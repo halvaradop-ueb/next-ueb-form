@@ -1,25 +1,53 @@
 "use client";
-import { Form } from "@halvaradop/ui-form";
-import { Input } from "@halvaradop/ui-input";
-import { Label } from "@halvaradop/ui-label";
-import { Button } from "@halvaradop/ui-button";
+import { useActionState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { loginAction } from "@/lib/actions/login";
+import { FormState } from "@/lib/@types/types";
 
 const AuthPage = () => {
+    const [state, action, isPending] = useActionState<FormState, FormData>(loginAction, {
+        idle: "idle",
+        message: "",
+    });
+
     return (
-        <section className="min-h-svh flex items-center justify-center bg-gray-100 p-4">
-            <Form className="p-0">
-                <Label variant="base">
-                    <span className="mb-1 block">Email</span>
-                    <Input type="email" name="email" placeholder="Email" required />
-                </Label>
-                <Label>
-                    <span className="mb-1 block">Password</span>
-                    <Input type="password" name="password" placeholder="Password" required />
-                </Label>
-                <Button className="mt-5 text-white" fullWidth>
-                    Log in
-                </Button>
-            </Form>
+        <section className="min-h-dvh flex items-center justify-center">
+            <Card className="w-11/12 max-w-md">
+                <CardHeader>
+                    <CardTitle className="text-2xl">Login</CardTitle>
+                    <CardDescription>Enter your email below to login to your account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form action={action}>
+                        <div className="flex flex-col gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input type="email" id="email" name="email" placeholder="m@example.com" required />
+                            </div>
+                            <div className="grid gap-2">
+                                <div className="flex items-center">
+                                    <Label htmlFor="password">Password</Label>
+                                </div>
+                                <Input type="password" id="password" name="password" placeholder="******" required />
+                            </div>
+                            {state.idle === "error" && (
+                                <span className="w-full py-2 text-center text-red-100  rounded-md bg-red-400">
+                                    {state.message}
+                                </span>
+                            )}
+                            <Button type="submit" className="w-full" disabled={isPending}>
+                                Login
+                            </Button>
+                            <Button variant="outline" className="w-full" disabled={isPending}>
+                                Login with Google
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </section>
     );
 };
