@@ -7,13 +7,10 @@
       {
         "tabWidth": 4,
         "semi": false,
-        "useTabs": false,
         "printWidth": 130,
-        "singleQuote": false,
-        "trailingComma": "es5",
         "overrides": [
           {
-            "files": ["*.json", "*.yml", "*.yaml", "README.md"],
+            "files": ["*.json", "*.yml", "*.yaml", "*.md"],
             "options": {
               "tabWidth": 2
             }

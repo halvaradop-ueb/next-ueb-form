@@ -1,14 +1,14 @@
-"use client";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Phone, MapPin, BookOpen, Clock, Save, Edit, UserPlus, FileText, Settings } from "lucide-react";
+"use client"
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Mail, Phone, MapPin, BookOpen, Clock, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
 
 const userData = {
     id: "prof123",
@@ -49,11 +49,11 @@ const userData = {
         totalEvaluations: 156,
         recentEvaluations: 24,
     },
-};
+}
 
 export default function ProfilePage() {
-    const [activeTab, setActiveTab] = useState("personal");
-    const [isEditing, setIsEditing] = useState(false);
+    const [activeTab, setActiveTab] = useState("personal")
+    const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -64,19 +64,19 @@ export default function ProfilePage() {
         department: userData.department,
         office: userData.office,
         officeHours: userData.officeHours,
-    });
+    })
 
     const handleInputChange = (field: string, value: string) => {
         setFormData({
             ...formData,
             [field]: value,
-        });
-    };
+        })
+    }
 
     const handleSave = () => {
-        setIsEditing(false);
-        alert("Profile updated successfully!");
-    };
+        setIsEditing(false)
+        alert("Profile updated successfully!")
+    }
 
     return (
         <div className="container mx-auto py-6">
@@ -530,5 +530,5 @@ export default function ProfilePage() {
                 </div>
             </div>
         </div>
-    );
+    )
 }

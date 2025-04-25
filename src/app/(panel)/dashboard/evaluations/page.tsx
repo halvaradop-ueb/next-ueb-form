@@ -1,10 +1,10 @@
-import { auth } from "@/lib/auth";
-import { StudentForm } from "@/ui/dashboard/evaluations/students/student-form";
-import { ProffessorForm } from "@/ui/dashboard/evaluations/proffessor/proffessor-form";
+import { auth } from "@/lib/auth"
+import { StudentForm } from "@/ui/dashboard/evaluations/students/student-form"
+import { ProffessorForm } from "@/ui/dashboard/evaluations/proffessor/proffessor-form"
 
 const EvaluationsPage = async () => {
-    const session = await auth();
-    const user: "proffessor" | "student" = true ? "proffessor" : "student";
+    const session = await auth()
+    const user: "proffessor" | "student" = true ? "proffessor" : "student"
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -15,7 +15,7 @@ const EvaluationsPage = async () => {
             {user === "student" && <StudentForm />}
             {user === "proffessor" && <ProffessorForm />}
         </div>
-    );
-};
+    )
+}
 
-export default EvaluationsPage;
+export default EvaluationsPage

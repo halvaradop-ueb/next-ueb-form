@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const LoginSchema = z
     .object({
@@ -7,4 +7,4 @@ export const LoginSchema = z
     })
     .refine((data) => data.email !== data.password, {
         message: "Email and password cannot be the same",
-    });
+    })

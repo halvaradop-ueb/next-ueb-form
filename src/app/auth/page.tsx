@@ -1,17 +1,17 @@
-"use client";
-import { useActionState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { loginAction } from "@/lib/actions/login";
-import { FormState } from "@/lib/@types/types";
+"use client"
+import { useActionState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { loginAction } from "@/lib/actions/login"
+import { FormState } from "@/lib/@types/types"
 
 const AuthPage = () => {
     const [state, action, isPending] = useActionState<FormState, FormData>(loginAction, {
         idle: "idle",
         message: "",
-    });
+    })
 
     return (
         <section className="min-h-dvh flex items-center justify-center">
@@ -49,7 +49,7 @@ const AuthPage = () => {
                 </CardContent>
             </Card>
         </section>
-    );
-};
+    )
+}
 
-export default AuthPage;
+export default AuthPage

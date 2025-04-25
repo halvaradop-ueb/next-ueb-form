@@ -1,14 +1,14 @@
-"use client";
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, Save } from "lucide-react";
+"use client"
+import { useState } from "react"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Download, FileText, Save } from "lucide-react"
 
 const professors = [
     { id: "prof1", name: "Dr. Smith" },
@@ -16,7 +16,7 @@ const professors = [
     { id: "prof3", name: "Prof. Williams" },
     { id: "prof4", name: "Dr. Brown" },
     { id: "prof5", name: "Dr. Davis" },
-];
+]
 
 const subjects = [
     { id: "math", name: "Matemáticas" },
@@ -24,7 +24,7 @@ const subjects = [
     { id: "physics", name: "Física" },
     { id: "chemistry", name: "Química" },
     { id: "biology", name: "Biología" },
-];
+]
 
 const evaluationCriteria = [
     { id: "teachingQuality", name: "Calidad de Enseñanza" },
@@ -33,30 +33,30 @@ const evaluationCriteria = [
     { id: "fairness", name: "Imparcialidad" },
     { id: "knowledge", name: "Conocimiento de la Materia" },
     { id: "organization", name: "Organización del Curso" },
-];
+]
 
 const timeframes = [
     { id: "semester", name: "Semestre Actual" },
     { id: "year", name: "Último Año" },
     { id: "all", name: "Todo el Tiempo" },
-];
+]
 
 export default function AdminReportsPage() {
-    const [activeTab, setActiveTab] = useState("new");
-    const [selectedProfessor, setSelectedProfessor] = useState("");
-    const [selectedSubject, setSelectedSubject] = useState("");
-    const [reportTitle, setReportTitle] = useState("");
-    const [startDate, setStartDate] = useState<Date>();
-    const [endDate, setEndDate] = useState<Date>();
-    const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
-    const [comments, setComments] = useState("");
-    const [recommendations, setRecommendations] = useState("");
+    const [activeTab, setActiveTab] = useState("new")
+    const [selectedProfessor, setSelectedProfessor] = useState("")
+    const [selectedSubject, setSelectedSubject] = useState("")
+    const [reportTitle, setReportTitle] = useState("")
+    const [startDate, setStartDate] = useState<Date>()
+    const [endDate, setEndDate] = useState<Date>()
+    const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
+    const [comments, setComments] = useState("")
+    const [recommendations, setRecommendations] = useState("")
 
     const toggleCriterion = (criterionId: string) => {
         setSelectedCriteria((prev) =>
             prev.includes(criterionId) ? prev.filter((id) => id !== criterionId) : [...prev, criterionId],
-        );
-    };
+        )
+    }
 
     const savedReports = [
         {
@@ -80,15 +80,15 @@ export default function AdminReportsPage() {
             subject: "Física",
             date: "2023-09-30",
         },
-    ];
+    ]
 
     const handleSaveReport = () => {
-        alert("¡Informe guardado exitosamente!");
-    };
+        alert("¡Informe guardado exitosamente!")
+    }
 
     const handleGenerateReport = () => {
-        alert("¡Informe generado exitosamente!");
-    };
+        alert("¡Informe generado exitosamente!")
+    }
 
     return (
         <section>
@@ -249,5 +249,5 @@ export default function AdminReportsPage() {
                 </Tabs>
             </div>
         </section>
-    );
+    )
 }

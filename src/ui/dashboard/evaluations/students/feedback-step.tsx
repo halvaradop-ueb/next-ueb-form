@@ -1,16 +1,16 @@
-"use client";
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+"use client"
+import { useState } from "react"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Slider } from "@/components/ui/slider"
 
 export function FeedbackStep() {
-    const [sliderValue, setSliderValue] = useState(0);
+    const [sliderValue, setSliderValue] = useState(0)
 
     const handleSliderChange = (value: number[]) => {
-        const newValue = value[0];
-        setSliderValue(newValue);
-    };
+        const newValue = value[0]
+        setSliderValue(newValue)
+    }
 
     return (
         <div className="space-y-6">
@@ -48,5 +48,5 @@ export function FeedbackStep() {
                 </div>
             </div>
         </div>
-    );
+    )
 }

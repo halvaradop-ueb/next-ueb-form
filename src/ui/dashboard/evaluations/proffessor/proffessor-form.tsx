@@ -1,10 +1,10 @@
-"use client";
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Confirmation } from "../confirmation";
-import { SelfEvaluation } from "./self-evaluation-step";
+"use client"
+import { useState } from "react"
+import { CheckCircle2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Confirmation } from "../confirmation"
+import { SelfEvaluation } from "./self-evaluation-step"
 
 const steps = [
     {
@@ -17,22 +17,22 @@ const steps = [
         name: "Confirmación",
         component: <Confirmation />,
     },
-];
+]
 
 export const ProffessorForm = () => {
-    const [indexStep, setIndexStep] = useState(0);
+    const [indexStep, setIndexStep] = useState(0)
 
     const handleNextStep = () => {
         if (indexStep < steps.length - 1) {
-            setIndexStep((prev) => prev + 1);
+            setIndexStep((prev) => prev + 1)
         }
-    };
+    }
 
     const handlePrevStep = () => {
         if (indexStep > 0) {
-            setIndexStep((prev) => prev - 1);
+            setIndexStep((prev) => prev - 1)
         }
-    };
+    }
 
     return (
         <section className="space-y-8">
@@ -79,5 +79,5 @@ export const ProffessorForm = () => {
                 </CardContent>
             </Card>
         </section>
-    );
-};
+    )
+}

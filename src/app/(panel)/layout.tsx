@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/dashboard/sidebar";
+import { AppSidebar } from "@/components/dashboard/sidebar"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -6,10 +6,10 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { ChildrenProps } from "@/lib/@types/props";
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ChildrenProps } from "@/lib/@types/props"
 
 export default function PanelLayout({ children }: ChildrenProps) {
     return (
@@ -34,5 +34,5 @@ export default function PanelLayout({ children }: ChildrenProps) {
                 <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
             </SidebarInset>
         </SidebarProvider>
-    );
+    )
 }

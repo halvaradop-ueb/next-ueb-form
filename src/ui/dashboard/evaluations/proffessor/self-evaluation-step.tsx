@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface ProfessorSelfEvaluationStepProps {
-    formData: FormData;
-    updateFormData: (field: keyof FormData, value: string) => void;
+    formData: FormData
+    updateFormData: (field: keyof FormData, value: string) => void
 }
 
 const subjects = [
@@ -16,7 +16,7 @@ const subjects = [
     { id: "physics", name: "Física" },
     { id: "chemistry", name: "Química" },
     { id: "biology", name: "Biología" },
-];
+]
 
 export const SelfEvaluation = () => {
     return (
@@ -99,5 +99,5 @@ export const SelfEvaluation = () => {
                 </Card>
             </div>
         </section>
-    );
-};
+    )
+}

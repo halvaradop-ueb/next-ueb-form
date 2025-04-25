@@ -60,8 +60,9 @@
     "typescript": "^5"
   },
   "prettier": {
-    "printWidth": 130,
     "tabWidth": 4,
+    "semi": false,
+    "printWidth": 130,
     "overrides": [
       {
         "files": [

@@ -1,6 +1,6 @@
-import * as React from "react";
-import Link from "next/link";
-import { VersionSwitcher } from "@/components/dashboard/version";
+import * as React from "react"
+import Link from "next/link"
+import { VersionSwitcher } from "@/components/dashboard/version"
 import {
     Sidebar,
     SidebarContent,
@@ -12,7 +12,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const linksByRole = {
     student: [
@@ -49,7 +49,7 @@ const linksByRole = {
             url: "/profile",
         },
     ],
-};
+}
 
 const data = {
     versions: ["0.1.0"],
@@ -60,7 +60,7 @@ const data = {
             items: linksByRole.admin,
         },
     ],
-};
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
@@ -88,5 +88,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarContent>
             <SidebarRail />
         </Sidebar>
-    );
+    )
 }

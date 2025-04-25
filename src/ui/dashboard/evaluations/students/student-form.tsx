@@ -1,12 +1,12 @@
-"use client";
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { SelectStep } from "./select-subject-step";
-import { FeedbackStep } from "./feedback-step";
-import { ProffessorEvaluationStep } from "./proffessor-evaluation-step";
-import { Confirmation } from "../confirmation";
+"use client"
+import { useState } from "react"
+import { CheckCircle2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { SelectStep } from "./select-subject-step"
+import { FeedbackStep } from "./feedback-step"
+import { ProffessorEvaluationStep } from "./proffessor-evaluation-step"
+import { Confirmation } from "../confirmation"
 
 const steps = [
     {
@@ -29,22 +29,22 @@ const steps = [
         name: "Confirmación",
         component: <Confirmation />,
     },
-];
+]
 
 export const StudentForm = () => {
-    const [indexStep, setIndexStep] = useState(0);
+    const [indexStep, setIndexStep] = useState(0)
 
     const handleNextStep = () => {
         if (indexStep < steps.length - 1) {
-            setIndexStep((prev) => prev + 1);
+            setIndexStep((prev) => prev + 1)
         }
-    };
+    }
 
     const handlePrevStep = () => {
         if (indexStep > 0) {
-            setIndexStep((prev) => prev - 1);
+            setIndexStep((prev) => prev - 1)
         }
-    };
+    }
 
     return (
         <section className="space-y-8">
@@ -91,5 +91,5 @@ export const StudentForm = () => {
                 </CardContent>
             </Card>
         </section>
-    );
-};
+    )
+}

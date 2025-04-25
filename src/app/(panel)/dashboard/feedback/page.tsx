@@ -1,10 +1,10 @@
-"use client";
-import { useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+"use client"
+import { useState } from "react"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const subjects = [
     { id: "all", name: "Todas las Materias" },
@@ -13,7 +13,7 @@ const subjects = [
     { id: "physics", name: "Física" },
     { id: "chemistry", name: "Química" },
     { id: "biology", name: "Biología" },
-];
+]
 
 const professors = [
     { id: "all", name: "Todos los Profesores" },
@@ -22,13 +22,13 @@ const professors = [
     { id: "prof3", name: "Prof. Williams" },
     { id: "prof4", name: "Dr. Brown" },
     { id: "prof5", name: "Dr. Davis" },
-];
+]
 
 const timeframes = [
     { id: "semester", name: "Semestre Actual" },
     { id: "year", name: "Último Año" },
     { id: "all", name: "Todo el Tiempo" },
-];
+]
 
 const mockFeedbackData = {
     averageRatings: {
@@ -79,16 +79,16 @@ const mockFeedbackData = {
             date: "2023-11-05",
         },
     ],
-};
+}
 
 interface FeedbackState {
-    professor: string;
-    subject: string;
-    timeframe: string;
+    professor: string
+    subject: string
+    timeframe: string
 }
 
 const FeedbackPage = () => {
-    const [options, setOptions] = useState<FeedbackState>();
+    const [options, setOptions] = useState<FeedbackState>()
 
     return (
         <section className="space-y-6">
@@ -211,7 +211,7 @@ const FeedbackPage = () => {
                                         rating as keyof typeof mockFeedbackData.ratingDistribution
                                     ] /
                                         Object.values(mockFeedbackData.ratingDistribution).reduce((a, b) => a + b, 0)) *
-                                    100;
+                                    100
                                 return (
                                     <div key={rating} className="space-y-1">
                                         <div className="flex items-center justify-between">
@@ -220,7 +220,7 @@ const FeedbackPage = () => {
                                         </div>
                                         <Progress value={percentage} className="h-2" />
                                     </div>
-                                );
+                                )
                             })}
                         </CardContent>
                     </Card>
@@ -232,7 +232,7 @@ const FeedbackPage = () => {
                             {Object.entries(mockFeedbackData.averageRatings)
                                 .filter(([key]) => key !== "overall")
                                 .map(([key, value]) => {
-                                    const percentage = (value / 5) * 100;
+                                    const percentage = (value / 5) * 100
                                     return (
                                         <div key={key} className="space-y-1">
                                             <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ const FeedbackPage = () => {
                                             </div>
                                             <Progress value={percentage} className="h-2" />
                                         </div>
-                                    );
+                                    )
                                 })}
                         </CardContent>
                     </Card>
@@ -269,7 +269,7 @@ const FeedbackPage = () => {
                 </TabsContent>
             </Tabs>
         </section>
-    );
-};
+    )
+}
 
-export default FeedbackPage;
+export default FeedbackPage

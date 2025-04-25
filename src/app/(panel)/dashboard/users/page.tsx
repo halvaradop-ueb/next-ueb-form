@@ -1,15 +1,15 @@
-"use client";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, UserPlus, MoreHorizontal } from "lucide-react";
+"use client"
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 
 const users = [
     {
@@ -60,23 +60,23 @@ const users = [
         status: "activo",
         lastActive: "2023-11-13",
     },
-];
+]
 
 export const UserManagementPage = () => {
-    const [activeTab, setActiveTab] = useState("all");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [newUserRole, setNewUserRole] = useState("estudiante");
+    const [activeTab, setActiveTab] = useState("all")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [newUserRole, setNewUserRole] = useState("estudiante")
 
     const filteredUsers = users.filter(
         (user) =>
             (activeTab === "all" || user.role === activeTab) &&
             (user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase())),
-    );
+    )
 
     const handleAddUser = () => {
-        alert("¡Usuario agregado exitosamente!");
-    };
+        alert("¡Usuario agregado exitosamente!")
+    }
 
     return (
         <section>
@@ -219,7 +219,7 @@ export const UserManagementPage = () => {
                 </Tabs>
             </div>
         </section>
-    );
-};
+    )
+}
 
-export default UserManagementPage;
+export default UserManagementPage

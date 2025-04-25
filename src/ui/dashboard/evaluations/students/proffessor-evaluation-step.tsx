@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 const evaluationQuestions = [
     {
@@ -36,9 +36,9 @@ const evaluationQuestions = [
         question: "¿Qué tan bien organizado estuvo el curso?",
         description: "Considera la estructura, la planificación y la claridad de las expectativas.",
     },
-];
+]
 
-const range = Array.from({ length: 10 }).map((_, i) => i + 1);
+const range = Array.from({ length: 10 }).map((_, i) => i + 1)
 
 export const ProffessorEvaluationStep = () => {
     return (
@@ -71,5 +71,5 @@ export const ProffessorEvaluationStep = () => {
                 ))}
             </form>
         </section>
-    );
-};
+    )
+}
