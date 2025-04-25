@@ -41,7 +41,7 @@ const timeframes = [
     { id: "all", name: "Todo el Tiempo" },
 ]
 
-export default function AdminReportsPage() {
+const AdminReportsPage = () => {
     const [activeTab, setActiveTab] = useState("new")
     const [selectedProfessor, setSelectedProfessor] = useState("")
     const [selectedSubject, setSelectedSubject] = useState("")
@@ -251,3 +251,5 @@ export default function AdminReportsPage() {
         </section>
     )
 }
+
+export default AdminReportsPage

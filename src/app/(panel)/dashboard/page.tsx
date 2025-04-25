@@ -1,4 +1,4 @@
-export default function Page() {
+const DashboardPage = () => {
     return (
         <section>
             <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -10,3 +10,5 @@ export default function Page() {
         </section>
     )
 }
+
+export default DashboardPage

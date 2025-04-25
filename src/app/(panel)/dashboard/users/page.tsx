@@ -62,7 +62,7 @@ const users = [
     },
 ]
 
-export const UserManagementPage = () => {
+const UserManagementPage = () => {
     const [activeTab, setActiveTab] = useState("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [newUserRole, setNewUserRole] = useState("estudiante")
