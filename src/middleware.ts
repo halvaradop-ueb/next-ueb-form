@@ -13,20 +13,24 @@ const getRoutesByRole = (role: Role) => {
 
 export const middleware = async (request: NextRequest) => {
     const session = await auth()
-    const url = request.nextUrl.href
-    if (url.includes("/auth") && !session) return NextResponse.next()
-    if (url.includes("/auth") && session) {
+    const url = request.nextUrl
+
+    if (url.pathname.startsWith("/auth")) {
+        if (!session) return NextResponse.next()
         return NextResponse.redirect(new URL("/dashboard", url))
     }
+
     const sessionRole = session?.user?.role as Role
-    if (!session && !sessionRole) {
+    if (!session || !sessionRole) {
         return NextResponse.redirect(new URL("/auth", url))
     }
+
     const routes = getRoutesByRole(sessionRole)
-    const isRouteAllowed = routes.some((route) => url.endsWith(route))
+    const isRouteAllowed = routes.some((route) => url.pathname === route)
     if (!isRouteAllowed) {
         return NextResponse.redirect(new URL("/dashboard", url))
     }
+
     return NextResponse.next()
 }
 
