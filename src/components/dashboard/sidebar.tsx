@@ -26,23 +26,27 @@ const linksByRole = {
             title: "Evaluaciones",
             url: "/dashboard/evaluations",
         },
+        {
+            title: "Perfil",
+            url: "/profile",
+        },
     ],
     admin: [
         {
-            title: "Estadísticas",
-            url: "/dashboard/statistics",
-        },
-        {
-            title: "Historia",
-            url: "/dashboard/history",
-        },
-        {
-            title: "Observaciones",
-            url: "/dashboard/observations",
+            title: "Feedback",
+            url: "/dashboard/feedback",
         },
         {
             title: "Informes",
             url: "/dashboard/reports",
+        },
+        {
+            title: "Gestión de usuarios",
+            url: "/dashboard/users",
+        },
+        {
+            title: "Perfil",
+            url: "/profile",
         },
     ],
 };
@@ -53,7 +57,7 @@ const data = {
         {
             title: "Panel",
             url: "#",
-            items: linksByRole.student,
+            items: linksByRole.admin,
         },
     ],
 };

@@ -3,26 +3,14 @@ import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SelectStep } from "./select-subject-step";
-import { FeedbackStep } from "./feedback-step";
-import { ProffessorEvaluationStep } from "./proffessor-evaluation-step";
 import { Confirmation } from "../confirmation";
+import { SelfEvaluation } from "./self-evaluation-step";
 
 const steps = [
     {
         id: "step-1",
-        name: "Curso",
-        component: <SelectStep />,
-    },
-    {
-        id: "step-2",
         name: "Evaluación",
-        component: <ProffessorEvaluationStep />,
-    },
-    {
-        id: "step-3",
-        name: "Comentarios",
-        component: <FeedbackStep />,
+        component: <SelfEvaluation />,
     },
     {
         id: "step-4",
@@ -31,7 +19,7 @@ const steps = [
     },
 ];
 
-export const StudentForm = () => {
+export const ProffessorForm = () => {
     const [indexStep, setIndexStep] = useState(0);
 
     const handleNextStep = () => {

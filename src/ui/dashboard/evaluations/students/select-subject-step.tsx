@@ -2,15 +2,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 const proffessors = [
-    { value: "1", name: "Dr. Anderson" },
-    { value: "2", name: "Prof. Thomas" },
-    { value: "3", name: "Dr. Jackson" },
+    { value: "1", name: "Dr. García" },
+    { value: "2", name: "Prof. Martínez" },
+    { value: "3", name: "Dr. López" },
 ];
 
 const subjects = [
-    { value: "1", name: "Mathematics" },
-    { value: "2", name: "Computer Science" },
-    { value: "3", name: "Physics" },
+    { value: "1", name: "Matemáticas" },
+    { value: "2", name: "Informática" },
+    { value: "3", name: "Física" },
 ];
 
 export const SelectStep = () => {

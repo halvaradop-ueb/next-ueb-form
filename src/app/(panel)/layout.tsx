@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChildrenProps } from "@/lib/@types/props";
 
-export default function DashboardLayout({ children }: ChildrenProps) {
+export default function PanelLayout({ children }: ChildrenProps) {
     return (
         <SidebarProvider>
             <AppSidebar />
