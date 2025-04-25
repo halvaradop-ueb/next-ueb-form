@@ -1,6 +1,5 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
+import NextAuth from "next-auth"
+import Credentials from "next-auth/providers/credentials"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     providers: [
@@ -10,9 +9,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 password: {},
             },
             authorize: async (credentials) => {
-                console.log("credentials: ", credentials);
-                return { ...credentials } as any;
+                console.log("credentials: ", credentials)
+                return { ...credentials } as any
             },
         }),
     ],
-});
+})

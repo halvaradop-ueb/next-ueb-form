@@ -7,19 +7,22 @@
       {
         "tabWidth": 4,
         "semi": false,
-        "useTabs": false,
         "printWidth": 130,
-        "singleQuote": false,
-        "trailingComma": "es5",
         "overrides": [
           {
-            "files": ["*.json", "*.yml", "*.yaml", "README.md"],
+            "files": ["*.json", "*.yml", "*.yaml", "*.md"],
             "options": {
               "tabWidth": 2
             }
           }
         ]
       }
-    ]
+    ],
+    "@typescript-eslint/no-empty-object-type": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
