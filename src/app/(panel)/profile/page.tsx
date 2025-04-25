@@ -1,5 +1,7 @@
 "use client"
 import { useState } from "react"
+import { redirect } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -52,6 +54,7 @@ const userData = {
 }
 
 export default function ProfilePage() {
+    const { data: session } = useSession()
     const [activeTab, setActiveTab] = useState("personal")
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
@@ -76,6 +79,10 @@ export default function ProfilePage() {
     const handleSave = () => {
         setIsEditing(false)
         alert("Profile updated successfully!")
+    }
+
+    if (!session) {
+        redirect("/auth")
     }
 
     return (
@@ -107,13 +114,11 @@ export default function ProfilePage() {
                                     <AvatarFallback>{`${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`}</AvatarFallback>
                                 </Avatar>
                                 <div className="text-center">
-                                    <h2 className="text-2xl font-bold">
-                                        {userData.firstName} {userData.lastName}
-                                    </h2>
+                                    <h2 className="text-2xl font-bold">{session.user?.name}</h2>
                                     <p className="text-muted-foreground">{userData.department}</p>
                                 </div>
                                 <Badge variant="outline" className="capitalize">
-                                    {userData.role}
+                                    {session.user?.role ?? "admin"}
                                 </Badge>
                             </div>
                         </CardContent>

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { loginAction } from "@/lib/actions/login"
+import { loginAction, signInWithGoogle } from "@/lib/actions/login"
 import { FormState } from "@/lib/@types/types"
 
 const AuthPage = () => {
@@ -41,10 +41,12 @@ const AuthPage = () => {
                             <Button type="submit" className="w-full" disabled={isPending}>
                                 Login
                             </Button>
-                            <Button variant="outline" className="w-full" disabled={isPending}>
-                                Login with Google
-                            </Button>
                         </div>
+                    </form>
+                    <form action={signInWithGoogle}>
+                        <Button className="w-full mt-6" variant="outline" disabled={isPending}>
+                            Login with Google
+                        </Button>
                     </form>
                 </CardContent>
             </Card>

@@ -1,7 +1,8 @@
 "use server"
-import { signIn } from "@/auth"
+import { signIn, signOut } from "@/auth"
 import { FormState } from "@/lib/@types/types"
 import { LoginSchema } from "../schema"
+import { redirect } from "next/navigation"
 
 export const loginAction = async (previous: FormState, form: FormData): Promise<FormState> => {
     const entries = Object.fromEntries(form.entries())
@@ -20,9 +21,17 @@ export const loginAction = async (previous: FormState, form: FormData): Promise<
             message: "Invalid email or password",
         }
     }
-
+    redirect("/dashboard")
     return {
         idle: "success",
         message: "Login successful",
     }
+}
+
+export const signInWithGoogle = async () => {
+    await signIn("google")
+}
+
+export const signOutSession = async () => {
+    await signOut({ redirectTo: "/auth" })
 }
