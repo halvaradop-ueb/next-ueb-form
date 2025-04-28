@@ -1,12 +1,23 @@
+import Image from "next/image"
+import logo from "@/assets/ueb.png"
+
 const DashboardPage = () => {
     return (
-        <section>
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div className="aspect-video rounded-xl bg-muted/50" />
-                <div className="aspect-video rounded-xl bg-muted/50" />
-                <div className="aspect-video rounded-xl bg-muted/50" />
+        <section className="flex flex-col items-center justify-center px-4 py-8 text-center">
+            <Image
+                className="w-10/12 max-w-sm rounded-lg"
+                src={logo}
+                alt="Logo de la Universidad El Bosque"
+                priority
+                draggable="false"
+            />
+            <div className="mb-6">
+                <h1 className="text-4xl font-extrabold leading-tight">Sistema de Evaluación Docente</h1>
+                <p className="mt-2 text-lg text-muted-foreground">
+                    Bienvenido al sistema de evaluación docente para el programa de gerencia de proyectos en postgrados de la
+                    Universidad El Bosque.
+                </p>
             </div>
-            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
         </section>
     )
 }
