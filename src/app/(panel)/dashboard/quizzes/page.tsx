@@ -206,12 +206,24 @@ const QuizzesPage = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                                    <Select value={filterAudience} onValueChange={setFilterAudience}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Categoría" />
+                                            <SelectValue placeholder="Audiencia" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Todas las categorías</SelectItem>
+                                            <SelectItem value="all">Todas las audiencias</SelectItem>
+                                            <SelectItem value="student">Estudiante</SelectItem>
+                                            <SelectItem value="professor">Profesor</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Etapa" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas las etapas</SelectItem>
                                             <SelectItem value="Personal">Personal</SelectItem>
                                             <SelectItem value="General">General</SelectItem>
                                         </SelectContent>
@@ -227,18 +239,6 @@ const QuizzesPage = () => {
                                             <SelectItem value="text">Respuesta de texto</SelectItem>
                                             <SelectItem value="single_choice">Selección única</SelectItem>
                                             <SelectItem value="multiple_choice">Selección múltiple</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Select value={filterAudience} onValueChange={setFilterAudience}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Audiencia" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Todas las audiencias</SelectItem>
-                                            <SelectItem value="student">Estudiante</SelectItem>
-                                            <SelectItem value="professor">Profesor</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -298,13 +298,13 @@ const QuizzesPage = () => {
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="category">Categoría</Label>
+                                        <Label htmlFor="category">Etapa</Label>
                                         <Select
                                             value={newQuestion.category}
                                             onValueChange={(valor) => handleUpdateField("category", valor)}
                                         >
                                             <SelectTrigger id="category">
-                                                <SelectValue placeholder="Seleccionar categoría" />
+                                                <SelectValue placeholder="Seleccionar etapa" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="General">General</SelectItem>

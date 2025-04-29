@@ -37,6 +37,8 @@ export interface UserService {
     role: "student" | "professor" | "admin"
     created_at: string
     status: boolean
+    address: string
+    phone: string
 }
 
 export interface ProffessorService extends UserService {}
