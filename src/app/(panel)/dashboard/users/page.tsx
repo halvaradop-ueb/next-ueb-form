@@ -22,6 +22,8 @@ const initialState: UserService = {
     password: "",
     role: "student",
     status: true,
+    address: "",
+    phone: "",
 }
 
 const UserManagementPage = () => {
