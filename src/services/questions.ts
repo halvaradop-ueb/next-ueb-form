@@ -42,6 +42,7 @@ export const getQuestions = async (): Promise<Question[]> => {
 
 export const addQuestion = async (question: Question): Promise<Question | null> => {
     try {
+        console.log("Adding question:", question)
         const { id, options, ...spread } = question
         const { data: questionId, error } = await supabase.from("question").insert(spread).select("id").single()
         if (error) {

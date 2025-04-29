@@ -1,30 +1,17 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, FileText, Save } from "lucide-react"
-
-const professors = [
-    { id: "prof1", name: "Dr. Smith" },
-    { id: "prof2", name: "Dr. Johnson" },
-    { id: "prof3", name: "Prof. Williams" },
-    { id: "prof4", name: "Dr. Brown" },
-    { id: "prof5", name: "Dr. Davis" },
-]
-
-const subjects = [
-    { id: "math", name: "Matemáticas" },
-    { id: "cs", name: "Ciencias de la Computación" },
-    { id: "physics", name: "Física" },
-    { id: "chemistry", name: "Química" },
-    { id: "biology", name: "Biología" },
-]
+import { getProfessors } from "@/services/professors"
+import type { ProffessorService, SubjectService } from "@/lib/@types/services"
+import type { ReportState } from "@/lib/@types/types"
+import { getSubjectsByProfessorId } from "@/services/subjects"
 
 const evaluationCriteria = [
     { id: "teachingQuality", name: "Calidad de Enseñanza" },
@@ -35,27 +22,19 @@ const evaluationCriteria = [
     { id: "organization", name: "Organización del Curso" },
 ]
 
-const timeframes = [
-    { id: "semester", name: "Semestre Actual" },
-    { id: "year", name: "Último Año" },
-    { id: "all", name: "Todo el Tiempo" },
-]
+const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
 
 const AdminReportsPage = () => {
     const [activeTab, setActiveTab] = useState("new")
-    const [selectedProfessor, setSelectedProfessor] = useState("")
-    const [selectedSubject, setSelectedSubject] = useState("")
-    const [reportTitle, setReportTitle] = useState("")
-    const [startDate, setStartDate] = useState<Date>()
-    const [endDate, setEndDate] = useState<Date>()
-    const [selectedCriteria, setSelectedCriteria] = useState<string[]>([])
-    const [comments, setComments] = useState("")
-    const [recommendations, setRecommendations] = useState("")
+    const [subjects, setSubjects] = useState<SubjectService[]>([])
+    const [professors, setProfessors] = useState<ProffessorService[]>([])
+    const [report, setReport] = useState<ReportState>({} as ReportState)
 
-    const toggleCriterion = (criterionId: string) => {
-        setSelectedCriteria((prev) =>
-            prev.includes(criterionId) ? prev.filter((id) => id !== criterionId) : [...prev, criterionId],
-        )
+    const handleChange = (key: keyof ReportState, value: any) => {
+        setReport((previous) => ({
+            ...previous,
+            [key]: value,
+        }))
     }
 
     const savedReports = [
@@ -90,6 +69,23 @@ const AdminReportsPage = () => {
         alert("¡Informe generado exitosamente!")
     }
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const [professors] = await Promise.all([getProfessors()])
+            setProfessors(professors)
+        }
+        fetchData()
+    }, [])
+
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            if (!report?.professor) return
+            const subjects = await getSubjectsByProfessorId(report.professor)
+            setSubjects(subjects)
+        }
+        fetchSubjects()
+    }, [report?.professor])
+
     return (
         <section>
             <div className="container mx-auto py-6">
@@ -113,21 +109,24 @@ const AdminReportsPage = () => {
                                     <Input
                                         id="reportTitle"
                                         placeholder="Ingresa el título del informe"
-                                        value={reportTitle}
-                                        onChange={(e) => setReportTitle(e.target.value)}
+                                        value={report.title}
+                                        onChange={(e) => handleChange("title", e.target.value)}
                                     />
                                 </div>
                                 <div className="grid gap-4 md:grid-cols-3">
                                     <div className="space-y-2">
                                         <Label htmlFor="professor">Profesor</Label>
-                                        <Select value={selectedProfessor} onValueChange={setSelectedProfessor}>
+                                        <Select
+                                            value={report.professor}
+                                            onValueChange={(value) => handleChange("professor", value)}
+                                        >
                                             <SelectTrigger id="professor">
                                                 <SelectValue placeholder="Selecciona un profesor" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {professors.map((professor) => (
                                                     <SelectItem key={professor.id} value={professor.id}>
-                                                        {professor.name}
+                                                        {professor.first_name} {professor.last_name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -135,7 +134,11 @@ const AdminReportsPage = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Materia</Label>
-                                        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                                        <Select
+                                            value={report.subject}
+                                            disabled={!report.professor}
+                                            onValueChange={(value) => handleChange("subject", value)}
+                                        >
                                             <SelectTrigger id="subject">
                                                 <SelectValue placeholder="Selecciona una materia" />
                                             </SelectTrigger>
@@ -164,7 +167,7 @@ const AdminReportsPage = () => {
                                         </Select>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
+                                {/* <div className="space-y-2">
                                     <Label>Criterios de Evaluación</Label>
                                     <div className="grid gap-2 md:grid-cols-2">
                                         {evaluationCriteria.map((criterion) => (
@@ -180,14 +183,14 @@ const AdminReportsPage = () => {
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
                                 <div className="space-y-2">
                                     <Label htmlFor="comments">Análisis y Comentarios</Label>
                                     <Textarea
                                         id="comments"
                                         placeholder="Ingresa tu análisis de los datos de evaluación..."
-                                        value={comments}
-                                        onChange={(e) => setComments(e.target.value)}
+                                        value={report.comments}
+                                        onChange={(e) => handleChange("comments", e.target.value)}
                                         className="min-h-[100px]"
                                     />
                                 </div>
@@ -196,8 +199,8 @@ const AdminReportsPage = () => {
                                     <Textarea
                                         id="recommendations"
                                         placeholder="Ingresa tus recomendaciones para mejorar..."
-                                        value={recommendations}
-                                        onChange={(e) => setRecommendations(e.target.value)}
+                                        value={report.recommendations}
+                                        onChange={(e) => handleChange("recommendations", e.target.value)}
                                         className="min-h-[100px]"
                                     />
                                 </div>

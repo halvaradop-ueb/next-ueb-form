@@ -45,6 +45,11 @@ const categories: Record<string, string> = {
     Personal: "Personal",
 }
 
+const audiences: Record<Question["target_audience"], string> = {
+    student: "Estudiantes",
+    professor: "Profesor",
+}
+
 const initialState: Question = {
     id: "",
     title: "",
@@ -52,32 +57,28 @@ const initialState: Question = {
     question_type: "text",
     category: "General",
     required: true,
+    target_audience: "student",
 }
 
 const QuizzesPage = () => {
     const [questions, setQuestions] = useState<Question[]>([])
-    const [newQuestion, setNewQuestion] = useState<Question>({
-        id: "",
-        title: "",
-        description: "",
-        question_type: "text",
-        category: "general",
-        required: true,
-    })
+    const [newQuestion, setNewQuestion] = useState<Question>(initialState)
     const [search, setSearch] = useState("")
     const [textOptions, setTextOptions] = useState("")
     const [isOpenDialog, setIsOpenDialog] = useState(false)
-    const [filterCategory, setFilterCategory] = useState<string>("todas")
+    const [filterCategory, setFilterCategory] = useState<string>("all")
     const [idleForm, setIdleForm] = useState<"create" | "editar">("create")
-    const [filterQuestionType, setFilterQuestionType] = useState<string>("todos")
-    const [errores, setErrores] = useState({} as Record<keyof Question, string>)
+    const [filterQuestionType, setFilterQuestionType] = useState<string>("all")
+    const [filterAudience, setFilterAudience] = useState<string>("all")
+    const [errors, setErrors] = useState({} as Record<keyof Question, string>)
 
-    const preguntasFiltradas = questions.filter(({ title, description, category, question_type }) => {
-        const coincideBusqueda =
+    const filteredQuestions = questions.filter(({ title, description, category, question_type, target_audience }) => {
+        const matchesSearch =
             title.toLowerCase().includes(search.toLowerCase()) || description?.toLowerCase().includes(search.toLowerCase())
-        const coincideCategoria = filterCategory === "todas" || category === filterCategory
-        const coincideTipo = filterQuestionType === "todos" || question_type === filterQuestionType
-        return coincideBusqueda && coincideCategoria && coincideTipo
+        const matchesCategory = filterCategory === "all" || category === filterCategory
+        const matchesType = filterQuestionType === "all" || question_type === filterQuestionType
+        const matchesAudience = filterAudience === "all" || target_audience === filterAudience
+        return matchesSearch && matchesCategory && matchesType && matchesAudience
     })
 
     const handleCreateQuestion = () => {
@@ -88,7 +89,7 @@ const QuizzesPage = () => {
         setTextOptions("")
         setIdleForm("create")
         setIsOpenDialog(true)
-        setErrores({} as Record<keyof Question, string>)
+        setErrors({} as Record<keyof Question, string>)
     }
 
     const handleEditQuestion = (id: string) => {
@@ -98,15 +99,15 @@ const QuizzesPage = () => {
             setIsOpenDialog(true)
             setIdleForm("editar")
             setNewQuestion({ ...pregunta })
-            setErrores({} as Record<keyof Question, string>)
+            setErrors({} as Record<keyof Question, string>)
         }
     }
 
     const isValidForm = (): boolean => {
-        const nuevosErrores: Record<string, string> = {}
+        const errors: Record<string, string> = {}
 
         if (!newQuestion.title.trim()) {
-            nuevosErrores.title = "El título de la pregunta es obligatorio"
+            errors.title = "El título de la pregunta es obligatorio"
         }
 
         if (newQuestion.question_type === "single_choice" || newQuestion.question_type === "multiple_choice") {
@@ -116,12 +117,12 @@ const QuizzesPage = () => {
                 .filter((opcion) => opcion !== "")
 
             if (opciones.length < 2) {
-                nuevosErrores.opciones = "Debe proporcionar al menos 2 opciones"
+                errors.opciones = "Debe proporcionar al menos 2 opciones"
             }
         }
 
-        setErrores(nuevosErrores)
-        return Object.keys(nuevosErrores).length === 0
+        setErrors(errors)
+        return Object.keys(errors).length === 0
     }
 
     const handleAddNewQuestion = () => {
@@ -167,8 +168,8 @@ const QuizzesPage = () => {
             return nuevaPregunta
         })
 
-        if (errores[field]) {
-            setErrores((previous) => {
+        if (errors[field]) {
+            setErrors((previous) => {
                 const nuevosErrores = { ...previous }
                 delete nuevosErrores[field]
                 return nuevosErrores
@@ -191,7 +192,7 @@ const QuizzesPage = () => {
                 <div className="mb-6 space-y-4">
                     <Card>
                         <CardContent className="p-4">
-                            <div className="grid gap-4 md:grid-cols-4">
+                            <div className="grid gap-4 lg:grid-cols-5">
                                 <div className="md:col-span-2">
                                     <div className="relative">
                                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -210,7 +211,7 @@ const QuizzesPage = () => {
                                             <SelectValue placeholder="Categoría" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="todas">Todas las categorías</SelectItem>
+                                            <SelectItem value="all">Todas las categorías</SelectItem>
                                             <SelectItem value="Personal">Personal</SelectItem>
                                             <SelectItem value="General">General</SelectItem>
                                         </SelectContent>
@@ -222,10 +223,22 @@ const QuizzesPage = () => {
                                             <SelectValue placeholder="Tipo de pregunta" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="todos">Todos los tipos</SelectItem>
+                                            <SelectItem value="all">Todos los tipos</SelectItem>
                                             <SelectItem value="text">Respuesta de texto</SelectItem>
                                             <SelectItem value="single_choice">Selección única</SelectItem>
                                             <SelectItem value="multiple_choice">Selección múltiple</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Select value={filterAudience} onValueChange={setFilterAudience}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Audiencia" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todas las audiencias</SelectItem>
+                                            <SelectItem value="student">Estudiante</SelectItem>
+                                            <SelectItem value="professor">Profesor</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -251,10 +264,10 @@ const QuizzesPage = () => {
                                 </DialogDescription>
                             </DialogHeader>
 
-                            {Object.keys(errores).length > 0 && (
+                            {Object.keys(errors).length > 0 && (
                                 <Alert variant="destructive" className="mt-2">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>Por favor corrija los errores antes de continuar.</AlertDescription>
+                                    <AlertDescription>Por favor corrija los errors antes de continuar.</AlertDescription>
                                 </Alert>
                             )}
 
@@ -268,9 +281,9 @@ const QuizzesPage = () => {
                                         value={newQuestion.title}
                                         onChange={(e) => handleUpdateField("title", e.target.value)}
                                         placeholder="¿Cómo calificaría...?"
-                                        className={errores.title ? "border-red-500" : ""}
+                                        className={errors.title ? "border-red-500" : ""}
                                     />
-                                    {errores.title && <p className="text-sm text-red-500">{errores.title}</p>}
+                                    {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -283,7 +296,7 @@ const QuizzesPage = () => {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="category">Categoría</Label>
                                         <Select
@@ -316,6 +329,21 @@ const QuizzesPage = () => {
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="target_audience">Audiencia</Label>
+                                        <Select
+                                            value={newQuestion.target_audience}
+                                            onValueChange={(valor) => handleUpdateField("target_audience", valor)}
+                                        >
+                                            <SelectTrigger id="target_audience">
+                                                <SelectValue placeholder="Seleccionar audiencia" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="student">Estudiantes</SelectItem>
+                                                <SelectItem value="professor">Docentes</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center space-x-2">
@@ -340,12 +368,12 @@ const QuizzesPage = () => {
                                             value={textOptions}
                                             onChange={(e) => setTextOptions(e.target.value)}
                                             placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
-                                            className={`min-h-[100px] ${errores.options ? "border-red-500" : ""}`}
+                                            className={`min-h-[100px] ${errors.options ? "border-red-500" : ""}`}
                                         />
                                         <p className="text-xs text-muted-foreground">
                                             Ingrese al menos 2 opciones, una por línea.
                                         </p>
-                                        {errores.options && <p className="text-sm text-red-500">{errores.options}</p>}
+                                        {errors.options && <p className="text-sm text-red-500">{errors.options}</p>}
                                     </div>
                                 )}
                             </div>
@@ -367,6 +395,7 @@ const QuizzesPage = () => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[40%]">Pregunta</TableHead>
+                                    <TableHead>Audiencia</TableHead>
                                     <TableHead>Categoría</TableHead>
                                     <TableHead>Tipo</TableHead>
                                     <TableHead>Estado</TableHead>
@@ -374,15 +403,24 @@ const QuizzesPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {preguntasFiltradas.length === 0 ? (
+                                {filteredQuestions.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                             No se encontraron preguntas que coincidan con los criterios de búsqueda.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    preguntasFiltradas.map(
-                                        ({ id, title, description, question_type, category, required, options }) => (
+                                    filteredQuestions.map(
+                                        ({
+                                            id,
+                                            title,
+                                            description,
+                                            question_type,
+                                            category,
+                                            required,
+                                            target_audience,
+                                            options,
+                                        }) => (
                                             <TableRow key={id}>
                                                 <TableCell>
                                                     <div>
@@ -410,6 +448,7 @@ const QuizzesPage = () => {
                                                             )}
                                                     </div>
                                                 </TableCell>
+                                                <TableCell>{audiences[target_audience]}</TableCell>
                                                 <TableCell>{categories[category]}</TableCell>
                                                 <TableCell>{questionTypes[question_type]}</TableCell>
                                                 <TableCell>
