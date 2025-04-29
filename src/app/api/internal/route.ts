@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase"
+import { getQuestions } from "@/services/questions"
 
 /**
  * This route handler is used to fetch all users from the database and check if the connection is working.
  */
 export const GET = async () => {
-    const supabase = await createClient()
-    const { data: users } = await supabase.from("users").select()
+    const questions = await getQuestions()
     return NextResponse.json({
-        users,
+        questions,
         message: "Users fetched successfully",
     })
 }

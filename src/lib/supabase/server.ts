@@ -16,7 +16,9 @@ export const createClient = async () => {
                     cookies.forEach(({ name, value, options }) => {
                         cookiesStore.set(name, value, options)
                     })
-                } catch {}
+                } catch (error) {
+                    console.error("Error setting cookies:", error)
+                }
             },
         },
         db: {
@@ -24,3 +26,5 @@ export const createClient = async () => {
         },
     })
 }
+
+export const supabase = await createClient()

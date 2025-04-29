@@ -1,85 +1,44 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { redirect } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, BookOpen, Clock, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
-
-const userData = {
-    id: "prof123",
-    role: "profesor",
-    firstName: "Roberto",
-    lastName: "Johnson",
-    email: "roberto.johnson@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Avenida Universidad, Ciudad Universitaria, CT 12345",
-    bio: "Profesor de Ciencias de la Computación con más de 15 años de experiencia en enseñanza e investigación. Especializado en inteligencia artificial y aprendizaje automático.",
-    department: "Ciencias de la Computación",
-    office: "Edificio de Ciencias, Oficina 305",
-    officeHours: "Lunes y Miércoles 2-4pm",
-    courses: [
-        { id: "cs101", name: "Introducción a la Computación" },
-        { id: "cs301", name: "Estructuras de Datos y Algoritmos" },
-        { id: "cs401", name: "Inteligencia Artificial" },
-    ],
-    education: [
-        { degree: "Doctorado en Ciencias de la Computación", institution: "Universidad de Stanford", year: "2005" },
-        { degree: "Maestría en Ciencias de la Computación", institution: "MIT", year: "2001" },
-        { degree: "Licenciatura en Ingeniería en Computación", institution: "UC Berkeley", year: "1999" },
-    ],
-    publications: [
-        {
-            title: "Avances en Arquitecturas de Redes Neuronales",
-            journal: "Revista de Inteligencia Artificial",
-            year: "2020",
-        },
-        {
-            title: "Aplicaciones del Aprendizaje Automático en la Educación",
-            journal: "Revisión de Tecnología Educativa",
-            year: "2018",
-        },
-    ],
-    evaluationStats: {
-        averageRating: 4.7,
-        totalEvaluations: 156,
-        recentEvaluations: 24,
-    },
-}
+import { getAuthenticated, updateUser } from "@/services/users"
+import { UserService } from "@/lib/@types/services"
 
 export default function ProfilePage() {
     const { data: session } = useSession()
     const [activeTab, setActiveTab] = useState("personal")
     const [isEditing, setIsEditing] = useState(false)
-    const [formData, setFormData] = useState({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone,
-        address: userData.address,
-        bio: userData.bio,
-        department: userData.department,
-        office: userData.office,
-        officeHours: userData.officeHours,
-    })
+    const [user, setUser] = useState<UserService>({} as UserService)
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData({
-            ...formData,
+    const handleChange = (field: string, value: string) => {
+        setUser((previous) => ({
+            ...previous,
             [field]: value,
-        })
+        }))
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsEditing(false)
+        await updateUser(user)
         alert("Profile updated successfully!")
     }
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const user = await getAuthenticated(session!)
+            setUser(user!)
+        }
+        fetchUser()
+    }, [])
 
     if (!session) {
         redirect("/auth")
@@ -111,14 +70,16 @@ export default function ProfilePage() {
                             <div className="flex flex-col items-center space-y-4">
                                 <Avatar className="h-32 w-32">
                                     <AvatarImage src="/placeholder-user.jpg" alt="Foto de perfil" />
-                                    <AvatarFallback>{`${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`}</AvatarFallback>
+                                    <AvatarFallback>{`${user.first_name?.charAt(0)}${user.last_name?.charAt(0)}`}</AvatarFallback>
                                 </Avatar>
                                 <div className="text-center">
-                                    <h2 className="text-2xl font-bold">{session.user?.name}</h2>
-                                    <p className="text-muted-foreground">{userData.department}</p>
+                                    <h2 className="text-2xl font-bold">
+                                        {user.first_name} {user.last_name}
+                                    </h2>
+                                    <p className="text-muted-foreground">Gestión de Proyectos</p>
                                 </div>
                                 <Badge variant="outline" className="capitalize">
-                                    {session.user?.role ?? "admin"}
+                                    {user.role ?? "admin"}
                                 </Badge>
                             </div>
                         </CardContent>
@@ -131,72 +92,24 @@ export default function ProfilePage() {
                         <CardContent className="space-y-4">
                             <div className="flex items-center">
                                 <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <span>{userData.email}</span>
+                                <span>{user.email}</span>
                             </div>
                             <div className="flex items-center">
                                 <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <span>{userData.phone}</span>
+                                <span>+57 {user.phone}</span>
                             </div>
                             <div className="flex items-center">
                                 <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <span>{userData.address}</span>
+                                <span>{user.address}</span>
                             </div>
                         </CardContent>
                     </Card>
-
-                    {userData.role === "professor" && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Enseñanza</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center">
-                                    <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
-                                    <span>{userData.department}</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                                    <span>{userData.office}</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                                    <span>{userData.officeHours}</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {userData.role === "professor" && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Resumen de Evaluaciones</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <span>Calificación Promedio</span>
-                                    <span className="font-bold">{userData.evaluationStats.averageRating}/5</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span>Total de Evaluaciones</span>
-                                    <span>{userData.evaluationStats.totalEvaluations}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span>Evaluaciones Recientes</span>
-                                    <span>{userData.evaluationStats.recentEvaluations}</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
 
                 <div className="space-y-6">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-3">
                             <TabsTrigger value="personal">Información Personal</TabsTrigger>
-                            {userData.role === "professor" && <TabsTrigger value="courses">Cursos</TabsTrigger>}
-                            {userData.role === "professor" && <TabsTrigger value="publications">Publicaciones</TabsTrigger>}
-                            {userData.role === "admin" && <TabsTrigger value="activity">Actividad</TabsTrigger>}
-                            {userData.role === "admin" && <TabsTrigger value="permissions">Permisos</TabsTrigger>}
                         </TabsList>
 
                         <TabsContent value="personal" className="space-y-6 pt-4">
@@ -211,27 +124,27 @@ export default function ProfilePage() {
                                             <Label htmlFor="firstName">Nombre</Label>
                                             {isEditing ? (
                                                 <Input
-                                                    id="firstName"
-                                                    value={formData.firstName}
-                                                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                                                    id="first_name"
+                                                    value={user.first_name}
+                                                    onChange={(e) => handleChange("first_name", e.target.value)}
                                                 />
                                             ) : (
                                                 <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                    {formData.firstName}
+                                                    {user.first_name}
                                                 </p>
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="lastName">Apellido</Label>
+                                            <Label htmlFor="last_name">Apellido</Label>
                                             {isEditing ? (
                                                 <Input
-                                                    id="lastName"
-                                                    value={formData.lastName}
-                                                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                                                    id="last_name"
+                                                    value={user.last_name}
+                                                    onChange={(e) => handleChange("last_name", e.target.value)}
                                                 />
                                             ) : (
                                                 <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                    {formData.lastName}
+                                                    {user.last_name}
                                                 </p>
                                             )}
                                         </div>
@@ -243,13 +156,11 @@ export default function ProfilePage() {
                                             <Input
                                                 id="email"
                                                 type="email"
-                                                value={formData.email}
-                                                onChange={(e) => handleInputChange("email", e.target.value)}
+                                                value={user.email}
+                                                onChange={(e) => handleChange("email", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                {formData.email}
-                                            </p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.email}</p>
                                         )}
                                     </div>
 
@@ -258,13 +169,11 @@ export default function ProfilePage() {
                                         {isEditing ? (
                                             <Input
                                                 id="phone"
-                                                value={formData.phone}
-                                                onChange={(e) => handleInputChange("phone", e.target.value)}
+                                                value={user.phone}
+                                                onChange={(e) => handleChange("phone", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                {formData.phone}
-                                            </p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.phone}</p>
                                         )}
                                     </div>
 
@@ -273,28 +182,12 @@ export default function ProfilePage() {
                                         {isEditing ? (
                                             <Input
                                                 id="address"
-                                                value={formData.address}
-                                                onChange={(e) => handleInputChange("address", e.target.value)}
+                                                value={user.address}
+                                                onChange={(e) => handleChange("address", e.target.value)}
                                             />
                                         ) : (
                                             <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                {formData.address}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="bio">Biografía</Label>
-                                        {isEditing ? (
-                                            <Textarea
-                                                id="bio"
-                                                value={formData.bio}
-                                                onChange={(e) => handleInputChange("bio", e.target.value)}
-                                                className="min-h-[100px]"
-                                            />
-                                        ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2 min-h-[100px]">
-                                                {formData.bio}
+                                                {user.address}
                                             </p>
                                         )}
                                     </div>
@@ -306,7 +199,7 @@ export default function ProfilePage() {
                                 )}
                             </Card>
 
-                            {userData.role === "professor" && (
+                            {/* {user.role === "professor" && (
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>Información Académica</CardTitle>
@@ -319,7 +212,7 @@ export default function ProfilePage() {
                                                 <Input
                                                     id="department"
                                                     value={formData.department}
-                                                    onChange={(e) => handleInputChange("department", e.target.value)}
+                                                    onChange={(e) => handleChange("department", e.target.value)}
                                                 />
                                             ) : (
                                                 <p className="rounded-md border border-input bg-background px-3 py-2">
@@ -334,7 +227,7 @@ export default function ProfilePage() {
                                                 <Input
                                                     id="office"
                                                     value={formData.office}
-                                                    onChange={(e) => handleInputChange("office", e.target.value)}
+                                                    onChange={(e) => handleChange("office", e.target.value)}
                                                 />
                                             ) : (
                                                 <p className="rounded-md border border-input bg-background px-3 py-2">
@@ -349,7 +242,7 @@ export default function ProfilePage() {
                                                 <Input
                                                     id="officeHours"
                                                     value={formData.officeHours}
-                                                    onChange={(e) => handleInputChange("officeHours", e.target.value)}
+                                                    onChange={(e) => handleChange("officeHours", e.target.value)}
                                                 />
                                             ) : (
                                                 <p className="rounded-md border border-input bg-background px-3 py-2">
@@ -360,7 +253,7 @@ export default function ProfilePage() {
 
                                         <div className="space-y-2">
                                             <Label>Educación</Label>
-                                            {userData.education.map((edu, index) => (
+                                            {user.education.map((edu, index) => (
                                                 <div key={index} className="rounded-md border border-input bg-background p-3">
                                                     <p className="font-medium">{edu.degree}</p>
                                                     <p className="text-sm text-muted-foreground">
@@ -371,70 +264,10 @@ export default function ProfilePage() {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            )}
+                            )} */}
                         </TabsContent>
 
-                        {userData.role === "professor" && (
-                            <TabsContent value="courses" className="space-y-6 pt-4">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Cursos Actuales</CardTitle>
-                                        <CardDescription>Cursos que estás enseñando actualmente</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {userData.courses.map((course) => (
-                                            <Card key={course.id}>
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <h3 className="font-medium">{course.name}</h3>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                ID del Curso: {course.id}
-                                                            </p>
-                                                        </div>
-                                                        <Button variant="outline" size="sm">
-                                                            Ver Detalles
-                                                        </Button>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        )}
-
-                        {userData.role === "professor" && (
-                            <TabsContent value="publications" className="space-y-6 pt-4">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Publicaciones</CardTitle>
-                                        <CardDescription>Tus publicaciones académicas e investigaciones</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {userData.publications.map((pub, index) => (
-                                            <Card key={index}>
-                                                <CardContent className="p-4">
-                                                    <div className="space-y-1">
-                                                        <h3 className="font-medium">{pub.title}</h3>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {pub.journal}, {pub.year}
-                                                        </p>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                        {isEditing && (
-                                            <Button variant="outline" className="w-full">
-                                                Agregar Publicación
-                                            </Button>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        )}
-
-                        {userData.role === "admin" && (
+                        {user.role === "admin" && (
                             <TabsContent value="activity" className="space-y-6 pt-4">
                                 <Card>
                                     <CardHeader>
@@ -483,7 +316,7 @@ export default function ProfilePage() {
                             </TabsContent>
                         )}
 
-                        {userData.role === "admin" && (
+                        {user.role === "admin" && (
                             <TabsContent value="permissions" className="space-y-6 pt-4">
                                 <Card>
                                     <CardHeader>
