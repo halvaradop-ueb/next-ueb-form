@@ -38,6 +38,7 @@ const questionTypes: Record<Question["question_type"], string> = {
     text: "Texto",
     single_choice: "Selección única",
     multiple_choice: "Selección múltiple",
+    numeric: "Numérico",
 }
 
 const categories: Record<string, string> = {
@@ -125,7 +126,7 @@ const QuizzesPage = () => {
         return Object.keys(errors).length === 0
     }
 
-    const handleAddNewQuestion = () => {
+    const handleAddNewQuestion = async () => {
         if (!isValidForm()) {
             return false
         }
@@ -140,11 +141,18 @@ const QuizzesPage = () => {
         }
 
         if (idleForm === "create") {
+            setTextOptions("")
             addQuestion(finalQuestion)
             setQuestions((previous) => [...previous, finalQuestion])
         } else {
-            updateQuestion(finalQuestion)
-            setQuestions((previous) => previous.map((q) => (q.id === finalQuestion.id ? finalQuestion : q)))
+            setTextOptions("")
+            await updateQuestion(finalQuestion)
+            /*
+                TODO: clean up question options
+                HARD CODED
+            */
+            const questions = await getQuestions()
+            setQuestions(questions)
         }
         setIsOpenDialog(false)
         return true
@@ -232,13 +240,14 @@ const QuizzesPage = () => {
                                 <div>
                                     <Select value={filterQuestionType} onValueChange={setFilterQuestionType}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Tipo de pregunta" />
+                                            <SelectValue placeholder="1de pregunta" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Todos los tipos</SelectItem>
                                             <SelectItem value="text">Respuesta de texto</SelectItem>
                                             <SelectItem value="single_choice">Selección única</SelectItem>
                                             <SelectItem value="multiple_choice">Selección múltiple</SelectItem>
+                                            <SelectItem value="numeric">Numérico</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -326,6 +335,7 @@ const QuizzesPage = () => {
                                                 <SelectItem value="text">Respuesta de texto</SelectItem>
                                                 <SelectItem value="single_choice">Selección única</SelectItem>
                                                 <SelectItem value="multiple_choice">Selección múltiple</SelectItem>
+                                                <SelectItem value="numeric">Numérico</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

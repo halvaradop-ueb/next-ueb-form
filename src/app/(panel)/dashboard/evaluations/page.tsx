@@ -18,7 +18,7 @@ const EvaluationsPage = async () => {
                 <p className="text-gray-600">Evaluación de los docentes por parte de los estudiantes</p>
             </div>
             {userRole === "student" && <StudentForm />}
-            {userRole === "proffessor" && <ProffessorForm />}
+            {userRole === "professor" && <ProffessorForm />}
         </div>
     )
 }

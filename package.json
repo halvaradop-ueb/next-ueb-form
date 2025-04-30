@@ -12,6 +12,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@halvaradop/ts-utility-types": "^0.19.0",
     "@halvaradop/ui-button": "0.4.0-beta.1",
     "@halvaradop/ui-dialog": "0.3.0-beta.1",
     "@halvaradop/ui-form": "0.2.0-beta.1",

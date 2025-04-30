@@ -3,7 +3,7 @@ export interface FormState {
     message: string
 }
 
-export type Role = "admin" | "student" | "proffessor"
+export type Role = "admin" | "student" | "professor"
 
 export interface ReportState {
     title: string
@@ -20,4 +20,17 @@ export interface FeedbackState {
     subject: string
     timeframe: string
     averageRating: number
+}
+
+export interface StudentFormState {
+    professor: string
+    subject: string
+    answers: Record<string, string | string[]>
+    comment: string
+    rating: number
+}
+
+export interface ProfessorFormState {
+    subject: string
+    answers: Record<string, string | string[]>
 }

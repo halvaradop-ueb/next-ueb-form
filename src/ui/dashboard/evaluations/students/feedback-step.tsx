@@ -3,13 +3,15 @@ import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
+import { FeedbackStepProps } from "@/lib/@types/props"
 
-export function FeedbackStep() {
+export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
     const [sliderValue, setSliderValue] = useState(0)
 
     const handleSliderChange = (value: number[]) => {
         const newValue = value[0]
         setSliderValue(newValue)
+        setFormData("rating", newValue)
     }
 
     return (
@@ -44,7 +46,13 @@ export function FeedbackStep() {
 
                 <div className="space-y-2">
                     <Label htmlFor="comments">Comentarios</Label>
-                    <Textarea id="comments" placeholder="Comparte tus pensamientos y comentarios..." className="min-h-[150px]" />
+                    <Textarea
+                        className="min-h-[150px]"
+                        value={formData.comment}
+                        id="comments"
+                        placeholder="Comparte tus pensamientos y comentarios..."
+                        onChange={(e) => setFormData("comment", e.target.value)}
+                    />
                 </div>
             </div>
         </div>

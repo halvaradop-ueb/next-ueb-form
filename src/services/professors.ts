@@ -1,7 +1,7 @@
-import { ProffessorService } from "@/lib/@types/services"
+import { ProfessorService } from "@/lib/@types/services"
 import { getUsers } from "./users"
 
-export const getProfessors = async (): Promise<ProffessorService[]> => {
+export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
         const professors = await getUsers()
         return professors.filter((professor) => professor.role === "professor")

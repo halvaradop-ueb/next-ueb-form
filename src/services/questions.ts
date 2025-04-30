@@ -42,7 +42,6 @@ export const getQuestions = async (): Promise<Question[]> => {
 
 export const addQuestion = async (question: Question): Promise<Question | null> => {
     try {
-        console.log("Adding question:", question)
         const { id, options, ...spread } = question
         const { data: questionId, error } = await supabase.from("question").insert(spread).select("id").single()
         if (error) {
@@ -65,13 +64,27 @@ export const addQuestion = async (question: Question): Promise<Question | null> 
     }
 }
 
+export const cleanQuestionOptions = async (questionId: string): Promise<boolean> => {
+    try {
+        const { error } = await supabase.from("questionoptions").delete().eq("question_id", questionId)
+        if (error) {
+            throw new Error(`Error cleaning question options: ${error.message}`)
+        }
+        return true
+    } catch (error) {
+        console.error("Error cleaning question:", error)
+        return false
+    }
+}
+
 export const updateQuestion = async (question: Question): Promise<Question | null> => {
     try {
         const { id, options, ...spread } = question
-        const { error } = await supabase.from("question").update(spread).eq("id", id)
+        const { data, error } = await supabase.from("question").update(spread).eq("id", id)
         if (error) {
             throw new Error(`Error updating question: ${error.message}`)
         }
+        cleanQuestionOptions(id)
         if (question.question_type === "single_choice" || question.question_type === "multiple_choice") {
             const questionOptions = options?.map<Omit<QuestionOptionService, "id">>((option) => ({
                 question_id: id,
@@ -82,7 +95,7 @@ export const updateQuestion = async (question: Question): Promise<Question | nul
                 throw new Error(`Error updating question options: ${error.message}`)
             }
         }
-        return question
+        return data
     } catch (error) {
         console.error("Error updating question:", error)
         return null
@@ -100,4 +113,16 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
         console.error("Error deleting question:", error)
         return false
     }
+}
+
+export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
+    const questions = await getQuestions()
+    const filteredQuestions = questions.filter((question) => question.target_audience === "student")
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.category)]
+}
+
+export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
+    const questions = await getQuestions()
+    const filteredQuestions = questions.filter((question) => question.target_audience === "professor")
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.category)]
 }
