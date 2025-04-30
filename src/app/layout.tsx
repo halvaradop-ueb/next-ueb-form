@@ -7,7 +7,7 @@ const geistSans = Geist({
     subsets: ["latin"],
 })
 
-export default function RootLayout({ children }: ChildrenProps) {
+export default async function RootLayout({ children }: ChildrenProps) {
     return (
         <html lang="en">
             <body className={`${geistSans.variable} antialiased`}>{children}</body>

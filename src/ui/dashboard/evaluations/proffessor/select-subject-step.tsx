@@ -30,7 +30,7 @@ export const SelectSubject = ({ formData, setFormData }: SelectSubjectStepProps<
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="selfEvalSubject">Asignatura</Label>
-                    <Select>
+                    <Select value={formData.subject} onValueChange={(value) => setFormData("subject", value)}>
                         <SelectTrigger id="selfEvalSubject">
                             <SelectValue placeholder="Seleccione una asignatura" />
                         </SelectTrigger>

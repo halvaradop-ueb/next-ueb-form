@@ -1,6 +1,7 @@
+import { Session } from "next-auth"
+import { hashPassword } from "./auth"
 import { supabase } from "@/lib/supabase/client"
 import type { UserService } from "@/lib/@types/services"
-import { Session } from "next-auth"
 
 export const getUsers = async (): Promise<UserService[]> => {
     try {
@@ -16,9 +17,15 @@ export const getUsers = async (): Promise<UserService[]> => {
     }
 }
 
-export const addUser = async (user: Pick<UserService, "created_at" | "id">): Promise<UserService | null> => {
+export const addUser = async (user: Omit<UserService, "created_at" | "id">): Promise<UserService | null> => {
     try {
-        const { data, error } = await supabase.from("User").insert(user).select().single()
+        const { password, ...spread } = user
+        const hashedPassword = await hashPassword(password)
+        const { data, error } = await supabase
+            .from("User")
+            .insert({ ...spread, password: hashedPassword })
+            .select()
+            .single()
         if (error) {
             throw new Error(`Error adding user: ${error.message}`)
         }
@@ -34,6 +41,19 @@ export const updateUser = async (user: UserService): Promise<UserService | null>
         const { data, error } = await supabase.from("User").update(user).eq("id", user.id).select().single()
         if (error) {
             throw new Error(`Error updating user: ${error.message}`)
+        }
+        if (data.password === user.password) {
+            const hashedPassword = await hashPassword(user.password)
+            const { data: updatedData, error: updateError } = await supabase
+                .from("User")
+                .update({ password: hashedPassword })
+                .eq("id", user.id)
+                .select()
+                .single()
+            if (updateError) {
+                throw new Error(`Error updating user password: ${updateError.message}`)
+            }
+            return updatedData
         }
         return data
     } catch (error) {
@@ -71,13 +91,4 @@ export const getAuthenticated = async (session: Session): Promise<UserService | 
         console.error("Error fetching logged user:", error)
         return null
     }
-}
-
-export const authenticate = async (email: string, password: string): Promise<UserService | null> => {
-    const { data, error } = await supabase.from("User").select("*").eq("email", email).eq("password", password).single()
-    if (error) {
-        console.error("Error fetching user:", error)
-        return null
-    }
-    return data
 }

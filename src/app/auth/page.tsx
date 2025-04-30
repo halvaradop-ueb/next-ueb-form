@@ -38,13 +38,13 @@ const AuthPage = () => {
                                     {state.message}
                                 </span>
                             )}
-                            <Button type="submit" className="w-full" disabled={isPending}>
+                            <Button type="submit" className="w-full hover:cursor-pointer" disabled={isPending}>
                                 Login
                             </Button>
                         </div>
                     </form>
                     <form action={signInWithGoogle}>
-                        <Button className="w-full mt-6" variant="outline" disabled={isPending}>
+                        <Button className="w-full mt-6 hover:cursor-pointer" variant="outline" disabled={isPending}>
                             Login with Google
                         </Button>
                     </form>

@@ -1,8 +1,11 @@
-import { StudentFormState } from "@/lib/@types/types"
+import { ProfessorFormState, StudentFormState } from "@/lib/@types/types"
 import { supabase } from "@/lib/supabase/client"
 import { isArray } from "@halvaradop/ts-utility-types/validate"
 
-export const addAnswer = async (answer: StudentFormState, studentId: string): Promise<boolean> => {
+export const addAnswer = async <User extends StudentFormState | ProfessorFormState>(
+    answer: User,
+    id: string,
+): Promise<boolean> => {
     try {
         const { answers } = answer
         Object.keys(answers).forEach(async (key) => {
@@ -10,7 +13,7 @@ export const addAnswer = async (answer: StudentFormState, studentId: string): Pr
                 .from("answer")
                 .insert({
                     question_id: key,
-                    student_id: studentId,
+                    user_id: id,
                 })
                 .select()
                 .single()

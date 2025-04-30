@@ -12,6 +12,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 import { addUser, deleteUser, getUsers, updateUser } from "@/services/users"
 import { UserService } from "@/lib/@types/services"
+import { cn } from "@/lib/utils"
+import { Role } from "@/lib/@types/types"
+
+const roles: Record<Role, string> = {
+    admin: "Administrador",
+    professor: "Docente",
+    student: "Estudiante",
+}
 
 const initialState: UserService = {
     id: "",
@@ -20,7 +28,7 @@ const initialState: UserService = {
     last_name: "",
     email: "",
     password: "",
-    role: "student",
+    role: "professor",
     status: true,
     address: "",
     phone: "",
@@ -77,6 +85,11 @@ const UserManagementPage = () => {
         alert("¡Usuario eliminado exitosamente!")
     }
 
+    const handleCancelEdit = () => {
+        setIdleForm("create")
+        setNewUser(initialState)
+    }
+
     useEffect(() => {
         const fetchUsers = async () => {
             const users = await getUsers()
@@ -130,12 +143,14 @@ const UserManagementPage = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredUsers.map((user) => (
-                                            <TableRow key={user.id}>
+                                            <TableRow className={cn({ "opacity-50": user.role === "student" })} key={user.id}>
                                                 <TableCell className="font-medium">
-                                                    {user.first_name} {user.last_name}
+                                                    {user.role === "student"
+                                                        ? `********`
+                                                        : `${user.first_name} ${user.last_name}`}
                                                 </TableCell>
-                                                <TableCell>{user.email}</TableCell>
-                                                <TableCell className="capitalize">{user.role}</TableCell>
+                                                <TableCell>{user.role === "student" ? `********` : user.email}</TableCell>
+                                                <TableCell className="capitalize">{roles[user.role]}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center">
                                                         <div
@@ -149,18 +164,25 @@ const UserManagementPage = () => {
                                                 <TableCell>{new Date().toLocaleString()}</TableCell>
                                                 <TableCell>
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
+                                                        <DropdownMenuTrigger
+                                                            className="hover:cursor-pointer"
+                                                            disabled={user.role === "student"}
+                                                            asChild
+                                                        >
                                                             <Button variant="ghost" size="icon">
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                                 <span className="sr-only">Acciones</span>
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleSetEdit(user)}>
+                                                            <DropdownMenuItem
+                                                                className="hover:cursor-pointer"
+                                                                onClick={() => handleSetEdit(user)}
+                                                            >
                                                                 Editar
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                className="text-red-600"
+                                                                className="text-red-600 hover:cursor-pointer"
                                                                 onClick={() => handleDeleteUser(user.id)}
                                                             >
                                                                 Eliminar
@@ -228,7 +250,6 @@ const UserManagementPage = () => {
                                                     <SelectValue placeholder="Seleccione un rol" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="student">Estudiante</SelectItem>
                                                     <SelectItem value="professor">Profesor</SelectItem>
                                                     <SelectItem value="admin">Administrador</SelectItem>
                                                 </SelectContent>
@@ -264,8 +285,13 @@ const UserManagementPage = () => {
                                     </div>
                                 </form>
                             </CardContent>
-                            <CardFooter>
+                            <CardFooter className="flex items-center gap-x-2">
                                 <Button onClick={handleSubmit}>Agregar Usuario</Button>
+                                {idleForm === "edit" && (
+                                    <Button variant="destructive" onClick={handleCancelEdit}>
+                                        Cancelar
+                                    </Button>
+                                )}
                             </CardFooter>
                         </Card>
                     </TabsContent>
