@@ -11,6 +11,7 @@ import { getQuestionsForProfessors } from "@/services/questions"
 import { defaultAnswer } from "@/lib/utils"
 import { ProfessorFormState } from "@/lib/@types/types"
 import { EvaluationStep } from "../students/evaluation-step"
+import { addAnswer } from "@/services/answer"
 
 const getSteps = (
     formData: ProfessorFormState,
@@ -87,6 +88,13 @@ export const ProffessorForm = () => {
         }))
     }
 
+    const handleSend = async () => {
+        if (!session || !session.user || !session.user.id) return
+        await addAnswer(formData, session.user.id)
+        setIndexStep(0)
+        setFormData(() => initialState(questions))
+    }
+
     const steps = getSteps(formData, handleChange, handleChangeAnswer, questionStages)
 
     useEffect(() => {
@@ -116,7 +124,7 @@ export const ProffessorForm = () => {
                         steps={steps}
                         onPrevStep={handlePrevStep}
                         onNextStep={handleNextStep}
-                        onSend={() => {}}
+                        onSend={handleSend}
                     />
                 </CardContent>
             </Card>

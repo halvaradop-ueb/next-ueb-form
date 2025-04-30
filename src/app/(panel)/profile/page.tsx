@@ -9,9 +9,16 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail, Phone, MapPin, BookOpen, Clock, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
+import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
 import { getAuthenticated, updateUser } from "@/services/users"
 import { UserService } from "@/lib/@types/services"
+import { Role } from "@/lib/@types/types"
+
+const roles: Record<Role, string> = {
+    admin: "Administrador",
+    professor: "Docente",
+    student: "Estudiante",
+}
 
 export default function ProfilePage() {
     const { data: session } = useSession()
@@ -34,7 +41,8 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const user = await getAuthenticated(session!)
+            if (!session) return
+            const user = await getAuthenticated(session)
             setUser(user!)
         }
         fetchUser()
@@ -79,7 +87,7 @@ export default function ProfilePage() {
                                     <p className="text-muted-foreground">Gestión de Proyectos</p>
                                 </div>
                                 <Badge variant="outline" className="capitalize">
-                                    {user.role ?? "admin"}
+                                    {roles[(user.role as Role) ?? "admin"]}
                                 </Badge>
                             </div>
                         </CardContent>
@@ -169,7 +177,7 @@ export default function ProfilePage() {
                                         {isEditing ? (
                                             <Input
                                                 id="phone"
-                                                value={user.phone}
+                                                value={user.phone ?? ""}
                                                 onChange={(e) => handleChange("phone", e.target.value)}
                                             />
                                         ) : (
@@ -184,7 +192,7 @@ export default function ProfilePage() {
                                         {isEditing ? (
                                             <Input
                                                 id="address"
-                                                value={user.address}
+                                                value={user.address ?? ""}
                                                 onChange={(e) => handleChange("address", e.target.value)}
                                             />
                                         ) : (

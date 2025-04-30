@@ -1,7 +1,8 @@
 import NextAuth, { User } from "next-auth"
-import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
-import { authenticate } from "@/services/users"
+import Credentials from "next-auth/providers/credentials"
+import { authenticate, checkAndRegisterUser } from "@/services/auth"
+import { GoogleProfile } from "./@types/types"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     providers: [
@@ -20,12 +21,28 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     id: isAuthenticated.id,
                     name: `${isAuthenticated.first_name} ${isAuthenticated.last_name}`,
                     email: isAuthenticated.email,
-                    password: isAuthenticated.password,
                     role: isAuthenticated.role,
+                }
+            },
+        }),
+        Google({
+            async profile(profile) {
+                const newUser = await checkAndRegisterUser(profile as GoogleProfile)
+                if (!newUser) {
+                    throw new Error("Error creating user")
+                }
+                return {
+                    id: newUser.id,
+                    role: "student",
+                    /**
+                     * TODO: Check if this is correct
+                     * May be undefined in the future
+                     */
+                    email: profile.email,
+                    name: "unknown",
                 } as User
             },
         }),
-        Google,
     ],
     callbacks: {
         async jwt({ user, token }) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { linksByRole } from "./components/dashboard/sidebar"
-import { Role } from "./lib/@types/types"
+import type { Role } from "./lib/@types/types"
 
 const getRoutesByRole = (role: Role) => {
     const routes = linksByRole[role]
@@ -30,7 +30,6 @@ export const middleware = async (request: NextRequest) => {
     if (!isRouteAllowed) {
         return NextResponse.redirect(new URL("/dashboard", url))
     }
-
     return NextResponse.next()
 }
 
