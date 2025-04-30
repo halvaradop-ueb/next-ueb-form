@@ -1,19 +1,34 @@
+"use client"
+import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { ProfessorService, Question, SubjectService } from "@/lib/@types/services"
+import { getProfessors } from "@/services/professors"
+import { SelectSubjectStepProps } from "@/lib/@types/props"
+import { getSubjectsByProfessorId } from "@/services/subjects"
 
-const proffessors = [
-    { value: "1", name: "Dr. García" },
-    { value: "2", name: "Prof. Martínez" },
-    { value: "3", name: "Dr. López" },
-]
+export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepProps) => {
+    const [subjects, setSubjects] = useState<SubjectService[]>([])
+    const [professors, setProfessors] = useState<ProfessorService[]>([])
+    const [questions, setQuestions] = useState<Question[]>([])
 
-const subjects = [
-    { value: "1", name: "Matemáticas" },
-    { value: "2", name: "Informática" },
-    { value: "3", name: "Física" },
-]
+    useEffect(() => {
+        const fetchData = async () => {
+            const [professors] = await Promise.all([getProfessors()])
+            setProfessors(professors)
+        }
+        fetchData()
+    }, [])
 
-export const SelectStep = () => {
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            const subjects = await getSubjectsByProfessorId(formData.professor)
+            setSubjects(subjects)
+        }
+        fetchSubjects()
+        setFormData("subject", null)
+    }, [formData.professor])
+
     return (
         <section>
             <div>
@@ -24,30 +39,34 @@ export const SelectStep = () => {
             </div>
             <form className="mt-6 space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="subject">Selecciona la materia</Label>
-                    <Select>
-                        <SelectTrigger className="w-full" id="subject">
-                            <SelectValue placeholder="Materia" />
+                    <Label htmlFor="proffessor">Selecciona al docente</Label>
+                    <Select value={formData.professor} onValueChange={(value) => setFormData("professor", value)}>
+                        <SelectTrigger className="w-full" id="proffessor">
+                            <SelectValue placeholder="Docente" />
                         </SelectTrigger>
                         <SelectContent>
-                            {subjects.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.name}
+                            {professors.map(({ id, first_name, last_name }) => (
+                                <SelectItem key={id} value={id}>
+                                    {first_name} {last_name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="proffessor">Selecciona al docente</Label>
-                    <Select>
-                        <SelectTrigger className="w-full" id="proffessor">
-                            <SelectValue placeholder="Docente" />
+                    <Label htmlFor="subject">Selecciona la materia</Label>
+                    <Select
+                        value={formData.subject}
+                        disabled={!formData.professor}
+                        onValueChange={(value) => setFormData("subject", value)}
+                    >
+                        <SelectTrigger className="w-full" id="subject">
+                            <SelectValue placeholder="Materia" />
                         </SelectTrigger>
                         <SelectContent>
-                            {proffessors.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.name}
+                            {subjects.map(({ id, name }) => (
+                                <SelectItem key={id} value={id}>
+                                    {name}
                                 </SelectItem>
                             ))}
                         </SelectContent>

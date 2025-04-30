@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client"
-import type { Feedback } from "@/lib/@types/services"
+import type { Feedback, FeedbackService } from "@/lib/@types/services"
+import { StudentFormState } from "@/lib/@types/types"
 
 export const getFeedback = async (professorId: string, subjectId: string): Promise<Feedback[]> => {
     try {
@@ -43,5 +44,28 @@ export const getAverageRatings = async (professorId: string, subjectId: string):
     } catch (error) {
         console.error("Error fetching feedback by rating:", error)
         return 0
+    }
+}
+
+export const addFeedback = async (feedback: StudentFormState, studentId: string): Promise<FeedbackService | null> => {
+    try {
+        const { subject, professor, comment } = feedback
+        const { data, error } = await supabase
+            .from("feedback")
+            .insert({
+                student_id: studentId,
+                subject_id: subject,
+                professor_id: professor,
+                feedback_text: comment,
+                rating: feedback.rating,
+            })
+            .single()
+        if (error) {
+            throw new Error(`Error adding feedback: ${error.message}`)
+        }
+        return data
+    } catch (error) {
+        console.error("Error adding feedback:", error)
+        return null
     }
 }

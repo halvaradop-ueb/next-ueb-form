@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getProfessors } from "@/services/professors"
 import { getFeedback, getAverageRatings } from "@/services/feedback"
 import { getSubjectsByProfessorId } from "@/services/subjects"
-import type { Feedback, ProffessorService, SubjectService } from "@/lib/@types/services"
+import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
 import type { FeedbackState } from "@/lib/@types/types"
 
 const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
@@ -27,7 +27,7 @@ const mockFeedbackData = {
 const FeedbackPage = () => {
     const [feedback, setFeedback] = useState<Feedback[]>([])
     const [subjects, setSubjects] = useState<SubjectService[]>([])
-    const [professors, setProfessors] = useState<ProffessorService[]>([])
+    const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [options, setOptions] = useState<FeedbackState>({} as FeedbackState)
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {

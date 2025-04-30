@@ -173,7 +173,9 @@ export default function ProfilePage() {
                                                 onChange={(e) => handleChange("phone", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.phone}</p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">
+                                                {user.phone ? user.phone : "+57"}
+                                            </p>
                                         )}
                                     </div>
 
@@ -198,73 +200,6 @@ export default function ProfilePage() {
                                     </CardFooter>
                                 )}
                             </Card>
-
-                            {/* {user.role === "professor" && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Información Académica</CardTitle>
-                                        <CardDescription>Detalles académicos y de oficina</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="department">Departamento</Label>
-                                            {isEditing ? (
-                                                <Input
-                                                    id="department"
-                                                    value={formData.department}
-                                                    onChange={(e) => handleChange("department", e.target.value)}
-                                                />
-                                            ) : (
-                                                <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                    {formData.department}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="office">Oficina</Label>
-                                            {isEditing ? (
-                                                <Input
-                                                    id="office"
-                                                    value={formData.office}
-                                                    onChange={(e) => handleChange("office", e.target.value)}
-                                                />
-                                            ) : (
-                                                <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                    {formData.office}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="officeHours">Horario de Oficina</Label>
-                                            {isEditing ? (
-                                                <Input
-                                                    id="officeHours"
-                                                    value={formData.officeHours}
-                                                    onChange={(e) => handleChange("officeHours", e.target.value)}
-                                                />
-                                            ) : (
-                                                <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                    {formData.officeHours}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label>Educación</Label>
-                                            {user.education.map((edu, index) => (
-                                                <div key={index} className="rounded-md border border-input bg-background p-3">
-                                                    <p className="font-medium">{edu.degree}</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {edu.institution}, {edu.year}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )} */}
                         </TabsContent>
 
                         {user.role === "admin" && (

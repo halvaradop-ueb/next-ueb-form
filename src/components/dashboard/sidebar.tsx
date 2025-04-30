@@ -29,7 +29,7 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             url: "/dashboard/evaluations",
         },
     ],
-    proffessor: [
+    professor: [
         {
             title: "Panel",
             url: "/dashboard",

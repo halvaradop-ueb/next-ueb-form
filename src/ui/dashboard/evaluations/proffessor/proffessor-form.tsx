@@ -1,26 +1,62 @@
 "use client"
-import { useState } from "react"
-import { CheckCircle2 } from "lucide-react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Confirmation } from "../confirmation"
-import { SelfEvaluation } from "./self-evaluation-step"
+import { SelectSubject } from "./select-subject-step"
+import { HeaderSteps } from "../header-steps"
+import { FooterSteps } from "../footer-steps"
+import { Question } from "@/lib/@types/services"
+import { useSession } from "next-auth/react"
+import { getQuestionsForProfessors } from "@/services/questions"
+import { defaultAnswer } from "@/lib/utils"
+import { ProfessorFormState } from "@/lib/@types/types"
+import { EvaluationStep } from "../students/evaluation-step"
 
-const steps = [
-    {
-        id: "step-1",
-        name: "Evaluación",
-        component: <SelfEvaluation />,
-    },
-    {
-        id: "step-4",
-        name: "Confirmación",
-        component: <Confirmation />,
-    },
-]
+const getSteps = (
+    formData: ProfessorFormState,
+    onChange: (key: keyof ProfessorFormState, value: any) => void,
+    onChangeAnswer: (key: string, value: any) => void,
+    stages: Partial<Record<string, Question[]>>,
+) => {
+    const mappedStages = Object.keys(stages).map((key, index) => ({
+        id: `step-${index + 10}`,
+        name: key,
+        component: (
+            <EvaluationStep
+                questions={stages[key] ?? []}
+                formData={formData as any}
+                setFormData={onChange as any}
+                onChangeAnswer={onChangeAnswer}
+            />
+        ),
+    }))
+    return [
+        {
+            id: "step-1",
+            name: "Evaluación",
+            component: <SelectSubject formData={formData} setFormData={onChange} />,
+        },
+        ...mappedStages,
+        {
+            id: "step-4",
+            name: "Confirmación",
+            component: <Confirmation />,
+        },
+    ]
+}
+
+const initialState = (questions: Question[]) => {
+    return {
+        answers: questions.reduce((previous, now) => ({ ...previous, [now.id]: defaultAnswer(now) }), {}),
+    } as ProfessorFormState
+}
 
 export const ProffessorForm = () => {
     const [indexStep, setIndexStep] = useState(0)
+    const [questions, setQuestions] = useState<Question[]>([])
+    const [formData, setFormData] = useState<ProfessorFormState>({} as ProfessorFormState)
+    const [questionStages, setQuestionStages] = useState<Partial<Record<string, Question[]>>>({})
+    const { data: session } = useSession()
 
     const handleNextStep = () => {
         if (indexStep < steps.length - 1) {
@@ -34,48 +70,54 @@ export const ProffessorForm = () => {
         }
     }
 
+    const handleChange = (key: keyof ProfessorFormState, value: any) => {
+        setFormData((previous) => ({
+            ...previous,
+            [key]: value,
+        }))
+    }
+
+    const handleChangeAnswer = (questionId: string, value: any) => {
+        setFormData((previous) => ({
+            ...previous,
+            answers: {
+                ...previous.answers,
+                [questionId]: value,
+            },
+        }))
+    }
+
+    const steps = getSteps(formData, handleChange, handleChangeAnswer, questionStages)
+
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            const [questions, questionsStages] = await getQuestionsForProfessors()
+            setQuestionStages(questionsStages)
+            const answers = questions.reduce((previous, now) => ({ ...previous, [now.id]: defaultAnswer(now) }), {})
+            setFormData((previous) => ({
+                ...previous,
+                answers,
+            }))
+            setQuestions(questions)
+        }
+        fetchQuestions()
+    }, [])
+
     return (
         <section className="space-y-8">
             <div className="flex flex-wrap justify-between gap-y-4">
-                {steps.map((step, index) => (
-                    <div key={step.id} className="flex flex-col items-center">
-                        <div className="flex items-center">
-                            <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                                    indexStep >= index
-                                        ? "border-primary bg-primary text-primary-foreground"
-                                        : "border-muted-foreground text-muted-foreground"
-                                }`}
-                            >
-                                {indexStep > index ? <CheckCircle2 className="h-6 w-6" /> : <span>{index + 1}</span>}
-                            </div>
-                            {index < steps.length - 1 && (
-                                <div className={`h-1 w-6 md:w-16 ${indexStep > index ? "bg-primary" : "bg-muted"}`} />
-                            )}
-                        </div>
-                        <span
-                            className={`mt-2 text-xs md:text-sm ${
-                                indexStep >= index ? "font-medium text-primary" : "text-muted-foreground"
-                            }`}
-                        >
-                            {step.name}
-                        </span>
-                    </div>
-                ))}
+                <HeaderSteps indexStep={indexStep} steps={steps} />
             </div>
             <Card>
                 <CardContent className="p-6">
                     <div className="min-h-[300px]">{steps[indexStep].component}</div>
-                    <div className="mt-8 flex justify-between">
-                        <Button variant="outline" onClick={handlePrevStep} disabled={indexStep === 0}>
-                            Anterior
-                        </Button>
-                        {indexStep < steps.length - 1 ? (
-                            <Button onClick={handleNextStep}>Siguiente</Button>
-                        ) : (
-                            <Button>Enviar</Button>
-                        )}
-                    </div>
+                    <FooterSteps
+                        indexStep={indexStep}
+                        steps={steps}
+                        onPrevStep={handlePrevStep}
+                        onNextStep={handleNextStep}
+                        onSend={() => {}}
+                    />
                 </CardContent>
             </Card>
         </section>

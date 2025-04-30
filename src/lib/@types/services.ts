@@ -3,7 +3,7 @@ export interface QuestionService {
     title: string
     description?: string
     category: string
-    question_type: "single_choice" | "multiple_choice" | "text"
+    question_type: "single_choice" | "multiple_choice" | "text" | "numeric"
     required: boolean
     target_audience: "student" | "professor"
 }
@@ -41,7 +41,7 @@ export interface UserService {
     phone: string
 }
 
-export interface ProffessorService extends UserService {}
+export interface ProfessorService extends UserService {}
 
 export interface SubjectService {
     id: string
@@ -62,4 +62,12 @@ export interface Feedback extends Omit<FeedbackService, "student_id" | "subject_
     subject: {
         name: string
     }
+}
+
+export interface AnswerService {
+    id: string
+    question_id: string
+    student_id: string
+    answer_text: string | string[]
+    selected_option: string
 }

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, FileText, Save } from "lucide-react"
 import { getProfessors } from "@/services/professors"
-import type { ProffessorService, SubjectService } from "@/lib/@types/services"
+import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import type { ReportState } from "@/lib/@types/types"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 
@@ -27,7 +27,7 @@ const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
 const AdminReportsPage = () => {
     const [activeTab, setActiveTab] = useState("new")
     const [subjects, setSubjects] = useState<SubjectService[]>([])
-    const [professors, setProfessors] = useState<ProffessorService[]>([])
+    const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [report, setReport] = useState<ReportState>({} as ReportState)
 
     const handleChange = (key: keyof ReportState, value: any) => {
