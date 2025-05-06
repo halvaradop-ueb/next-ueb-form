@@ -131,11 +131,11 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
 export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     const questions = await getQuestions()
     const filteredQuestions = questions.filter((question) => question.target_audience === "student")
-    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage_id)]
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage?.name!)]
 }
 
 export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     const questions = await getQuestions()
     const filteredQuestions = questions.filter((question) => question.target_audience === "professor")
-    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage_id)]
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage?.name!)]
 }

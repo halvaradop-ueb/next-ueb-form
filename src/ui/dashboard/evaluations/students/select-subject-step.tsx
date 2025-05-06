@@ -10,7 +10,6 @@ import { getSubjectsByProfessorId } from "@/services/subjects"
 export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepProps) => {
     const [subjects, setSubjects] = useState<SubjectService[]>([])
     const [professors, setProfessors] = useState<ProfessorService[]>([])
-    const [questions, setQuestions] = useState<Question[]>([])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -22,6 +21,7 @@ export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepPr
 
     useEffect(() => {
         const fetchSubjects = async () => {
+            if (!formData.professor) return
             const subjects = await getSubjectsByProfessorId(formData.professor)
             setSubjects(subjects)
         }

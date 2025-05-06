@@ -1,6 +1,7 @@
 import { Geist } from "next/font/google"
 import { ChildrenProps } from "@/lib/@types/props"
 import "@/ui/globals.css"
+import { updateDatabase } from "@/lib/utils"
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
