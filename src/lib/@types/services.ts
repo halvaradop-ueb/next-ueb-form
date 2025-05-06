@@ -2,14 +2,18 @@ export interface QuestionService {
     id: string
     title: string
     description?: string
-    category: string
     question_type: "single_choice" | "multiple_choice" | "text" | "numeric"
     required: boolean
     target_audience: "student" | "professor"
+    stage_id: string
 }
 
 export interface Question extends QuestionService {
     options?: string[] | null
+    stage: {
+        id: string
+        name: string
+    } | null
 }
 
 export interface QuestionOptionService {

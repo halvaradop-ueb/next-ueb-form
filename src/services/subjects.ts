@@ -16,15 +16,11 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     try {
-        const { data: relations, error: errorrelation } = await supabase.from("subjectassignment").select("*")
-
         const { data, error } = await supabase
             .from("subjectassignment")
             .select(
                 `
-                id,
-                assigned_at,
-                subject:subject (
+                subject (
                     id,
                     name,
                     description
@@ -35,7 +31,7 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
         if (error) {
             throw new Error(`Error fetching subjects by professor ID: ${error.message}`)
         }
-        return []
+        return data.map((relation) => relation.subject) as unknown as SubjectService[]
     } catch (error) {
         console.error("Error fetching subjects by professor ID:", error)
         return []

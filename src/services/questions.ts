@@ -3,13 +3,26 @@ import { Question, QuestionOptionService, QuestionService } from "@/lib/@types/s
 
 export const getQuestions = async (): Promise<Question[]> => {
     try {
-        const { data: questions, error } = await supabase.from("question").select()
+        const { data: questions, error } = await supabase.from("question").select(`
+                id,
+                title,
+                description,
+                question_type,
+                target_audience,
+                required,
+                target_audience,
+                stage_id,
+                stage: stage_id (
+                    id,
+                    name
+                )    
+            `)
         if (error) {
             throw new Error(`Error fetching questions: ${error.message}`)
         }
 
         const questionsWithOptions = await Promise.all(
-            questions.map(async (question: QuestionService) => {
+            questions.map(async (question: any) => {
                 if (["single_choice", "multiple_choice"].includes(question.question_type)) {
                     const { data: options, error } = await supabase
                         .from("questionoptions")
@@ -79,7 +92,7 @@ export const cleanQuestionOptions = async (questionId: string): Promise<boolean>
 
 export const updateQuestion = async (question: Question): Promise<Question | null> => {
     try {
-        const { id, options, ...spread } = question
+        const { id, options, stage, ...spread } = question
         const { data, error } = await supabase.from("question").update(spread).eq("id", id)
         if (error) {
             throw new Error(`Error updating question: ${error.message}`)
@@ -118,11 +131,11 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
 export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     const questions = await getQuestions()
     const filteredQuestions = questions.filter((question) => question.target_audience === "student")
-    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.category)]
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage_id)]
 }
 
 export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     const questions = await getQuestions()
     const filteredQuestions = questions.filter((question) => question.target_audience === "professor")
-    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.category)]
+    return [filteredQuestions, Object.groupBy(filteredQuestions, (question) => question.stage_id)]
 }

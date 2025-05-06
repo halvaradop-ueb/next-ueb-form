@@ -30,20 +30,16 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Question } from "@/lib/@types/services"
+import { Question, StageService } from "@/lib/@types/services"
 import { addQuestion, deleteQuestion, getQuestions, updateQuestion } from "@/services/questions"
 import { Search, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
+import { getStages } from "@/services/stages"
 
 const questionTypes: Record<Question["question_type"], string> = {
     text: "Texto",
     single_choice: "Selección única",
     multiple_choice: "Selección múltiple",
     numeric: "Numérico",
-}
-
-const categories: Record<string, string> = {
-    General: "General",
-    Personal: "Personal",
 }
 
 const audiences: Record<Question["target_audience"], string> = {
@@ -56,27 +52,34 @@ const initialState: Question = {
     title: "",
     description: "",
     question_type: "text",
-    category: "General",
+    options: [],
     required: true,
     target_audience: "student",
+    stage: null,
+    stage_id: "",
 }
 
 const QuizzesPage = () => {
+    const [stages, setStages] = useState<StageService[]>([])
     const [questions, setQuestions] = useState<Question[]>([])
     const [newQuestion, setNewQuestion] = useState<Question>(initialState)
     const [search, setSearch] = useState("")
     const [textOptions, setTextOptions] = useState("")
     const [isOpenDialog, setIsOpenDialog] = useState(false)
+
+    /**
+     * TODO: refactor this to use a reducer
+     */
     const [filterCategory, setFilterCategory] = useState<string>("all")
     const [idleForm, setIdleForm] = useState<"create" | "editar">("create")
     const [filterQuestionType, setFilterQuestionType] = useState<string>("all")
     const [filterAudience, setFilterAudience] = useState<string>("all")
     const [errors, setErrors] = useState({} as Record<keyof Question, string>)
 
-    const filteredQuestions = questions.filter(({ title, description, category, question_type, target_audience }) => {
+    const filteredQuestions = questions.filter(({ title, description, question_type, target_audience }) => {
         const matchesSearch =
             title.toLowerCase().includes(search.toLowerCase()) || description?.toLowerCase().includes(search.toLowerCase())
-        const matchesCategory = filterCategory === "all" || category === filterCategory
+        const matchesCategory = filterCategory === "all"
         const matchesType = filterQuestionType === "all" || question_type === filterQuestionType
         const matchesAudience = filterAudience === "all" || target_audience === filterAudience
         return matchesSearch && matchesCategory && matchesType && matchesAudience
@@ -187,8 +190,9 @@ const QuizzesPage = () => {
 
     useEffect(() => {
         const fetchQuestions = async () => {
-            const questions = await getQuestions()
+            const [questions, stages] = await Promise.all([getQuestions(), getStages()])
             setQuestions(questions)
+            setStages(stages)
         }
         fetchQuestions()
     }, [])
@@ -232,8 +236,13 @@ const QuizzesPage = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Todas las etapas</SelectItem>
-                                            <SelectItem value="Personal">Personal</SelectItem>
-                                            <SelectItem value="General">General</SelectItem>
+                                            {stages
+                                                .filter((stage) => stage.target_audience === newQuestion.target_audience)
+                                                .map((stage) => (
+                                                    <SelectItem key={stage.id} value={stage.name}>
+                                                        {stage.name}
+                                                    </SelectItem>
+                                                ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -307,17 +316,23 @@ const QuizzesPage = () => {
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="category">Etapa</Label>
+                                        <Label htmlFor="stage_id">Etapa</Label>
                                         <Select
-                                            value={newQuestion.category}
-                                            onValueChange={(valor) => handleUpdateField("category", valor)}
+                                            value={newQuestion.stage_id}
+                                            onValueChange={(valor) => handleUpdateField("stage_id", valor)}
                                         >
-                                            <SelectTrigger id="category">
+                                            <SelectTrigger id="stage_id">
                                                 <SelectValue placeholder="Seleccionar etapa" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="General">General</SelectItem>
-                                                <SelectItem value="Personal">Personal</SelectItem>
+                                                {/* TODO: FIX */}
+                                                {stages
+                                                    .filter((stage) => stage.target_audience === newQuestion.target_audience)
+                                                    .map((stage) => (
+                                                        <SelectItem key={stage.id} value={stage.id}>
+                                                            {stage.name}
+                                                        </SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -426,10 +441,10 @@ const QuizzesPage = () => {
                                             title,
                                             description,
                                             question_type,
-                                            category,
                                             required,
                                             target_audience,
                                             options,
+                                            stage,
                                         }) => (
                                             <TableRow key={id}>
                                                 <TableCell>
@@ -459,7 +474,7 @@ const QuizzesPage = () => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{audiences[target_audience]}</TableCell>
-                                                <TableCell>{categories[category]}</TableCell>
+                                                <TableCell>{stage && stage.name}</TableCell>
                                                 <TableCell>{questionTypes[question_type]}</TableCell>
                                                 <TableCell>
                                                     <Badge variant={required ? "default" : "secondary"}>
