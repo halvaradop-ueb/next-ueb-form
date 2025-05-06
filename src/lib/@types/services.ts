@@ -82,11 +82,16 @@ export interface SubjectAssignmentService {
     assigned_at: string
 }
 export interface SubjectAssignmentWithProfessorService {
+    id: string
     subject_id: string
     user: {
         id: string
         email: string
         first_name: string
         last_name: string
+    },
+    subject: {
+        id: string
+        name: string
     }
 }

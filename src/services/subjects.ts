@@ -17,7 +17,6 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     try {
         const { data: relations, error: errorrelation } = await supabase.from("subjectassignment").select("*")
-        console.log("Relations:", relations, ", Error:", errorrelation)
 
         const { data, error } = await supabase
             .from("subjectassignment")
@@ -76,7 +75,12 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
             .from("subjectassignment")
             .select(
                 `
+                id,
                 subject_id,
+                Subject: subject_id (
+                    id,
+                    name
+                ),
                 User: professor_id (
                     id,
                     first_name,
@@ -90,11 +94,52 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
             throw new Error(`Error fetching professors by subject ID: ${error.message}`)
         }
         return data.map((relation) => ({
+            id: relation.id,
             subject_id: relation.subject_id,
             user: relation.User,
+            subject: relation.Subject,
         })) as unknown as SubjectAssignmentWithProfessorService[]
     } catch (error) {
         console.error("Error fetching professors by subject ID:", error)
         return []
+    }
+}
+
+export const deleteAssignment = async (assignmentId: string): Promise<boolean> => {
+    try {
+        const { error } = await supabase.from("subjectassignment").delete().eq("id", assignmentId)
+        if (error) {
+            throw new Error(`Error deleting assignment: ${error.message}`)
+        }
+        return true
+    } catch (error) {
+        console.error("Error deleting assignment:", error)
+        return false
+    }
+}
+
+export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
+    try {
+        const { data, error } = await supabase.from("subject").insert(subject).select().single()
+        if (error) {
+            throw new Error(`Error adding subject: ${error.message}`)
+        }
+        return data
+    } catch (error) {
+        console.error("Error adding subject:", error)
+        return {} as SubjectService
+    }
+}
+
+export const deleteSubject = async (subjectId: string): Promise<boolean> => {
+    try {
+        const { error } = await supabase.from("subject").delete().eq("id", subjectId)
+        if (error) {
+            throw new Error(`Error deleting subject: ${error.message}`)
+        }
+        return true
+    } catch (error) {
+        console.error("Error deleting subject:", error)
+        return false
     }
 }

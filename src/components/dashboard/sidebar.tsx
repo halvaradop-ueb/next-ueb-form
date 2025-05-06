@@ -49,6 +49,10 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             url: "/dashboard",
         },
         {
+            title: "Etapas",
+            url: "/dashboard/stages",
+        },
+        {
             title: "Materias",
             url: "/dashboard/subjects",
         },

@@ -1,5 +1,5 @@
 import type { MouseEventHandler } from "react"
-import type { Question } from "./services"
+import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
 import type { ProfessorFormState, StudentFormState } from "./types"
 
 export interface ChildrenProps {
@@ -49,4 +49,15 @@ export interface FooterStepsProps {
 export interface FeedbackStepProps {
     formData: StudentFormState
     setFormData: (key: keyof StudentFormState, value: any) => void
+}
+
+export interface SubjectAssignmentProps {
+    subject: SubjectService
+    assignments: SubjectAssignmentWithProfessorService[]
+    expandedSubjects: string[]
+    setExpandedSubjects: (subjectId: string) => void
+    onCreateAssignment: (subjectId: string) => void
+    onEditSubject: (subjectId: string) => void
+    onDeleteSubject: (subjectId: string) => void
+    onDeleteAssignment: (assignmentId: string) => void
 }
