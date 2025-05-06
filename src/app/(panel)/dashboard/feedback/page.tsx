@@ -124,12 +124,11 @@ const FeedbackPage = () => {
                     </Select>
                 </div>
             </div>
-            <Tabs className="w-full">
+            <Tabs className="w-full" defaultValue="summary">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="summary" disabled={!options.professor || !options.subject}>
                         Resumen
                     </TabsTrigger>
-                    {/* <TabsTrigger value="ratings">Calificaciones</TabsTrigger> */}
                     <TabsTrigger value="comments" disabled={!options.professor || !options.subject}>
                         Comentarios
                     </TabsTrigger>
@@ -149,7 +148,7 @@ const FeedbackPage = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardTitle>Participación</CardTitle>
@@ -161,74 +160,8 @@ const FeedbackPage = () => {
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle>Promedios</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm">Calidad de Enseñanza</span>
-                                    <span className="font-medium">{mockFeedbackData.averageRatings.teachingQuality}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm">Conocimiento</span>
-                                    <span className="font-medium">{mockFeedbackData.averageRatings.knowledge}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm">Justicia</span>
-                                    <span className="font-medium">{mockFeedbackData.averageRatings.fairness}</span>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </div>
                 </TabsContent>
-                {/* <TabsContent value="ratings" className="space-y-4 pt-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Distribución de Calificaciones</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {[5, 4, 3, 2, 1].map((rating) => {
-                                const percentage =
-                                    (mockFeedbackData.ratingDistribution[
-                                        rating as keyof typeof mockFeedbackData.ratingDistribution
-                                    ] /
-                                        Object.values(mockFeedbackData.ratingDistribution).reduce((a, b) => a + b, 0)) *
-                                    100
-                                return (
-                                    <div key={rating} className="space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <span>{rating} Estrellas</span>
-                                            <span>{percentage.toFixed(0)}%</span>
-                                        </div>
-                                        <Progress value={percentage} className="h-2" />
-                                    </div>
-                                )
-                            })}
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Calificaciones por Categoría</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {Object.entries(mockFeedbackData.averageRatings)
-                                .filter(([key]) => key !== "overall")
-                                .map(([key, value]) => {
-                                    const percentage = (value / 5) * 100
-                                    return (
-                                        <div key={key} className="space-y-1">
-                                            <div className="flex items-center justify-between">
-                                                <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
-                                                <span>{value}/5</span>
-                                            </div>
-                                            <Progress value={percentage} className="h-2" />
-                                        </div>
-                                    )
-                                })}
-                        </CardContent>
-                    </Card>
-                </TabsContent> */}
                 <TabsContent value="comments" className="space-y-4 pt-4">
                     {feedback.length === 0 && (
                         <div className="flex items-center justify-center w-full h-32">

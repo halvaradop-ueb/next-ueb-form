@@ -49,6 +49,14 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             url: "/dashboard",
         },
         {
+            title: "Etapas",
+            url: "/dashboard/stages",
+        },
+        {
+            title: "Materias",
+            url: "/dashboard/subjects",
+        },
+        {
             title: "Cuestionarios",
             url: "/dashboard/quizzes",
         },
@@ -56,10 +64,13 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             title: "Feedback",
             url: "/dashboard/feedback",
         },
+        /*
+        TODO: implement reports       
         {
             title: "Informes",
             url: "/dashboard/reports",
         },
+        */
         {
             title: "Gestión de usuarios",
             url: "/dashboard/users",
@@ -93,8 +104,8 @@ export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sideb
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {routes.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                            {routes.map((item, index) => (
+                                <SidebarMenuItem key={index}>
                                     <SidebarMenuButton asChild>
                                         <Link href={item.url}>{item.title}</Link>
                                     </SidebarMenuButton>

@@ -2,14 +2,18 @@ export interface QuestionService {
     id: string
     title: string
     description?: string
-    category: string
     question_type: "single_choice" | "multiple_choice" | "text" | "numeric"
     required: boolean
     target_audience: "student" | "professor"
+    stage_id: string
 }
 
 export interface Question extends QuestionService {
     options?: string[] | null
+    stage: {
+        id: string
+        name: string
+    } | null
 }
 
 export interface QuestionOptionService {
@@ -47,6 +51,9 @@ export interface SubjectService {
     id: string
     name: string
     description: string
+    /**
+     * @deprecated
+     */
     professor_id: string
 }
 
@@ -70,4 +77,33 @@ export interface AnswerService {
     student_id: string
     answer_text: string | string[]
     selected_option: string
+}
+
+export interface SubjectAssignmentService {
+    id: string
+    professor_id: string
+    subject_id: string
+    assigned_at: string
+}
+export interface SubjectAssignmentWithProfessorService {
+    id: string
+    subject_id: string
+    user: {
+        id: string
+        email: string
+        first_name: string
+        last_name: string
+    }
+    subject: {
+        id: string
+        name: string
+    }
+}
+
+export interface StageService {
+    id: string
+    name: string
+    description: string
+    target_audience: "student" | "professor"
+    questions: Pick<QuestionService, "id" | "title" | "description">[]
 }
