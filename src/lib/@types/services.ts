@@ -47,6 +47,9 @@ export interface SubjectService {
     id: string
     name: string
     description: string
+    /**
+     * @deprecated
+     */
     professor_id: string
 }
 
@@ -70,4 +73,20 @@ export interface AnswerService {
     student_id: string
     answer_text: string | string[]
     selected_option: string
+}
+
+export interface SubjectAssignmentService {
+    id: string
+    professor_id: string
+    subject_id: string
+    assigned_at: string
+}
+export interface SubjectAssignmentWithProfessorService {
+    subject_id: string
+    user: {
+        id: string
+        email: string
+        first_name: string
+        last_name: string
+    }
 }

@@ -49,6 +49,10 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             url: "/dashboard",
         },
         {
+            title: "Materias",
+            url: "/dashboard/subjects",
+        },
+        {
             title: "Cuestionarios",
             url: "/dashboard/quizzes",
         },
@@ -93,8 +97,8 @@ export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sideb
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {routes.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                            {routes.map((item, index) => (
+                                <SidebarMenuItem key={index}>
                                     <SidebarMenuButton asChild>
                                         <Link href={item.url}>{item.title}</Link>
                                     </SidebarMenuButton>

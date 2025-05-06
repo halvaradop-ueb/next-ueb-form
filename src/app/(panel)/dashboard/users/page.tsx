@@ -106,7 +106,7 @@ const UserManagementPage = () => {
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">Todos los Usuarios</TabsTrigger>
                         <TabsTrigger value="student">Estudiantes</TabsTrigger>
-                        <TabsTrigger value="professor">Profesores</TabsTrigger>
+                        <TabsTrigger value="professor">Docentes</TabsTrigger>
                         <TabsTrigger value="admin">Administradores</TabsTrigger>
                     </TabsList>
                     <TabsContent value={activeTab} className="space-y-6 pt-4">
