@@ -58,7 +58,7 @@ const UserManagementPage = () => {
 
     const handleSetEdit = (user: UserService) => {
         setIdleForm("edit")
-        setNewUser(user)
+        setNewUser({ ...user, password: "" })
         document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
     }
 
