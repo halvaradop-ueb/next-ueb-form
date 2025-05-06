@@ -183,14 +183,14 @@ const SubjectsPage = () => {
         if (!validarFormularioMateria()) {
             return false
         }
-        const newSubject = await addSubject({
-            name: materiaActual.nombre,
-            description: materiaActual.descripcion,
-        })
         if (modoFormulario === "crear") {
+            const newSubject = await addSubject({
+                name: materiaActual.nombre,
+                description: materiaActual.descripcion,
+            })
             setSubjects((previous) => [...previous, newSubject])
         } else {
-            setSubjects((previous) => previous.map((subject) => (subject.id === newSubject.id ? newSubject : subject)))
+            //setSubjects((previous) => previous.map((subject) => (subject.id === newSubject.id ? newSubject : subject)))
         }
 
         setDialogoMateriaAbierto(false)

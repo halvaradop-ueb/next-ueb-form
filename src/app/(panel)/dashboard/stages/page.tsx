@@ -1,13 +1,13 @@
 "use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus, Pencil, Trash2, Save } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
     Dialog,
     DialogContent,
@@ -17,235 +17,109 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, Plus, Pencil, Trash2 } from "lucide-react"
+import { StageService } from "@/lib/@types/services"
+import { addStage, deleteStage, getStages, updateStage } from "@/services/stages"
 
-// Tipo para categorías
-interface Categoria {
-    id: string
-    nombre: string
-    descripcion: string
-    slug: string
-    preguntasAsociadas: number
-    tipo: "estudiante" | "profesor" // Nuevo campo para indicar a quién va dirigida la categoría
+const initialStage: StageService = {
+    id: "",
+    name: "",
+    description: "",
+    questions: [],
+    target_audience: "student",
 }
 
-export default function GestionCategoriasPage() {
-    // Estado para las categorías
-    const [categorias, setCategorias] = useState<Categoria[]>([
-        {
-            id: "cat1",
-            nombre: "Profesor",
-            descripcion: "Preguntas relacionadas con el desempeño del profesor",
-            slug: "profesor",
-            preguntasAsociadas: 12,
-            tipo: "estudiante", // Esta categoría es para que los estudiantes evalúen a los profesores
-        },
-        {
-            id: "cat2",
-            nombre: "Curso",
-            descripcion: "Preguntas sobre el contenido y estructura del curso",
-            slug: "curso",
-            preguntasAsociadas: 8,
-            tipo: "estudiante", // Esta categoría es para que los estudiantes evalúen el curso
-        },
-        {
-            id: "cat3",
-            nombre: "Metodología",
-            descripcion: "Preguntas sobre los métodos de enseñanza utilizados",
-            slug: "metodologia",
-            preguntasAsociadas: 6,
-            tipo: "estudiante", // Esta categoría es para que los estudiantes evalúen la metodología
-        },
-        {
-            id: "cat4",
-            nombre: "Evaluación",
-            descripcion: "Preguntas sobre los métodos de evaluación del curso",
-            slug: "evaluacion",
-            preguntasAsociadas: 5,
-            tipo: "profesor", // Esta categoría es para que los profesores evalúen sus métodos de evaluación
-        },
-        {
-            id: "cat5",
-            nombre: "General",
-            descripcion: "Preguntas generales sobre la experiencia educativa",
-            slug: "general",
-            preguntasAsociadas: 3,
-            tipo: "estudiante", // Esta categoría es para estudiantes
-        },
-    ])
+const StagePage = () => {
+    const [search, setSearch] = useState("")
+    const [openDialog, setOpenDialog] = useState(false)
+    const [stages, setStages] = useState<StageService[]>([])
+    const [stage, setStage] = useState<StageService>(initialStage)
+    const [textoConfirmacion, setTextoConfirmacion] = useState("")
+    const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
+    const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    const [stageToDelete, setStageToDelete] = useState<string | null>(null)
+    const [openDialogDeleteStage, setOpenDialogDeleteStage] = useState(false)
 
-    // Estado para búsqueda
-    const [busqueda, setBusqueda] = useState("")
-
-    // Estado para la categoría que se está editando o creando
-    const [categoriaActual, setCategoriaActual] = useState<Categoria>({
-        id: "",
-        nombre: "",
-        descripcion: "",
-        slug: "",
-        preguntasAsociadas: 0,
-        tipo: "estudiante", // Por defecto, las nuevas categorías son para estudiantes
-    })
-
-    // Estado para el modo del formulario (crear o editar)
-    const [modoFormulario, setModoFormulario] = useState<"crear" | "editar">("crear")
-
-    // Estado para controlar si el diálogo está abierto
-    const [dialogoAbierto, setDialogoAbierto] = useState(false)
-
-    // Estado para errores de validación
-    const [errores, setErrores] = useState<{ [key: string]: string }>({})
-
-    // Filtrar categorías según la búsqueda
-    const categoriasFiltradas = categorias.filter(
-        (categoria) =>
-            categoria.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            categoria.descripcion.toLowerCase().includes(busqueda.toLowerCase()),
+    const filteredStages = stages.filter(
+        (stage) =>
+            stage.name.toLowerCase().includes(search.toLowerCase()) ||
+            stage.description.toLowerCase().includes(search.toLowerCase()),
     )
 
-    // Función para iniciar la creación de una nueva categoría
-    const iniciarCrearCategoria = () => {
-        setCategoriaActual({
-            id: `cat${Date.now()}`,
-            nombre: "",
-            descripcion: "",
-            slug: "",
-            preguntasAsociadas: 0,
-            tipo: "estudiante", // Por defecto, las nuevas categorías son para estudiantes
-        })
-        setModoFormulario("crear")
-        setErrores({})
-        setDialogoAbierto(true)
+    const initStage = () => {
+        setErrors({})
+        setIdleForm("create")
+        setOpenDialog(true)
+        setStage(initialStage)
     }
 
-    // Función para iniciar la edición de una categoría existente
-    const iniciarEditarCategoria = (id: string) => {
-        const categoria = categorias.find((c) => c.id === id)
+    const handleSetEdit = (stageId: string) => {
+        const categoria = stages.find((stage) => stage.id === stageId)
         if (categoria) {
-            setCategoriaActual({ ...categoria })
-            setModoFormulario("editar")
-            setErrores({})
-            setDialogoAbierto(true)
+            setErrors({})
+            setIdleForm("edit")
+            setOpenDialog(true)
+            setStage({ ...categoria })
         }
     }
 
-    // Función para generar un slug a partir del nombre
-    const generarSlug = (nombre: string): string => {
-        return nombre
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9\s]/g, "")
-            .replace(/\s+/g, "-")
-    }
-
-    // Función para actualizar el slug cuando cambia el nombre
-    const actualizarSlug = (nombre: string) => {
-        const nuevoSlug = generarSlug(nombre)
-        setCategoriaActual((prev) => ({
-            ...prev,
-            slug: nuevoSlug,
-        }))
-    }
-
-    // Añadir estado para el texto de confirmación de eliminación
-    const [textoConfirmacion, setTextoConfirmacion] = useState("")
-    const [categoriaAEliminar, setCategoriaAEliminar] = useState<string | null>(null)
-    const [dialogoEliminarAbierto, setDialogoEliminarAbierto] = useState(false)
-
-    // Función para iniciar el proceso de eliminación
-    const iniciarEliminarCategoria = (id: string) => {
-        const categoria = categorias.find((c) => c.id === id)
-        if (categoria && categoria.preguntasAsociadas === 0) {
-            setCategoriaAEliminar(id)
+    const handleDeleteStage = async (stageId: string) => {
+        const categoria = stages.find((stage) => stage.id === stageId)
+        if (categoria && categoria.questions.length === 0) {
             setTextoConfirmacion("")
-            setDialogoEliminarAbierto(true)
+            setStageToDelete(stageId)
+            setOpenDialogDeleteStage(true)
         }
     }
 
-    // Función para confirmar la eliminación
-    const confirmarEliminarCategoria = () => {
-        if (categoriaAEliminar && textoConfirmacion.toLowerCase() === "eliminar") {
-            eliminarCategoria(categoriaAEliminar)
-            setDialogoEliminarAbierto(false)
-            setCategoriaAEliminar(null)
+    const handleConfirmDeleting = async () => {
+        if (stageToDelete && textoConfirmacion.toLowerCase() === "eliminar") {
+            await deleteStage(stageToDelete)
+            setStages((previous) => previous.filter((stage) => stage.id !== stageToDelete))
             setTextoConfirmacion("")
+            setStageToDelete(null)
+            setOpenDialogDeleteStage(false)
         }
     }
 
-    // Validar el formulario de categoría
-    const validarFormulario = (): boolean => {
+    const isValidForm = (): boolean => {
         const nuevosErrores: { [key: string]: string } = {}
 
-        // Validar nombre
-        if (!categoriaActual.nombre.trim()) {
-            nuevosErrores.nombre = "El nombre de la categoría es obligatorio"
+        if (!stage.name.trim()) {
+            nuevosErrores.name = "El nombre de la categoría es obligatorio"
         }
 
-        // Validar slug
-        if (!categoriaActual.slug.trim()) {
-            nuevosErrores.slug = "El slug es obligatorio"
-        } else if (!/^[a-z0-9-]+$/.test(categoriaActual.slug)) {
-            nuevosErrores.slug = "El slug solo puede contener letras minúsculas, números y guiones"
+        if (!stage.target_audience) {
+            nuevosErrores.target_audience = "Debe seleccionar para quién es la audiencia de la etapa"
         }
-
-        // Validar tipo
-        if (!categoriaActual.tipo) {
-            nuevosErrores.tipo = "Debe seleccionar para quién es la categoría"
-        }
-
-        // Verificar que el slug no esté duplicado (excepto para la misma categoría en modo edición)
-        const slugExistente = categorias.find(
-            (c) => c.slug === categoriaActual.slug && (modoFormulario === "crear" || c.id !== categoriaActual.id),
-        )
-        if (slugExistente) {
-            nuevosErrores.slug = "Este slug ya está en uso por otra categoría"
-        }
-
-        setErrores(nuevosErrores)
+        setErrors(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
     }
 
-    // Función para guardar una categoría (crear o actualizar)
-    const guardarCategoria = () => {
-        // Validar el formulario
-        if (!validarFormulario()) {
+    const handleSaveStage = async () => {
+        if (!isValidForm()) {
             return false
         }
-
-        if (modoFormulario === "crear") {
-            // Agregar nueva categoría
-            setCategorias([...categorias, categoriaActual])
+        if (idleForm === "create") {
+            const newStage = await addStage(stage)
+            setStages((previous) => [...previous, newStage!])
         } else {
-            // Actualizar categoría existente
-            setCategorias(categorias.map((c) => (c.id === categoriaActual.id ? categoriaActual : c)))
+            const updatedStage = await updateStage(stage)
+            if (!updatedStage) return
+            setStages((previous) => previous.map((stg) => (stg.id === stage.id ? updatedStage : stg)))
         }
-
-        setDialogoAbierto(false)
+        setOpenDialog(false)
         return true
     }
 
-    // Función para eliminar una categoría
-    const eliminarCategoria = (id: string) => {
-        setCategorias(categorias.filter((c) => c.id !== id))
-    }
-
-    // Función para actualizar campos de la categoría actual
-    const actualizarCampoCategoria = (campo: keyof Categoria, valor: any) => {
-        setCategoriaActual((prev) => ({
+    const handleChange = (campo: keyof StageService, valor: any) => {
+        setStage((prev) => ({
             ...prev,
             [campo]: valor,
         }))
 
-        // Si se actualiza el nombre, actualizar también el slug (solo en modo crear o si el slug no ha sido editado manualmente)
-        if (campo === "nombre" && (modoFormulario === "crear" || categoriaActual.slug === generarSlug(categoriaActual.nombre))) {
-            actualizarSlug(valor)
-        }
-
-        // Limpiar errores relacionados con el campo actualizado
-        if (errores[campo as string]) {
-            setErrores((prev) => {
+        if (errors[campo as string]) {
+            setErrors((prev) => {
                 const nuevosErrores = { ...prev }
                 delete nuevosErrores[campo as string]
                 return nuevosErrores
@@ -253,10 +127,18 @@ export default function GestionCategoriasPage() {
         }
     }
 
+    useEffect(() => {
+        const fetchStages = async () => {
+            const stages = await getStages()
+            setStages(stages)
+        }
+        fetchStages()
+    }, [])
+
     return (
         <section>
             <div className="container mx-auto py-6">
-                <h1 className="mb-6 text-3xl font-bold">Gestión de Categorías</h1>
+                <h1 className="mb-6 text-3xl font-bold">Gestión de Etapas</h1>
 
                 <div className="mb-6 flex items-center justify-between">
                     <div className="relative w-full max-w-sm">
@@ -265,109 +147,83 @@ export default function GestionCategoriasPage() {
                             type="search"
                             placeholder="Buscar categorías..."
                             className="pl-8"
-                            value={busqueda}
-                            onChange={(e) => setBusqueda(e.target.value)}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <Dialog open={dialogoAbierto} onOpenChange={setDialogoAbierto}>
+                    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
                         <DialogTrigger asChild>
-                            <Button onClick={iniciarCrearCategoria}>
+                            <Button onClick={initStage}>
                                 <Plus className="mr-2 h-4 w-4" />
-                                Nueva Categoría
+                                Nueva Etapa
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>
-                                    {modoFormulario === "crear" ? "Crear Nueva Categoría" : "Editar Categoría"}
-                                </DialogTitle>
+                                <DialogTitle>{idleForm === "create" ? "Crear Nueva Etapa" : "Editar Etapa"}</DialogTitle>
                                 <DialogDescription>
-                                    {modoFormulario === "crear"
-                                        ? "Crea una nueva categoría para clasificar preguntas."
-                                        : "Modifica los detalles de la categoría."}
+                                    {idleForm === "create"
+                                        ? "Crea una nueva etapa para clasificar preguntas."
+                                        : "Modifica los detalles de la etapa."}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="nombre" className="flex items-center">
+                                    <Label htmlFor="name" className="flex items-center">
                                         Nombre <span className="text-red-500 ml-1">*</span>
                                     </Label>
                                     <Input
-                                        id="nombre"
-                                        value={categoriaActual.nombre}
-                                        onChange={(e) => actualizarCampoCategoria("nombre", e.target.value)}
+                                        id="name"
+                                        value={stage.name}
+                                        onChange={(e) => handleChange("name", e.target.value)}
                                         placeholder="Ej: Metodología de enseñanza"
-                                        className={errores.nombre ? "border-red-500" : ""}
+                                        className={errors.name ? "border-red-500" : ""}
                                     />
-                                    {errores.nombre && <p className="text-sm text-red-500">{errores.nombre}</p>}
+                                    {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
                                 </div>
-
                                 <div className="space-y-2">
-                                    <Label htmlFor="descripcion">Descripción</Label>
+                                    <Label htmlFor="description">Descripción</Label>
                                     <Textarea
-                                        id="descripcion"
-                                        value={categoriaActual.descripcion}
-                                        onChange={(e) => actualizarCampoCategoria("descripcion", e.target.value)}
+                                        id="description"
+                                        value={stage.description}
+                                        onChange={(e) => handleChange("description", e.target.value)}
                                         placeholder="Describe el propósito de esta categoría..."
                                         className="min-h-[80px]"
                                     />
                                 </div>
-
                                 <div className="space-y-2">
-                                    <Label htmlFor="slug" className="flex items-center">
-                                        Slug <span className="text-red-500 ml-1">*</span>
-                                    </Label>
-                                    <div className="flex items-center space-x-2">
-                                        <Input
-                                            id="slug"
-                                            value={categoriaActual.slug}
-                                            onChange={(e) => actualizarCampoCategoria("slug", e.target.value)}
-                                            placeholder="ej-metodologia-ensenanza"
-                                            className={errores.slug ? "border-red-500" : ""}
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => actualizarSlug(categoriaActual.nombre)}
-                                        >
-                                            <Save className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Identificador único para la categoría. Solo letras minúsculas, números y guiones.
-                                    </p>
-                                    {errores.slug && <p className="text-sm text-red-500">{errores.slug}</p>}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipo" className="flex items-center">
-                                        Tipo de categoría <span className="text-red-500 ml-1">*</span>
+                                    <Label htmlFor="target_audience" className="flex items-center">
+                                        Tipo de la etapa <span className="text-red-500 ml-1">*</span>
                                     </Label>
                                     <Select
-                                        value={categoriaActual.tipo}
-                                        onValueChange={(valor) => actualizarCampoCategoria("tipo", valor)}
+                                        value={stage.target_audience}
+                                        onValueChange={(valor) => handleChange("target_audience", valor)}
                                     >
-                                        <SelectTrigger id="tipo" className={errores.tipo ? "border-red-500" : ""}>
-                                            <SelectValue placeholder="Seleccionar tipo" />
+                                        <SelectTrigger
+                                            id="target_audience"
+                                            className={errors.target_audience ? "border-red-500" : ""}
+                                        >
+                                            <SelectValue placeholder="Seleccionar target_audience" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="estudiante">Para Estudiantes</SelectItem>
-                                            <SelectItem value="profesor">Para Profesores</SelectItem>
+                                            <SelectItem value="student">Para Estudiantes</SelectItem>
+                                            <SelectItem value="professor">Para Profesores</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-xs text-muted-foreground">
-                                        Indica si esta categoría de preguntas será respondida por estudiantes o profesores.
-                                    </p>
-                                    {errores.tipo && <p className="text-sm text-red-500">{errores.tipo}</p>}
+                                    <span className="text-xs text-muted-foreground">
+                                        Indica si esta etapa de preguntas será respondida por estudiantes o profesores.
+                                    </span>
+                                    {errors.target_audience && (
+                                        <span className="text-sm text-red-500">{errors.target_audience}</span>
+                                    )}
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => setDialogoAbierto(false)}>
+                                <Button variant="outline" onClick={() => setOpenDialog(false)}>
                                     Cancelar
                                 </Button>
-                                <Button onClick={guardarCategoria}>
-                                    {modoFormulario === "crear" ? "Crear Categoría" : "Guardar Cambios"}
+                                <Button onClick={handleSaveStage}>
+                                    {idleForm === "create" ? "Crear Etapa" : "Guardar Cambios"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -381,40 +237,32 @@ export default function GestionCategoriasPage() {
                                 <TableRow>
                                     <TableHead>Nombre</TableHead>
                                     <TableHead>Descripción</TableHead>
-                                    <TableHead>Slug</TableHead>
-                                    <TableHead>Tipo</TableHead>
+                                    <TableHead>Audiencia</TableHead>
                                     <TableHead>Preguntas</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {categoriasFiltradas.length === 0 ? (
+                                {filteredStages.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                                             No se encontraron categorías que coincidan con la búsqueda.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    categoriasFiltradas.map((categoria) => (
-                                        <TableRow key={categoria.id}>
-                                            <TableCell className="font-medium">{categoria.nombre}</TableCell>
-                                            <TableCell className="max-w-xs truncate">{categoria.descripcion}</TableCell>
+                                    filteredStages.map((stage) => (
+                                        <TableRow key={stage.id}>
+                                            <TableCell className="font-medium">{stage.name}</TableCell>
+                                            <TableCell className="max-w-xs truncate">{stage.description}</TableCell>
                                             <TableCell>
-                                                <Badge variant="outline">{categoria.slug}</Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={categoria.tipo === "estudiante" ? "default" : "secondary"}>
-                                                    {categoria.tipo === "estudiante" ? "Estudiante" : "Profesor"}
+                                                <Badge variant={stage.target_audience === "student" ? "default" : "secondary"}>
+                                                    {stage.target_audience === "student" ? "Estudiante" : "Profesor"}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell>{categoria.preguntasAsociadas}</TableCell>
+                                            <TableCell>{stage.questions.length}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => iniciarEditarCategoria(categoria.id)}
-                                                    >
+                                                    <Button variant="ghost" size="icon" onClick={() => handleSetEdit(stage.id)}>
                                                         <Pencil className="h-4 w-4" />
                                                         <span className="sr-only">Editar</span>
                                                     </Button>
@@ -422,19 +270,17 @@ export default function GestionCategoriasPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        disabled={categoria.preguntasAsociadas > 0}
+                                                        disabled={stage.questions.length > 0}
                                                         title={
-                                                            categoria.preguntasAsociadas > 0
+                                                            stage.questions.length > 0
                                                                 ? "No se puede eliminar una categoría con preguntas asociadas"
                                                                 : "Eliminar categoría"
                                                         }
-                                                        onClick={() => iniciarEliminarCategoria(categoria.id)}
+                                                        onClick={() => handleDeleteStage(stage.id)}
                                                     >
                                                         <Trash2
                                                             className={`h-4 w-4 ${
-                                                                categoria.preguntasAsociadas > 0
-                                                                    ? "text-gray-400"
-                                                                    : "text-red-500"
+                                                                stage.questions.length > 0 ? "text-gray-400" : "text-red-500"
                                                             }`}
                                                         />
                                                         <span className="sr-only">Eliminar</span>
@@ -449,29 +295,27 @@ export default function GestionCategoriasPage() {
                     </CardContent>
                 </Card>
             </div>
-            <Dialog open={dialogoEliminarAbierto} onOpenChange={setDialogoEliminarAbierto}>
+            <Dialog open={openDialogDeleteStage} onOpenChange={setOpenDialogDeleteStage}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle className="text-red-600">Confirmar eliminación de categoría</DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription asChild>
                             <div className="space-y-4 pt-2">
                                 <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800">
-                                    <p className="font-medium">¡Atención! Esta acción no se puede deshacer.</p>
-                                    <p className="mt-1">
+                                    <span className="font-medium">¡Atención! Esta acción no se spanuede deshacer.</span>
+                                    <span className="mt-1">
                                         Está a punto de eliminar permanentemente una categoría del sistema. Esta acción:
-                                    </p>
+                                    </span>
                                     <ul className="list-disc pl-5 mt-2 space-y-1">
                                         <li>Eliminará la categoría de forma permanente</li>
                                         <li>Podría afectar a la organización de las preguntas</li>
                                         <li>Podría impactar en reportes históricos</li>
                                     </ul>
                                 </div>
-
-                                <p>
+                                <span>
                                     Para confirmar que desea eliminar esta categoría, escriba{" "}
                                     <span className="font-bold">eliminar</span> en el campo a continuación:
-                                </p>
-
+                                </span>
                                 <Input
                                     value={textoConfirmacion}
                                     onChange={(e) => setTextoConfirmacion(e.target.value)}
@@ -481,13 +325,13 @@ export default function GestionCategoriasPage() {
                             </div>
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => setDialogoEliminarAbierto(false)}>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setOpenDialogDeleteStage(false)}>
                             Cancelar
                         </Button>
                         <Button
                             variant="destructive"
-                            onClick={confirmarEliminarCategoria}
+                            onClick={handleConfirmDeleting}
                             disabled={textoConfirmacion.toLowerCase() !== "eliminar"}
                         >
                             Eliminar Categoría
@@ -498,3 +342,5 @@ export default function GestionCategoriasPage() {
         </section>
     )
 }
+
+export default StagePage

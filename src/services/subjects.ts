@@ -35,7 +35,6 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
         if (error) {
             throw new Error(`Error fetching subjects by professor ID: ${error.message}`)
         }
-        console.log("Subjects by professor ID:", data)
         return []
     } catch (error) {
         console.error("Error fetching subjects by professor ID:", error)

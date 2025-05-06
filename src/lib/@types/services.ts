@@ -95,3 +95,11 @@ export interface SubjectAssignmentWithProfessorService {
         name: string
     }
 }
+
+export interface StageService {
+    id: string
+    name: string
+    description: string
+    target_audience: "student" | "professor"
+    questions: Pick<QuestionService, "id" | "title" | "description">[]
+}
