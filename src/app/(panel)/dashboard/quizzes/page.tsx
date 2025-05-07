@@ -88,7 +88,7 @@ const QuizzesPage = () => {
     const handleCreateQuestion = () => {
         setNewQuestion({
             ...initialState,
-            id: `p${Date.now()}`,
+            id: crypto.randomUUID(),
         })
         setTextOptions("")
         setIdleForm("create")
