@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { Question } from "./@types/services"
+import { Feedback, Question } from "./@types/services"
 import { supabase } from "./supabase/client"
 import { hashPassword } from "@/services/auth"
 
@@ -32,4 +32,49 @@ export const updateDatabase = async (role: string, value: string) => {
     } else {
         console.log("Admin password updated successfully:", data)
     }
+}
+
+export const ratingFeedback = (feedback: Feedback[] = []) => {
+    const n = feedback.length
+    const groupBy = Object.groupBy(feedback, (item) => item.rating)
+    return Array.from({ length: 10 }).map((_, index) => {
+        const quantity = groupBy[index + 1]?.length || 0
+        const percentage = (quantity / n) * 100
+        return {
+            rating: index + 1,
+            percentage: percentage ? percentage.toFixed(2) : "0",
+        }
+    })
+}
+
+export const getAverageRatings = (feedback: Feedback[]) => {
+    const n = feedback.length
+    return n ? feedback.reduce((previous, now) => previous + now.rating, 0) / n : 0
+}
+
+export const createPeriods = (start: Date) => {
+    const periods = []
+    const now = new Date()
+    let startDate = new Date(start)
+    while (startDate < now) {
+        const endDate = new Date(startDate)
+        endDate.setMonth(endDate.getMonth() + 6)
+        endDate.setDate(endDate.getDate() - 1)
+        const period = startDate.getMonth() === 0 ? 1 : 2
+        const name = `Periodo ${startDate.getFullYear()} - ${period}`
+        periods.unshift({ start: new Date(startDate), end: new Date(endDate), name })
+        startDate.setMonth(startDate.getMonth() + 6)
+    }
+    periods.unshift({ start: new Date(start), end: new Date("2050-01-01"), name: "Todos los periodos" })
+    return periods
+}
+
+export const filterByPeriod = (feedback: Feedback[], date: string) => {
+    return feedback.filter((item) => {
+        const dateItem = new Date(item.feedback_date)
+        const split = date.split(" - ")
+        const start = new Date(split[0])
+        const end = new Date(split[1])
+        return dateItem >= start && dateItem <= end
+    })
 }
