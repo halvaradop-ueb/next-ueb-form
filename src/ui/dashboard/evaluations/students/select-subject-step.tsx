@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { ProfessorService, Question, SubjectService } from "@/lib/@types/services"
+import { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
 import { SelectSubjectStepProps } from "@/lib/@types/props"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 
-export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepProps) => {
+export const SelectSubjectStep = ({ formData, errors, setFormData }: SelectSubjectStepProps) => {
     const [subjects, setSubjects] = useState<SubjectService[]>([])
     const [professors, setProfessors] = useState<ProfessorService[]>([])
 
@@ -39,9 +39,12 @@ export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepPr
             </div>
             <form className="mt-6 space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="proffessor">Selecciona al docente</Label>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="professor">Selecciona al docente</Label>
+                        <span className="text-red-500 text-sm">*</span>
+                    </div>
                     <Select value={formData.professor} onValueChange={(value) => setFormData("professor", value)}>
-                        <SelectTrigger className="w-full" id="proffessor">
+                        <SelectTrigger className="w-full" id="professor">
                             <SelectValue placeholder="Docente" />
                         </SelectTrigger>
                         <SelectContent>
@@ -52,9 +55,13 @@ export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepPr
                             ))}
                         </SelectContent>
                     </Select>
+                    {errors.professor && <p className="text-red-500 text-sm">{errors.professor}</p>}
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="subject">Selecciona la materia</Label>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="subject">Selecciona la materia</Label>
+                        <span className="text-red-500 text-sm">*</span>
+                    </div>
                     <Select
                         value={formData.subject}
                         disabled={!formData.professor}
@@ -71,6 +78,7 @@ export const SelectSubjectStep = ({ formData, setFormData }: SelectSubjectStepPr
                             ))}
                         </SelectContent>
                     </Select>
+                    {errors.subject && <p className="text-red-500 text-sm">{errors.subject}</p>}
                 </div>
             </form>
         </section>
