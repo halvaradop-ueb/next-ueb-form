@@ -22,7 +22,7 @@ import { StageService } from "@/lib/@types/services"
 import { addStage, deleteStage, getStages, updateStage } from "@/services/stages"
 
 const initialStage: StageService = {
-    id: "",
+    id: crypto.randomUUID(),
     name: "",
     description: "",
     questions: [],
@@ -34,9 +34,9 @@ const StagePage = () => {
     const [openDialog, setOpenDialog] = useState(false)
     const [stages, setStages] = useState<StageService[]>([])
     const [stage, setStage] = useState<StageService>(initialStage)
-    const [textoConfirmacion, setTextoConfirmacion] = useState("")
+    const [textConfirmation, setTextoConfirmacion] = useState("")
     const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
-    const [errors, setErrors] = useState<{ [key: string]: string }>({})
+    const [errors, setErrors] = useState<Record<string, string>>({})
     const [stageToDelete, setStageToDelete] = useState<string | null>(null)
     const [openDialogDeleteStage, setOpenDialogDeleteStage] = useState(false)
 
@@ -53,14 +53,11 @@ const StagePage = () => {
         setStage(initialStage)
     }
 
-    const handleSetEdit = (stageId: string) => {
-        const categoria = stages.find((stage) => stage.id === stageId)
-        if (categoria) {
-            setErrors({})
-            setIdleForm("edit")
-            setOpenDialog(true)
-            setStage({ ...categoria })
-        }
+    const handleSetEdit = (stage: StageService) => {
+        setErrors({})
+        setIdleForm("edit")
+        setOpenDialog(true)
+        setStage(stage)
     }
 
     const handleDeleteStage = async (stageId: string) => {
@@ -73,7 +70,7 @@ const StagePage = () => {
     }
 
     const handleConfirmDeleting = async () => {
-        if (stageToDelete && textoConfirmacion.toLowerCase() === "eliminar") {
+        if (stageToDelete && textConfirmation.toLowerCase() === "eliminar") {
             await deleteStage(stageToDelete)
             setStages((previous) => previous.filter((stage) => stage.id !== stageToDelete))
             setTextoConfirmacion("")
@@ -84,13 +81,16 @@ const StagePage = () => {
 
     const isValidForm = (): boolean => {
         const nuevosErrores: { [key: string]: string } = {}
-
         if (!stage.name.trim()) {
             nuevosErrores.name = "El nombre de la categoría es obligatorio"
-        }
-
-        if (!stage.target_audience) {
-            nuevosErrores.target_audience = "Debe seleccionar para quién es la audiencia de la etapa"
+        } else if (
+            stages.some(
+                (category) =>
+                    category.name.trim().toLowerCase() === stage.name.trim().toLowerCase() &&
+                    category.target_audience === stage.target_audience,
+            )
+        ) {
+            nuevosErrores.name = `Ya existe una etapa con este nombre para ${stage.target_audience === "student" ? "estudiantes" : "profesores"}`
         }
         setErrors(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
@@ -112,17 +112,17 @@ const StagePage = () => {
         return true
     }
 
-    const handleChange = (campo: keyof StageService, valor: any) => {
+    const handleChange = (field: keyof StageService, value: any) => {
         setStage((prev) => ({
             ...prev,
-            [campo]: valor,
+            [field]: value,
         }))
 
-        if (errors[campo as string]) {
+        if (errors[field as string]) {
             setErrors((prev) => {
-                const nuevosErrores = { ...prev }
-                delete nuevosErrores[campo as string]
-                return nuevosErrores
+                const newErrors = { ...prev }
+                delete newErrors[field as string]
+                return newErrors
             })
         }
     }
@@ -262,11 +262,10 @@ const StagePage = () => {
                                             <TableCell>{stage.questions.length}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleSetEdit(stage.id)}>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleSetEdit(stage)}>
                                                         <Pencil className="h-4 w-4" />
                                                         <span className="sr-only">Editar</span>
                                                     </Button>
-
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -317,7 +316,7 @@ const StagePage = () => {
                                     <span className="font-bold">eliminar</span> en el campo a continuación:
                                 </span>
                                 <Input
-                                    value={textoConfirmacion}
+                                    value={textConfirmation}
                                     onChange={(e) => setTextoConfirmacion(e.target.value)}
                                     placeholder="Escriba 'eliminar' para confirmar"
                                     className="mt-2"
@@ -332,7 +331,7 @@ const StagePage = () => {
                         <Button
                             variant="destructive"
                             onClick={handleConfirmDeleting}
-                            disabled={textoConfirmacion.toLowerCase() !== "eliminar"}
+                            disabled={textConfirmation.toLowerCase() !== "eliminar"}
                         >
                             Eliminar Categoría
                         </Button>

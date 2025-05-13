@@ -27,7 +27,11 @@ export const getStages = async (): Promise<StageService[]> => {
 export const addStage = async (stage: StageService): Promise<StageService | null> => {
     const { name, description, target_audience } = stage
     try {
-        const { data, error } = await supabase.from("stage").insert({ name, description, target_audience }).select().single()
+        const { data, error } = await supabase
+            .from("stage")
+            .insert({ name: name.trim(), description, target_audience })
+            .select()
+            .single()
         if (error) {
             throw new Error(`Error adding stage: ${error.message}`)
         }
