@@ -37,16 +37,6 @@ export const getFeedback = async (professorId: string, subjectId: string): Promi
     }
 }
 
-export const getAverageRatings = async (professorId: string, subjectId: string): Promise<number> => {
-    try {
-        const count = await getFeedback(professorId, subjectId)
-        return count.length ? count.reduce((previous, now) => previous + now.rating, 0) / count.length : 0
-    } catch (error) {
-        console.error("Error fetching feedback by rating:", error)
-        return 0
-    }
-}
-
 export const addFeedback = async (feedback: StudentFormState, studentId: string): Promise<FeedbackService | null> => {
     try {
         const { subject, professor, comment } = feedback

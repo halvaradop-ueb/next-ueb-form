@@ -1,3 +1,5 @@
+import { ratingFeedback } from "../utils"
+
 export interface FormState {
     idle: "idle" | "loading" | "success" | "error"
     message: string
@@ -16,10 +18,9 @@ export interface ReportState {
 }
 
 export interface FeedbackState {
-    professor: string
-    subject: string
+    professorId: string
+    subjectId: string
     timeframe: string
-    averageRating: number
 }
 
 export interface StudentFormState {
