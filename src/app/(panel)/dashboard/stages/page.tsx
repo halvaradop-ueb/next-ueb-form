@@ -34,7 +34,7 @@ const StagePage = () => {
     const [openDialog, setOpenDialog] = useState(false)
     const [stages, setStages] = useState<StageService[]>([])
     const [stage, setStage] = useState<StageService>(initialStage)
-    const [textConfirmation, setTextoConfirmacion] = useState("")
+    const [textConfirmation, setTextConfirmation] = useState("")
     const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [stageToDelete, setStageToDelete] = useState<string | null>(null)
@@ -63,7 +63,7 @@ const StagePage = () => {
     const handleDeleteStage = async (stageId: string) => {
         const categoria = stages.find((stage) => stage.id === stageId)
         if (categoria && categoria.questions.length === 0) {
-            setTextoConfirmacion("")
+            setTextConfirmation("")
             setStageToDelete(stageId)
             setOpenDialogDeleteStage(true)
         }
@@ -73,7 +73,7 @@ const StagePage = () => {
         if (stageToDelete && textConfirmation.toLowerCase() === "eliminar") {
             await deleteStage(stageToDelete)
             setStages((previous) => previous.filter((stage) => stage.id !== stageToDelete))
-            setTextoConfirmacion("")
+            setTextConfirmation("")
             setStageToDelete(null)
             setOpenDialogDeleteStage(false)
         }
@@ -317,7 +317,7 @@ const StagePage = () => {
                                 </span>
                                 <Input
                                     value={textConfirmation}
-                                    onChange={(e) => setTextoConfirmacion(e.target.value)}
+                                    onChange={(e) => setTextConfirmation(e.target.value)}
                                     placeholder="Escriba 'eliminar' para confirmar"
                                     className="mt-2"
                                 />
