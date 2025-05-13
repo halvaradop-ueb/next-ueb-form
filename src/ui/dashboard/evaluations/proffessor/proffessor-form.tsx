@@ -1,47 +1,54 @@
 "use client"
 import { useState, useEffect } from "react"
+import { z } from "zod"
+import { useSession } from "next-auth/react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Confirmation } from "../confirmation"
-import { SelectSubject } from "./select-subject-step"
 import { HeaderSteps } from "../header-steps"
 import { FooterSteps } from "../footer-steps"
-import { Question } from "@/lib/@types/services"
-import { useSession } from "next-auth/react"
-import { getQuestionsForProfessors } from "@/services/questions"
-import { defaultAnswer } from "@/lib/utils"
-import { ProfessorFormState } from "@/lib/@types/types"
+import { Confirmation } from "../confirmation"
+import { SelectSubject } from "./select-subject-step"
 import { EvaluationStep } from "../students/evaluation-step"
 import { addAnswer } from "@/services/answer"
+import { Question } from "@/lib/@types/services"
+import { AssignedProfessorSchema } from "@/lib/schema"
+import { defaultAnswer, generateSchema } from "@/lib/utils"
+import { getQuestionsForProfessors } from "@/services/questions"
+import type { ProfessorFormState, Step } from "@/lib/@types/types"
 
 const getSteps = (
     formData: ProfessorFormState,
+    errors: Record<string, string>,
     onChange: (key: keyof ProfessorFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
     stages: Partial<Record<string, Question[]>>,
-) => {
+): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
         id: `step-${index + 10}`,
         name: key,
         component: (
             <EvaluationStep
                 questions={stages[key] ?? []}
+                errors={errors}
                 formData={formData as any}
                 setFormData={onChange as any}
                 onChangeAnswer={onChangeAnswer}
             />
         ),
+        schema: generateSchema(stages[key]) ?? z.object({}),
     }))
     return [
         {
             id: "step-1",
             name: "Evaluación",
-            component: <SelectSubject formData={formData} setFormData={onChange} />,
+            component: <SelectSubject formData={formData} errors={errors} setFormData={onChange} />,
+            schema: AssignedProfessorSchema,
         },
         ...mappedStages,
         {
             id: "step-4",
             name: "Confirmación",
             component: <Confirmation />,
+            schema: z.object({}),
         },
     ]
 }
@@ -53,11 +60,12 @@ const initialState = (questions: Question[]) => {
 }
 
 export const ProffessorForm = () => {
+    const { data: session } = useSession()
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
     const [formData, setFormData] = useState<ProfessorFormState>({} as ProfessorFormState)
+    const [errors, setErrors] = useState<Record<string, string>>({})
     const [questionStages, setQuestionStages] = useState<Partial<Record<string, Question[]>>>({})
-    const { data: session } = useSession()
 
     const handleNextStep = () => {
         if (indexStep < steps.length - 1) {
@@ -76,6 +84,13 @@ export const ProffessorForm = () => {
             ...previous,
             [key]: value,
         }))
+        if (errors[key]) {
+            setErrors((previous) => {
+                const newErrors = { ...previous }
+                delete newErrors[key]
+                return newErrors
+            })
+        }
     }
 
     const handleChangeAnswer = (questionId: string, value: any) => {
@@ -95,7 +110,7 @@ export const ProffessorForm = () => {
         setFormData(() => initialState(questions))
     }
 
-    const steps = getSteps(formData, handleChange, handleChangeAnswer, questionStages)
+    const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages)
 
     useEffect(() => {
         const fetchQuestions = async () => {

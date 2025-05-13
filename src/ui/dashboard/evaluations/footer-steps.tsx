@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { FooterStepsProps } from "@/lib/@types/props"
+import type { FooterStepsProps } from "@/lib/@types/props"
 
 export const FooterSteps = ({ steps, indexStep, onPrevStep, onNextStep, onSend }: FooterStepsProps) => {
     return (

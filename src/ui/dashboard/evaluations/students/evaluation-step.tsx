@@ -2,8 +2,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RenderQuestion } from "../render-question"
 import type { EvaluationStepProps } from "@/lib/@types/props"
+import type { FormSchema } from "@/lib/@types/types"
 
-export const EvaluationStep = ({ questions, formData, setFormData, onChangeAnswer }: EvaluationStepProps) => {
+export const EvaluationStep = <T extends FormSchema>({
+    questions,
+    formData,
+    errors,
+    setFormData,
+    onChangeAnswer,
+}: EvaluationStepProps<T>) => {
     return (
         <section>
             <div>
@@ -29,6 +36,7 @@ export const EvaluationStep = ({ questions, formData, setFormData, onChangeAnswe
                                 <RenderQuestion
                                     question={question}
                                     formData={formData}
+                                    errors={errors}
                                     setFormData={setFormData}
                                     onChange={onChangeAnswer}
                                 />
