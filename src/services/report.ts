@@ -1,7 +1,4 @@
-//cracion
 import { supabase } from "@/lib/supabase/client"
-
-// Definición de tipos
 export interface Report {
     id: string
     title: string
@@ -25,7 +22,6 @@ export interface Report {
         code?: string
     }
 }
-
 export interface CreateReportDto {
     title: string
     professor_id: string
@@ -34,7 +30,6 @@ export interface CreateReportDto {
     recommendations?: string
     status?: "draft" | "published"
 }
-
 type SupabaseReportResponse = {
     id: string
     title: string
@@ -60,12 +55,9 @@ type SupabaseReportResponse = {
           }[]
         | null
 }
-
-// Mapeador mejorado
 const mapReport = (data: SupabaseReportResponse): Report => {
     const professor = data.professor?.[0]
     const subject = data.subject?.[0]
-
     return {
         id: data.id,
         title: data.title,
@@ -94,8 +86,6 @@ const mapReport = (data: SupabaseReportResponse): Report => {
             : undefined,
     }
 }
-
-// Servicio para obtener reportes
 export const getReports = async (): Promise<Report[]> => {
     try {
         const { data, error } = await supabase
@@ -132,8 +122,6 @@ export const getReports = async (): Promise<Report[]> => {
         return []
     }
 }
-
-// Servicio para crear reportes
 export const createReport = async (reportData: CreateReportDto): Promise<Report | null> => {
     try {
         const professor = (
@@ -175,8 +163,6 @@ export const createReport = async (reportData: CreateReportDto): Promise<Report 
             .single()
 
         if (error) throw new Error(error.message)
-
-        // Para incluir relaciones en la respuesta
         const fullReport = await supabase
             .from("report")
             .select(

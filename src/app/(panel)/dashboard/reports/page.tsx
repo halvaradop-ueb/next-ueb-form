@@ -1,4 +1,3 @@
-//mejora
 "use client"
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
@@ -87,8 +86,8 @@ const AdminReportsPage = () => {
 
             const newReport = await createReport({
                 title: report.title,
-                professor_id: report.professor, // Solo el ID
-                subject_id: report.subject, // Solo el ID
+                professor_id: report.professor,
+                subject_id: report.subject,
                 comments: report.comments || "",
                 recommendations: report.recommendations || "",
                 status: "draft",
@@ -98,7 +97,6 @@ const AdminReportsPage = () => {
                 setSavedReports((prev) => [newReport, ...prev])
                 alert("Borrador guardado exitosamente!")
                 setActiveTab("saved")
-                // Resetear el formulario
                 setReport({
                     title: "",
                     professor: "",
@@ -133,16 +131,12 @@ const AdminReportsPage = () => {
             month: "long",
             day: "numeric",
         })
-
-        // Encabezado
         doc.setFillColor(30, 41, 59)
         doc.rect(0, 0, 210, 30, "F")
         doc.setFont("helvetica", "bold")
         doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
         doc.text("REPORTE DOCENTE", 105, 20, { align: "center" })
-
-        // Información del reporte
         doc.setFillColor(240, 240, 240)
         doc.rect(0, 30, 210, 10, "F")
         doc.setFontSize(14)
@@ -150,8 +144,6 @@ const AdminReportsPage = () => {
         doc.text(`Docente: ${professor?.first_name} ${professor?.last_name}`, 20, 45)
         doc.text(`Materia: ${subject?.name || "N/A"}`, 20, 55)
         doc.text(`Fecha: ${currentDate}`, 20, 65)
-
-        // Contenido
         doc.setDrawColor(200, 200, 200)
         doc.line(20, 75, 190, 75)
         doc.setFontSize(16)
@@ -162,7 +154,6 @@ const AdminReportsPage = () => {
         doc.setFontSize(11)
         const splitComments = doc.splitTextToSize(report.comments || "No se registraron comentarios.", 160)
         doc.text(splitComments, 25, 95)
-
         doc.setFontSize(16)
         doc.setTextColor(30, 41, 59)
         doc.text("Recomendaciones", 20, 150)
@@ -171,15 +162,12 @@ const AdminReportsPage = () => {
         doc.setFontSize(11)
         const splitRecs = doc.splitTextToSize(report.recommendations || "No se registraron recomendaciones.", 160)
         doc.text(splitRecs, 25, 160)
-
-        // Pie de página
         doc.setFontSize(10)
         doc.setTextColor(100, 100, 100)
         doc.text("Sistema de Gestión Docente - Universidad XYZ", 105, 290, { align: "center" })
 
         doc.save(`Reporte_Docente_${professor?.last_name}_${currentDate.replace(/ /g, "_")}.pdf`)
     }
-
     const generateSavedReportPDF = (reportId: string) => {
         const savedReport = savedReports.find((r) => r.id === reportId)
         if (!savedReport) return
@@ -189,16 +177,12 @@ const AdminReportsPage = () => {
             unit: "mm",
             format: "a4",
         })
-
-        // Encabezado
         doc.setFillColor(30, 41, 59)
         doc.rect(0, 0, 210, 30, "F")
         doc.setFont("helvetica", "bold")
         doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
         doc.text("REPORTE DOCENTE HISTÓRICO", 105, 20, { align: "center" })
-
-        // Información del reporte
         doc.setFillColor(240, 240, 240)
         doc.rect(0, 30, 210, 10, "F")
         doc.setFontSize(14)
@@ -206,8 +190,6 @@ const AdminReportsPage = () => {
         doc.text(`Docente: ${savedReport.professor_name}`, 20, 45)
         doc.text(`Materia: ${savedReport.subject_name}`, 20, 55)
         doc.text(`Fecha del informe: ${new Date(savedReport.created_at).toLocaleDateString("es-ES")}`, 20, 65)
-
-        // Contenido
         doc.setDrawColor(200, 200, 200)
         doc.line(20, 75, 190, 75)
         doc.setFontSize(16)
@@ -225,8 +207,6 @@ const AdminReportsPage = () => {
             "realizadas por los estudiantes durante el periodo correspondiente.",
         ]
         doc.text(evaluationText, 25, 95)
-
-        // Gráficos simulados
         doc.setFillColor(59, 130, 246)
         doc.rect(25, 120, 40, 5, "F")
         doc.text("Calidad de enseñanza: 8.5/10", 70, 123)
@@ -238,8 +218,6 @@ const AdminReportsPage = () => {
         doc.setFillColor(245, 158, 11)
         doc.rect(25, 140, 45, 5, "F")
         doc.text("Conocimiento: 9.0/10", 70, 143)
-
-        // Pie de página
         doc.setFontSize(10)
         doc.setTextColor(100, 100, 100)
         doc.text("Sistema de Gestión Docente - Universidad XYZ", 105, 290, { align: "center" })
