@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
-import { SelectSubjectStepProps } from "@/lib/@types/props"
 import { getSubjectsByProfessorId } from "@/services/subjects"
+import type { SelectSubjectStepProps } from "@/lib/@types/props"
+import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 
 export const SelectSubjectStep = ({ formData, errors, setFormData }: SelectSubjectStepProps) => {
     const [subjects, setSubjects] = useState<SubjectService[]>([])

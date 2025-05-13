@@ -1,21 +1,21 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { z } from "zod"
 import { Card, CardContent } from "@/components/ui/card"
-import { SelectSubjectStep } from "./select-subject-step"
-import { FeedbackStep } from "./feedback-step"
-import { Confirmation } from "../confirmation"
-import { getQuestionsForStudents } from "@/services/questions"
-import { Question } from "@/lib/@types/services"
-import { EvaluationStep } from "./evaluation-step"
 import { HeaderSteps } from "../header-steps"
 import { FooterSteps } from "../footer-steps"
-import type { Step, StudentFormState } from "@/lib/@types/types"
-import { defaultAnswer, generateSchema } from "@/lib/utils"
+import { FeedbackStep } from "./feedback-step"
+import { Confirmation } from "../confirmation"
+import { EvaluationStep } from "./evaluation-step"
+import { SelectSubjectStep } from "./select-subject-step"
 import { addAnswer } from "@/services/answer"
-import { useSession } from "next-auth/react"
+import { Question } from "@/lib/@types/services"
 import { addFeedback } from "@/services/feedback"
-import { FeedbackFormSchema, StudentFormSchema } from "@/lib/schemas/student-form"
+import { defaultAnswer, generateSchema } from "@/lib/utils"
+import { getQuestionsForStudents } from "@/services/questions"
+import type { Step, StudentFormState } from "@/lib/@types/types"
+import { FeedbackFormSchema, AssignedStudentSchema } from "@/lib/schema"
 
 const getSteps = (
     formData: StudentFormState,
@@ -43,7 +43,7 @@ const getSteps = (
             id: "step-1",
             name: "Curso",
             component: <SelectSubjectStep formData={formData} errors={errors} setFormData={onChange} />,
-            schema: StudentFormSchema,
+            schema: AssignedStudentSchema,
         },
         ...mappedStages,
         {
@@ -87,13 +87,11 @@ export const StudentForm = () => {
         if (indexStep < steps.length - 1) {
             if (!isValid.success) {
                 isValid.error.errors.forEach((error) => {
-                    console.log(error.path, error.message)
                     setErrors((prev) => ({
                         ...prev,
                         [error.path[0]]: error.message,
                     }))
                 })
-                console.log(isValid.error)
             } else {
                 setIndexStep((prev) => prev + 1)
             }
@@ -101,7 +99,6 @@ export const StudentForm = () => {
     }
 
     const handleChange = (key: keyof StudentFormState, value: any) => {
-        console.log(key, value)
         setFormData((previous) => ({
             ...previous,
             [key]: value,

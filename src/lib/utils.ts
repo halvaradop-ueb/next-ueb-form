@@ -88,7 +88,7 @@ export const createQuestionSchema = (type: Pick<Question, "question_type">) => {
                 .string({
                     errorMap: () => ({ message: "Este campo es obligatorio y debe ser un número mayor o igual a 1." }),
                 })
-                .regex(/[1-10]+/, "Este campo es obligatorio y debe ser un número mayor o igual a 1.")
+                .regex(/^(10|[1-9])$/, "Este campo es obligatorio y debe ser un número mayor o igual a 1.")
         case "single_choice":
             return z.string().min(1, "Por favor selecciona una opción.")
         case "multiple_choice":

@@ -11,8 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
 import { getAuthenticated, updateUser } from "@/services/users"
-import { UserService } from "@/lib/@types/services"
-import { Role } from "@/lib/@types/types"
+import type { UserService } from "@/lib/@types/services"
+import type { Role } from "@/lib/@types/types"
 
 const roles: Record<Role, string> = {
     admin: "Administrador",

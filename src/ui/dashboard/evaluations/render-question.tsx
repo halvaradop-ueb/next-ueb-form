@@ -1,9 +1,9 @@
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
-import { RenderQuestionProps } from "@/lib/@types/props"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import type { FormSchema } from "@/lib/@types/types"
+import type { RenderQuestionProps } from "@/lib/@types/props"
 
 export const RenderQuestion = <T extends FormSchema>({
     question,
