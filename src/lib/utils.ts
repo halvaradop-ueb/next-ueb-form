@@ -55,7 +55,7 @@ export const getAverageRatings = (feedback: Feedback[]) => {
 export const createPeriods = (start: Date) => {
     const periods = []
     const now = new Date()
-    let startDate = new Date(start)
+    const startDate = new Date(start)
     while (startDate < now) {
         const endDate = new Date(startDate)
         endDate.setMonth(endDate.getMonth() + 6)

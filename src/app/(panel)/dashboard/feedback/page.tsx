@@ -10,7 +10,7 @@ import { getFeedback } from "@/services/feedback"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
-import { createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
+import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -31,9 +31,12 @@ const FeedbackPage = () => {
             ? "Por favor selecciona un profesor y una materia para ver la retroalimentación."
             : !options.professorId
               ? "Por favor selecciona un profesor para ver la retroalimentación."
-              : !options.subjectId
-                ? "Por favor selecciona una materia para ver la retroalimentación."
-                : "success"
+              : subjects.length === 0
+                ? "El profesor seleccionado no tiene materias asignadas."
+                : !options.subjectId
+                  ? "Por favor selecciona una materia para ver la retroalimentación."
+                  : "success"
+
     const fileteredFeedback = filterByPeriod(feedback, options.timeframe)
     const avgRating = getAverageRatings(fileteredFeedback)
     const isEmptyFeedback = fileteredFeedback.length === 0
@@ -103,7 +106,7 @@ const FeedbackPage = () => {
                     <Label htmlFor="selectedSubject">Materia</Label>
                     <Select
                         value={options.subjectId}
-                        disabled={!options?.professorId}
+                        disabled={!options?.professorId || subjects.length === 0}
                         onValueChange={(value) => handleSelectChange("subjectId", value)}
                     >
                         <SelectTrigger id="selectedSubject">
@@ -149,7 +152,13 @@ const FeedbackPage = () => {
                 <TabsContent value="summary" className="space-y-4 pt-4">
                     {defaultCardMessage !== "success" && (
                         <div className="flex items-center justify-center w-full h-32">
-                            <p className="text-sm text-muted-foreground">{defaultCardMessage}</p>
+                            <p
+                                className={cn("text-sm text-muted-foreground", {
+                                    "text-destructive": options.professorId && subjects.length === 0,
+                                })}
+                            >
+                                {defaultCardMessage}
+                            </p>
                         </div>
                     )}
                     {defaultCardMessage === "success" && (
