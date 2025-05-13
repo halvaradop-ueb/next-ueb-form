@@ -1,3 +1,4 @@
+//cracion
 import { supabase } from "@/lib/supabase/client"
 
 // Definición de tipos
