@@ -12,7 +12,7 @@ import { getProfessors } from "@/services/professors"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import type { ReportState } from "@/lib/@types/types"
 import { getSubjectsByProfessorId } from "@/services/subjects"
-import { jsPDF } from "jspdf";
+import { jsPDF } from "jspdf"
 
 const evaluationCriteria = [
     { id: "teachingQuality", name: "Calidad de Enseñanza" },
@@ -85,63 +85,63 @@ const AdminReportsPage = () => {
 
     const generateNewReportPDF = () => {
         if (!report.title || !report.professor || !report.subject) {
-            alert("Complete título, profesor y materia antes de generar el PDF");
-            return;
+            alert("Complete título, profesor y materia antes de generar el PDF")
+            return
         }
 
-        const doc = new jsPDF();
-        
-        const professor = professors.find(p => p.id === report.professor);
-        const subject = subjects.find(s => s.id === report.subject);
+        const doc = new jsPDF()
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text(`Informe: ${report.title}`, 105, 20, { align: "center" });
-        
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Profesor: ${professor?.first_name} ${professor?.last_name}`, 20, 40);
-        doc.text(`Materia: ${subject?.name || "N/A"}`, 20, 50);
-        doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 20, 60);
+        const professor = professors.find((p) => p.id === report.professor)
+        const subject = subjects.find((s) => s.id === report.subject)
 
-        doc.setFontSize(14);
-        doc.text("Análisis y Comentarios:", 20, 80);
-        doc.setFontSize(11);
-        const splitComments = doc.splitTextToSize(report.comments || "Sin comentarios", 170);
-        doc.text(splitComments, 20, 90);
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(18)
+        doc.text(`Informe: ${report.title}`, 105, 20, { align: "center" })
 
-        doc.setFontSize(14);
-        doc.text("Recomendaciones:", 20, 150);
-        doc.setFontSize(11);
-        const splitRecs = doc.splitTextToSize(report.recommendations || "Sin recomendaciones", 170);
-        doc.text(splitRecs, 20, 160);
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Profesor: ${professor?.first_name} ${professor?.last_name}`, 20, 40)
+        doc.text(`Materia: ${subject?.name || "N/A"}`, 20, 50)
+        doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 20, 60)
 
-        doc.save(`Informe_${report.title.replace(/ /g, "_")}.pdf`);
-    };
+        doc.setFontSize(14)
+        doc.text("Análisis y Comentarios:", 20, 80)
+        doc.setFontSize(11)
+        const splitComments = doc.splitTextToSize(report.comments || "Sin comentarios", 170)
+        doc.text(splitComments, 20, 90)
+
+        doc.setFontSize(14)
+        doc.text("Recomendaciones:", 20, 150)
+        doc.setFontSize(11)
+        const splitRecs = doc.splitTextToSize(report.recommendations || "Sin recomendaciones", 170)
+        doc.text(splitRecs, 20, 160)
+
+        doc.save(`Informe_${report.title.replace(/ /g, "_")}.pdf`)
+    }
 
     const generateSavedReportPDF = (reportId: string) => {
-        const savedReport = savedReports.find(r => r.id === reportId);
-        if (!savedReport) return;
+        const savedReport = savedReports.find((r) => r.id === reportId)
+        if (!savedReport) return
 
-        const doc = new jsPDF();
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text(savedReport.title, 105, 20, { align: "center" });
-        
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Profesor: ${savedReport.professor}`, 20, 40);
-        doc.text(`Materia: ${savedReport.subject}`, 20, 50);
-        doc.text(`Fecha: ${savedReport.date}`, 20, 60);
-        
-        doc.setFontSize(14);
-        doc.text("Resumen de Evaluación:", 20, 80);
-        doc.setFontSize(11);
-        doc.text("Este informe contiene datos históricos de evaluaciones realizadas por estudiantes.", 20, 90);
-        
-        doc.save(`Informe_Guardado_${savedReport.id}.pdf`);
-    };
+        const doc = new jsPDF()
+
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(18)
+        doc.text(savedReport.title, 105, 20, { align: "center" })
+
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Profesor: ${savedReport.professor}`, 20, 40)
+        doc.text(`Materia: ${savedReport.subject}`, 20, 50)
+        doc.text(`Fecha: ${savedReport.date}`, 20, 60)
+
+        doc.setFontSize(14)
+        doc.text("Resumen de Evaluación:", 20, 80)
+        doc.setFontSize(11)
+        doc.text("Este informe contiene datos históricos de evaluaciones realizadas por estudiantes.", 20, 90)
+
+        doc.save(`Informe_Guardado_${savedReport.id}.pdf`)
+    }
 
     return (
         <section>
@@ -152,7 +152,7 @@ const AdminReportsPage = () => {
                         <TabsTrigger value="new">Crear Nuevo Informe</TabsTrigger>
                         <TabsTrigger value="saved">Informes Guardados</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="new" className="space-y-6 pt-4">
                         <Card>
                             <CardHeader>
@@ -258,7 +258,7 @@ const AdminReportsPage = () => {
                             </CardFooter>
                         </Card>
                     </TabsContent>
-                    
+
                     <TabsContent value="saved" className="pt-4">
                         <Card>
                             <CardHeader>
@@ -279,8 +279,8 @@ const AdminReportsPage = () => {
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <p className="text-sm text-muted-foreground">{report.date}</p>
-                                                        <Button 
-                                                            variant="ghost" 
+                                                        <Button
+                                                            variant="ghost"
                                                             size="icon"
                                                             onClick={() => generateSavedReportPDF(report.id)}
                                                         >

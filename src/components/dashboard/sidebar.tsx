@@ -64,13 +64,13 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             title: "Feedback",
             url: "/dashboard/feedback",
         },
-    
-       // TODO: implement reports       
+
+        // TODO: implement reports
         {
             title: "Informes",
             url: "/dashboard/reports",
         },
-    
+
         {
             title: "Gestión de usuarios",
             url: "/dashboard/users",
