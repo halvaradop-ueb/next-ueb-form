@@ -218,7 +218,7 @@ const FeedbackPage = () => {
                                 {ratings.map(({ rating, percentage }) => (
                                     <div key={rating} className="space-y-1">
                                         <div className="flex items-center justify-between">
-                                            <span>{rating} Stars</span>
+                                            <span>{rating} Puntos</span>
                                             <span>{percentage}%</span>
                                         </div>
                                         <Progress value={parseInt(percentage)} className="h-2" />
