@@ -2,8 +2,8 @@ import { ProfessorFormState, StudentFormState } from "@/lib/@types/types"
 import { supabase } from "@/lib/supabase/client"
 import { isArray } from "@halvaradop/ts-utility-types/validate"
 
-export const addAnswer = async <User extends StudentFormState | ProfessorFormState>(
-    answer: User,
+export const addAnswer = async <FormSchema extends StudentFormState | ProfessorFormState>(
+    answer: FormSchema,
     userId: string,
 ): Promise<boolean> => {
     try {
@@ -30,7 +30,7 @@ export const addAnswer = async <User extends StudentFormState | ProfessorFormSta
             }
 
             const answerOptions = filteredValues.map((value) => ({ answer_id: answer.id, answer_text: value }))
-            const { error: errorOptions } = await supabase.from("answervalue").insert(answerOptions).select().single()
+            const { error: errorOptions } = await supabase.from("answervalue").insert(answerOptions)
             if (errorOptions) {
                 console.error("Error inserting answer options:", errorOptions)
                 throw new Error("Failed to insert answer options")

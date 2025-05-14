@@ -30,7 +30,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Question, StageService } from "@/lib/@types/services"
+import type { Question, StageService } from "@/lib/@types/services"
 import { addQuestion, deleteQuestion, getQuestions, updateQuestion } from "@/services/questions"
 import { Search, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { getStages } from "@/services/stages"

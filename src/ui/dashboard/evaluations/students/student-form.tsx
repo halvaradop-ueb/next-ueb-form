@@ -1,54 +1,62 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { z } from "zod"
 import { Card, CardContent } from "@/components/ui/card"
-import { SelectSubjectStep } from "./select-subject-step"
-import { FeedbackStep } from "./feedback-step"
-import { Confirmation } from "../confirmation"
-import { getQuestionsForStudents } from "@/services/questions"
-import { Question } from "@/lib/@types/services"
-import { EvaluationStep } from "./evaluation-step"
 import { HeaderSteps } from "../header-steps"
 import { FooterSteps } from "../footer-steps"
-import type { StudentFormState } from "@/lib/@types/types"
-import { defaultAnswer } from "@/lib/utils"
+import { FeedbackStep } from "./feedback-step"
+import { Confirmation } from "../confirmation"
+import { EvaluationStep } from "./evaluation-step"
+import { SelectSubjectStep } from "./select-subject-step"
 import { addAnswer } from "@/services/answer"
-import { useSession } from "next-auth/react"
+import { Question } from "@/lib/@types/services"
 import { addFeedback } from "@/services/feedback"
+import { defaultAnswer, generateSchema } from "@/lib/utils"
+import { getQuestionsForStudents } from "@/services/questions"
+import type { Step, StudentFormState } from "@/lib/@types/types"
+import { FeedbackFormSchema, AssignedStudentSchema } from "@/lib/schema"
 
 const getSteps = (
     formData: StudentFormState,
+    errors: Record<string, string>,
     onChange: (key: keyof StudentFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
     stages: Partial<Record<string, Question[]>>,
-) => {
+): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
-        id: `step-${index + 10}`,
+        id: `step-generated-${index}`,
         name: key,
         component: (
             <EvaluationStep
                 questions={stages[key] ?? []}
                 formData={formData}
+                errors={errors}
                 setFormData={onChange}
                 onChangeAnswer={onChangeAnswer}
             />
         ),
+        schema: generateSchema(stages[key]) ?? z.object({}),
     }))
     return [
         {
             id: "step-1",
             name: "Curso",
-            component: <SelectSubjectStep formData={formData} setFormData={onChange} />,
+            component: <SelectSubjectStep formData={formData} errors={errors} setFormData={onChange} />,
+            schema: AssignedStudentSchema,
         },
         ...mappedStages,
         {
             id: "step-3",
             name: "Comentarios",
             component: <FeedbackStep formData={formData} setFormData={onChange} />,
+            schema: FeedbackFormSchema,
         },
         {
             id: "step-4",
             name: "Confirmación",
             component: <Confirmation />,
+            schema: z.object({}),
         },
     ]
 }
@@ -60,11 +68,12 @@ const initialState = (questions: Question[]) => {
 }
 
 export const StudentForm = () => {
+    const { data: session } = useSession()
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
+    const [errors, setErrors] = useState<Record<string, string>>({})
     const [formData, setFormData] = useState<StudentFormState>({} as StudentFormState)
     const [questionStages, setQuestionStages] = useState<Partial<Record<string, Question[]>>>({})
-    const { data: session } = useSession()
 
     const handlePrevStep = () => {
         if (indexStep > 0) {
@@ -73,8 +82,19 @@ export const StudentForm = () => {
     }
 
     const handleNextStep = () => {
+        const data = steps[indexStep].id.includes("step-generated-") ? formData.answers : formData
+        const isValid = steps[indexStep].schema.safeParse(data)
         if (indexStep < steps.length - 1) {
-            setIndexStep((prev) => prev + 1)
+            if (!isValid.success) {
+                isValid.error.errors.forEach((error) => {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [error.path[0]]: error.message,
+                    }))
+                })
+            } else {
+                setIndexStep((prev) => prev + 1)
+            }
         }
     }
 
@@ -83,6 +103,13 @@ export const StudentForm = () => {
             ...previous,
             [key]: value,
         }))
+        if (errors[key] && value) {
+            setErrors((previous) => {
+                const newErrors = { ...previous }
+                delete newErrors[key]
+                return newErrors
+            })
+        }
     }
 
     const handleChangeAnswer = (questionId: string, value: any) => {
@@ -93,6 +120,13 @@ export const StudentForm = () => {
                 [questionId]: value,
             },
         }))
+        if (errors[questionId]) {
+            setErrors((previous) => {
+                const newErrors = { ...previous }
+                delete newErrors[questionId]
+                return newErrors
+            })
+        }
     }
 
     const handleSend = async () => {
@@ -103,18 +137,15 @@ export const StudentForm = () => {
         setFormData(() => initialState(questions))
     }
 
-    const steps = getSteps(formData, handleChange, handleChangeAnswer, questionStages)
+    const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages)
 
     useEffect(() => {
         const fetchQuestions = async () => {
             const [questions, questionsStages] = await getQuestionsForStudents()
+            setQuestions(questions)
             setQuestionStages(questionsStages)
             const answers = questions.reduce((previous, now) => ({ ...previous, [now.id]: defaultAnswer(now) }), {})
-            setFormData((previous) => ({
-                ...previous,
-                answers,
-            }))
-            setQuestions(questions)
+            setFormData((previous) => ({ ...previous, answers }))
         }
         fetchQuestions()
     }, [])
@@ -126,10 +157,10 @@ export const StudentForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep].component}</div>
                     <FooterSteps
-                        indexStep={indexStep}
                         steps={steps}
+                        indexStep={indexStep}
                         onPrevStep={handlePrevStep}
                         onNextStep={handleNextStep}
                         onSend={handleSend}

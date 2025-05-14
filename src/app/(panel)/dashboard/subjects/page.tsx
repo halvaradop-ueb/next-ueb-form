@@ -37,7 +37,7 @@ import {
     getProfessorsBySubject,
     getSubjects,
 } from "@/services/subjects"
-import { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
+import type { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
 import { SubjectAssignment } from "@/ui/subjects/subject-assignment"
 

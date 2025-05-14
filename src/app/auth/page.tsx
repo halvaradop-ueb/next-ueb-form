@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { loginAction, signInWithGoogle } from "@/lib/actions/login"
-import { FormState } from "@/lib/@types/types"
+import type { FormState } from "@/lib/@types/types"
 
 const AuthPage = () => {
     const [state, action, isPending] = useActionState<FormState, FormData>(loginAction, {
