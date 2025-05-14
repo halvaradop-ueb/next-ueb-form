@@ -17,14 +17,26 @@ import { createReport, getReports } from "@/services/report"
 interface Report {
     id: string
     title: string
-    professor_id: string
-    professor_name: string
-    subject_id: string
-    subject_name: string
-    comments?: string
-    recommendations?: string
-    status: "draft" | "published"
+    professor_id: string | null
+    subject_id: string | null
+    evaluation_criteria?: string | null
+    analysis?: string | null
+    comments?: string | null
+    recommendations?: string | null
     created_at: string
+    professor_name?: string | null
+    subject_name?: string | null
+    professor?: {
+        id: string
+        first_name: string
+        last_name: string
+        email?: string
+    }
+    subject?: {
+        id: string
+        name: string
+        description?: string
+    }
 }
 
 interface ReportState {
@@ -69,6 +81,17 @@ const AdminReportsPage = () => {
         }))
     }
 
+    const resetForm = () => {
+        setReport({
+            title: "",
+            professor: "",
+            subject: "",
+            comments: "",
+            recommendations: "",
+        })
+        setSubjects([])
+    }
+
     const handleSaveReport = async () => {
         if (!report.title || !report.professor || !report.subject) {
             alert("Por favor complete todos los campos obligatorios: título, profesor y materia")
@@ -81,48 +104,45 @@ const AdminReportsPage = () => {
             const subject = subjects.find((s) => s.id === report.subject)
 
             if (!professor || !subject) {
-                throw new Error("No se encontró la información del profesor o materia")
+                alert("No se encontró la información del profesor o materia.")
+                return
             }
 
-            const newReport = await createReport({
+            const reportData = {
                 title: report.title,
                 professor_id: report.professor,
+                professor_name: `${professor.first_name} ${professor.last_name}`,
                 subject_id: report.subject,
+                subject_name: subject.name,
                 comments: report.comments || "",
                 recommendations: report.recommendations || "",
-                status: "draft",
-            })
+            }
+
+            const newReport = await createReport(reportData)
 
             if (newReport) {
                 setSavedReports((prev) => [newReport, ...prev])
                 alert("Borrador guardado exitosamente!")
                 setActiveTab("saved")
-                setReport({
-                    title: "",
-                    professor: "",
-                    subject: "",
-                    comments: "",
-                    recommendations: "",
-                })
+                resetForm()
             }
         } catch (error) {
             console.error("Error al guardar el borrador:", error)
-            alert("Ocurrió un error al guardar el borrador. Por favor intente nuevamente.")
+            alert(`Error al guardar: ${error instanceof Error ? error.message : "Ocurrió un error"}`)
         } finally {
             setIsLoading(false)
         }
     }
+
     const generateNewReportPDF = () => {
         if (!report.title || !report.professor || !report.subject) {
             alert("Complete título, profesor y materia antes de generar el PDF")
             return
         }
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
-        })
+        const doc = new jsPDF()
+        const marginLeft = 20
+        let y = 20
 
         const professor = professors.find((p) => p.id === report.professor)
         const subject = subjects.find((s) => s.id === report.subject)
@@ -131,127 +151,172 @@ const AdminReportsPage = () => {
             month: "long",
             day: "numeric",
         })
+
         doc.setFillColor(30, 41, 59)
         doc.rect(0, 0, 210, 30, "F")
-        doc.setFont("helvetica", "bold")
         doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
+        doc.setFont("helvetica", "bold")
         doc.text("REPORTE DOCENTE", 105, 20, { align: "center" })
-        doc.setFillColor(240, 240, 240)
-        doc.rect(0, 30, 210, 10, "F")
-        doc.setFontSize(14)
-        doc.setTextColor(30, 41, 59)
-        doc.text(`Docente: ${professor?.first_name} ${professor?.last_name}`, 20, 45)
-        doc.text(`Materia: ${subject?.name || "N/A"}`, 20, 55)
-        doc.text(`Fecha: ${currentDate}`, 20, 65)
+
+        y = 40
+        doc.setTextColor(0, 0, 0)
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Docente: ${professor?.first_name} ${professor?.last_name}`, marginLeft, y)
+        y += 8
+        doc.text(`Materia: ${subject?.name || "N/A"}`, marginLeft, y)
+        y += 8
+        doc.text(`Fecha: ${currentDate}`, marginLeft, y)
+        y += 10
+
         doc.setDrawColor(200, 200, 200)
-        doc.line(20, 75, 190, 75)
-        doc.setFontSize(16)
-        doc.text("Análisis y Comentarios", 20, 85)
-        doc.setFillColor(255, 255, 255)
-        doc.roundedRect(20, 90, 170, 50, 3, 3, "F")
-        doc.setTextColor(60, 60, 60)
+        doc.line(marginLeft, y, 190, y)
+        y += 10
+
+        doc.setFontSize(14)
+        doc.setFont("helvetica", "bold")
+        doc.text("Análisis y Comentarios", marginLeft, y)
+        y += 8
         doc.setFontSize(11)
-        const splitComments = doc.splitTextToSize(report.comments || "No se registraron comentarios.", 160)
-        doc.text(splitComments, 25, 95)
-        doc.setFontSize(16)
-        doc.setTextColor(30, 41, 59)
-        doc.text("Recomendaciones", 20, 150)
-        doc.roundedRect(20, 155, 170, 50, 3, 3, "F")
-        doc.setTextColor(60, 60, 60)
+        doc.setFont("helvetica", "normal")
+        const commentLines = doc.splitTextToSize(report.comments || "No se registraron comentarios.", 170)
+        doc.text(commentLines, marginLeft, y)
+        y += commentLines.length * 6 + 10
+
+        doc.setFontSize(14)
+        doc.setFont("helvetica", "bold")
+        doc.text("Recomendaciones", marginLeft, y)
+        y += 8
         doc.setFontSize(11)
-        const splitRecs = doc.splitTextToSize(report.recommendations || "No se registraron recomendaciones.", 160)
-        doc.text(splitRecs, 25, 160)
+        doc.setFont("helvetica", "normal")
+        const recLines = doc.splitTextToSize(report.recommendations || "No se registraron recomendaciones.", 170)
+        doc.text(recLines, marginLeft, y)
+        y += recLines.length * 6 + 10
+
+        doc.setDrawColor(180, 180, 180)
+        doc.line(20, 285, 190, 285)
         doc.setFontSize(10)
         doc.setTextColor(100, 100, 100)
-        doc.text("Sistema de Gestión Docente - Universidad XYZ", 105, 290, { align: "center" })
+        doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
+            align: "center",
+        })
 
         doc.save(`Reporte_Docente_${professor?.last_name}_${currentDate.replace(/ /g, "_")}.pdf`)
     }
+
     const generateSavedReportPDF = (reportId: string) => {
         const savedReport = savedReports.find((r) => r.id === reportId)
         if (!savedReport) return
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
+        const doc = new jsPDF()
+        const marginLeft = 20
+        let y = 20
+
+        const currentDate = new Date(savedReport.created_at).toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
         })
+
         doc.setFillColor(30, 41, 59)
         doc.rect(0, 0, 210, 30, "F")
-        doc.setFont("helvetica", "bold")
         doc.setFontSize(20)
         doc.setTextColor(255, 255, 255)
+        doc.setFont("helvetica", "bold")
         doc.text("REPORTE DOCENTE HISTÓRICO", 105, 20, { align: "center" })
-        doc.setFillColor(240, 240, 240)
-        doc.rect(0, 30, 210, 10, "F")
-        doc.setFontSize(14)
-        doc.setTextColor(30, 41, 59)
-        doc.text(`Docente: ${savedReport.professor_name}`, 20, 45)
-        doc.text(`Materia: ${savedReport.subject_name}`, 20, 55)
-        doc.text(`Fecha del informe: ${new Date(savedReport.created_at).toLocaleDateString("es-ES")}`, 20, 65)
+
+        y = 40
+        doc.setTextColor(0, 0, 0)
+        doc.setFontSize(12)
+        doc.setFont("helvetica", "normal")
+        doc.text(`Docente: ${savedReport.professor_name || "No disponible"}`, marginLeft, y)
+        y += 8
+        doc.text(`Materia: ${savedReport.subject_name || "No disponible"}`, marginLeft, y)
+        y += 8
+        doc.text(`Fecha del informe: ${currentDate}`, marginLeft, y)
+        y += 10
+
         doc.setDrawColor(200, 200, 200)
-        doc.line(20, 75, 190, 75)
-        doc.setFontSize(16)
-        doc.text("Evaluación General", 20, 85)
-        doc.setFillColor(255, 255, 255)
-        doc.roundedRect(20, 90, 170, 100, 3, 3, "F")
-        doc.setTextColor(60, 60, 60)
+        doc.line(marginLeft, y, 190, y)
+        y += 10
+
+        doc.setFontSize(14)
+        doc.setFont("helvetica", "bold")
+        doc.text("Resumen del Reporte", marginLeft, y)
+        y += 8
         doc.setFontSize(11)
+        doc.setFont("helvetica", "normal")
 
-        const evaluationText = [
+        const summary = [
             `Título: ${savedReport.title}`,
-            `Periodo evaluado: ${new Date(savedReport.created_at).toLocaleDateString("es-ES")}`,
+            `Periodo evaluado: ${currentDate}`,
             `Materia: ${savedReport.subject_name}`,
-            "\nEste informe contiene los resultados históricos de las evaluaciones",
-            "realizadas por los estudiantes durante el periodo correspondiente.",
+            "Comentarios:",
+            ...doc.splitTextToSize(savedReport.comments || "No se registraron comentarios.", 170),
+            "",
+            "Recomendaciones:",
+            ...doc.splitTextToSize(savedReport.recommendations || "No se registraron recomendaciones.", 170),
         ]
-        doc.text(evaluationText, 25, 95)
-        doc.setFillColor(59, 130, 246)
-        doc.rect(25, 120, 40, 5, "F")
-        doc.text("Calidad de enseñanza: 8.5/10", 70, 123)
 
-        doc.setFillColor(16, 185, 129)
-        doc.rect(25, 130, 35, 5, "F")
-        doc.text("Comunicación: 7.8/10", 70, 133)
+        doc.text(summary, marginLeft, y)
 
-        doc.setFillColor(245, 158, 11)
-        doc.rect(25, 140, 45, 5, "F")
-        doc.text("Conocimiento: 9.0/10", 70, 143)
+
+        doc.setDrawColor(180, 180, 180)
+        doc.line(20, 285, 190, 285)
         doc.setFontSize(10)
         doc.setTextColor(100, 100, 100)
-        doc.text("Sistema de Gestión Docente - Universidad XYZ", 105, 290, { align: "center" })
+        doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
+            align: "center",
+        })
 
-        doc.save(`Reporte_Historico_${savedReport.professor_name.replace(/ /g, "_")}.pdf`)
+        doc.save(`Reporte_Historico_${savedReport.professor_name}_${currentDate.replace(/ /g, "_")}.pdf`)
     }
+
     useEffect(() => {
-        const loadReports = async () => {
+        const loadInitialData = async () => {
             setIsLoading(true)
             try {
-                const reports = await getReports() // Usa el servicio que creamos
-                setSavedReports(reports)
+                const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
+                setProfessors(professorsData)
+                setSavedReports(
+                    reportsData.filter(
+                        (r) =>
+                            r.professor_id &&
+                            r.subject_id &&
+                            (r.professor_name || (r.professor?.first_name && r.professor?.last_name)) &&
+                            r.subject_name,
+                    ),
+                )
             } catch (error) {
-                console.error("Error loading reports:", error)
+                console.error("Error loading initial data:", error)
+                alert("Error al cargar los datos iniciales")
             } finally {
                 setIsLoading(false)
             }
         }
 
-        loadReports()
+        loadInitialData()
     }, [])
 
     useEffect(() => {
         const fetchSubjects = async () => {
-            if (!report?.professor) return
+            if (!report.professor) {
+                setSubjects([])
+                return
+            }
+
             try {
-                const subjectsData = await getSubjectsByProfessorId(report.professor)
-                setSubjects(subjectsData)
+                const data = await getSubjectsByProfessorId(report.professor)
+                setSubjects(data)
             } catch (error) {
-                console.error("Error cargando materias:", error)
+                console.error("Error al cargar las materias:", error)
+                setSubjects([])
             }
         }
+
         fetchSubjects()
-    }, [report?.professor])
+    }, [report.professor])
 
     return (
         <section>
@@ -289,17 +354,16 @@ const AdminReportsPage = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="professor">Profesor *</Label>
                                         <Select
-                                            value={report.professor}
                                             onValueChange={(value) => handleChange("professor", value)}
-                                            required
+                                            value={report.professor}
                                         >
-                                            <SelectTrigger id="professor">
-                                                <SelectValue placeholder="Selecciona un profesor" />
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona un docente" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {professors.map((professor) => (
-                                                    <SelectItem key={professor.id} value={professor.id}>
-                                                        {professor.first_name} {professor.last_name}
+                                                {professors.map((prof) => (
+                                                    <SelectItem key={prof.id} value={prof.id}>
+                                                        {prof.first_name} {prof.last_name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -308,20 +372,9 @@ const AdminReportsPage = () => {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Materia *</Label>
-                                        <Select
-                                            value={report.subject}
-                                            disabled={!report.professor}
-                                            onValueChange={(value) => handleChange("subject", value)}
-                                            required
-                                        >
-                                            <SelectTrigger id="subject">
-                                                <SelectValue
-                                                    placeholder={
-                                                        report.professor
-                                                            ? "Selecciona una materia"
-                                                            : "Primero selecciona un profesor"
-                                                    }
-                                                />
+                                        <Select onValueChange={(value) => handleChange("subject", value)} value={report.subject}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecciona una materia" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {subjects.map((subject) => (
@@ -414,8 +467,7 @@ const AdminReportsPage = () => {
                                                                 {report.professor_name} • {report.subject_name}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground mt-1">
-                                                                {new Date(report.created_at).toLocaleDateString("es-ES")} •
-                                                                {report.status === "draft" ? "Borrador" : "Publicado"}
+                                                                {new Date(report.created_at).toLocaleDateString("es-ES")}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center space-x-2">

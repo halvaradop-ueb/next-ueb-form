@@ -20,14 +20,14 @@ import {
 import { Search, Plus, Pencil, Trash2 } from "lucide-react"
 import { StageService } from "@/lib/@types/services"
 import { addStage, deleteStage, getStages, updateStage } from "@/services/stages"
-
-const initialStage: StageService = {
-    id: crypto.randomUUID(),
+import { v4 as uuidv4 } from "uuid"
+const initialStage = (): StageService => ({
+    id: uuidv4(),
     name: "",
     description: "",
     questions: [],
     target_audience: "student",
-}
+})
 
 const StagePage = () => {
     const [search, setSearch] = useState("")

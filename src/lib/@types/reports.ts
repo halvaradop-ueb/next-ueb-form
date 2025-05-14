@@ -8,6 +8,8 @@ export interface Report {
     comments?: string | null
     recommendations?: string | null
     created_at: string
+    professor_name?: string | null
+    subject_name?: string | null
     professor?: {
         id: string
         first_name: string
@@ -17,7 +19,7 @@ export interface Report {
     subject?: {
         id: string
         name: string
-        code?: string
+        description?: string
     }
 }
 

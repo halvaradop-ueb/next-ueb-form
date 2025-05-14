@@ -1,15 +1,15 @@
 import { supabase } from "@/lib/supabase/client"
+import { any } from "zod"
 export interface Report {
     id: string
     title: string
-    professor_id: string
-    professor_name: string
-    subject_id: string
-    subject_name: string
-    comments?: string
-    recommendations?: string
-    status: "draft" | "published"
+    professor_id: string | null
+    subject_id: string | null
+    comments?: string | null
+    recommendations?: string | null
     created_at: string
+    professor_name?: string | null
+    subject_name?: string | null
     professor?: {
         id: string
         first_name: string
@@ -19,16 +19,17 @@ export interface Report {
     subject?: {
         id: string
         name: string
-        code?: string
+        description?: string
     }
 }
 export interface CreateReportDto {
     title: string
     professor_id: string
     subject_id: string
+    evaluation_criteria?: string
+    analysis?: string
     comments?: string
     recommendations?: string
-    status?: "draft" | "published"
 }
 type SupabaseReportResponse = {
     id: string
@@ -37,7 +38,6 @@ type SupabaseReportResponse = {
     subject_id: string | null
     comments?: string | null
     recommendations?: string | null
-    status: "draft" | "published"
     created_at: string
     professor?:
         | {
@@ -51,37 +51,41 @@ type SupabaseReportResponse = {
         | {
               id: string
               name: string
-              code?: string
+              description?: string
           }[]
         | null
 }
-const mapReport = (data: SupabaseReportResponse): Report => {
-    const professor = data.professor?.[0]
-    const subject = data.subject?.[0]
+const mapReport = (item: SupabaseReportResponse): Report => {
+    const professorObj = item.professor?.[0]
+    const subjectObj = item.subject?.[0]
+
+    const professorName = professorObj ? `${professorObj.first_name} ${professorObj.last_name}` : "Profesor desconocido"
+
+    const subjectName = subjectObj ? subjectObj.name : "Materia desconocida"
+
     return {
-        id: data.id,
-        title: data.title,
-        professor_id: data.professor_id || professor?.id || "",
-        professor_name: professor ? `${professor.first_name} ${professor.last_name}` : "",
-        subject_id: data.subject_id || subject?.id || "",
-        subject_name: subject?.name || "",
-        comments: data.comments || undefined,
-        recommendations: data.recommendations || undefined,
-        status: data.status,
-        created_at: data.created_at,
-        professor: professor
+        id: item.id,
+        title: item.title || "Sin título",
+        professor_id: item.professor_id || "",
+        subject_id: item.subject_id || "",
+        comments: item.comments || undefined,
+        recommendations: item.recommendations || undefined,
+        created_at: item.created_at,
+        professor_name: professorName,
+        subject_name: subjectName,
+        professor: professorObj
             ? {
-                  id: professor.id,
-                  first_name: professor.first_name,
-                  last_name: professor.last_name,
-                  email: professor.email,
+                  id: professorObj.id,
+                  first_name: professorObj.first_name,
+                  last_name: professorObj.last_name,
+                  email: professorObj.email,
               }
             : undefined,
-        subject: subject
+        subject: subjectObj
             ? {
-                  id: subject.id,
-                  name: subject.name,
-                  code: subject.code,
+                  id: subjectObj.id,
+                  name: subjectObj.name,
+                  description: subjectObj.description,
               }
             : undefined,
     }
@@ -92,31 +96,69 @@ export const getReports = async (): Promise<Report[]> => {
             .from("report")
             .select(
                 `
-        id,
-        title,
-        professor_id,
-        subject_id,
-        comments,
-        recommendations,
-        status,
-        created_at,
-        professor:professor_id (
-          id,
-          first_name,
-          last_name,
-          email
-        ),
-        subject:subject_id (
-          id,
-          name,
-          code
-        )
-      `,
+                id,
+                title,
+                professor_id,
+                subject_id,
+                comments,
+                recommendations,
+                created_at,
+                professor:professor_id (
+                    id,
+                    first_name,
+                    last_name,
+                    email
+                ),
+                subject:subject_id (
+                    id,
+                    name,
+                    description
+                )
+            `,
             )
             .order("created_at", { ascending: false })
 
         if (error) throw new Error(error.message)
-        return data ? data.map(mapReport) : []
+
+        return data
+            ? data.map((item) => {
+                  const professorObj = item.professor?.[0]
+                  const subjectObj = item.subject?.[0]
+
+                  const professorName = professorObj
+                      ? `${professorObj.first_name} ${professorObj.last_name}`
+                      : "Profesor desconocido"
+
+                  const subjectName = subjectObj ? subjectObj.name : "Materia desconocida"
+
+                  return {
+                      id: item.id,
+                      title: item.title || "Sin título",
+                      professor_id: item.professor_id || "",
+                      subject_id: item.subject_id || "",
+                      comments: item.comments || undefined,
+                      recommendations: item.recommendations || undefined,
+                      created_at: item.created_at,
+                      professor_name: professorName,
+                      subject_name: subjectName,
+                      professor: professorObj
+                          ? {
+                                id: professorObj.id,
+                                first_name: professorObj.first_name,
+                                last_name: professorObj.last_name,
+                                email: professorObj.email,
+                            }
+                          : undefined,
+                      subject: subjectObj
+                          ? {
+                                id: subjectObj.id,
+                                name: subjectObj.name,
+                                description: subjectObj.description,
+                            }
+                          : undefined,
+                  } as Report
+              })
+            : []
     } catch (error) {
         console.error("Error fetching reports:", error)
         return []
@@ -124,60 +166,94 @@ export const getReports = async (): Promise<Report[]> => {
 }
 export const createReport = async (reportData: CreateReportDto): Promise<Report | null> => {
     try {
-        const professor = (
-            await supabase.from("professors").select("first_name, last_name").eq("id", reportData.professor_id).single()
-        ).data
+        const { data: professorData, error: professorError } = await supabase
+            .from("User")
+            .select("first_name, last_name")
+            .eq("id", reportData.professor_id)
+            .single()
 
-        const subject = (await supabase.from("subjects").select("name").eq("id", reportData.subject_id).single()).data
+        if (professorError) throw professorError
+        if (!professorData) throw new Error("Profesor no encontrado")
 
-        if (!professor || !subject) {
-            throw new Error("No se encontró profesor o materia")
-        }
+        const { data: subjectData, error: subjectError } = await supabase
+            .from("subject")
+            .select("name")
+            .eq("id", reportData.subject_id)
+            .single()
 
-        const { data, error } = await supabase
+        if (subjectError) throw subjectError
+        if (!subjectData) throw new Error("Materia no encontrada")
+
+        const { data: newReport, error: insertError } = await supabase
             .from("report")
             .insert({
                 title: reportData.title,
                 professor_id: reportData.professor_id,
-                professor_name: `${professor.first_name} ${professor.last_name}`,
                 subject_id: reportData.subject_id,
-                subject_name: subject.name,
                 comments: reportData.comments || null,
                 recommendations: reportData.recommendations || null,
-                status: reportData.status || "draft",
             })
-            .select(
-                `
-        id,
-        title,
-        professor_id,
-        professor_name,
-        subject_id,
-        subject_name,
-        comments,
-        recommendations,
-        status,
-        created_at
-      `,
-            )
+            .select()
             .single()
 
-        if (error) throw new Error(error.message)
-        const fullReport = await supabase
+        if (insertError) throw insertError
+        if (!newReport) throw new Error("No se pudo crear el reporte")
+
+
+        const { data: fullReport, error: fullReportError } = await supabase
             .from("report")
             .select(
                 `
-        *,
-        professor:professor_id (*),
-        subject:subject_id (*)
-      `,
+                *,
+                professor:professor_id (*),
+                subject:subject_id (*)
+            `,
             )
-            .eq("id", data.id)
+            .eq("id", newReport.id)
             .single()
 
-        return fullReport.data ? mapReport(fullReport.data) : null
-    } catch (error) {
-        console.error("Error creating report:", error)
+        if (fullReportError) throw fullReportError
+        if (!fullReport) throw new Error("No se pudo obtener el reporte completo")
+
+        const mappedReport: Report = {
+            id: fullReport.id,
+            title: fullReport.title,
+            professor_id: fullReport.professor_id || "",
+            subject_id: fullReport.subject_id || "",
+            comments: fullReport.comments || undefined,
+            recommendations: fullReport.recommendations || undefined,
+            created_at: fullReport.created_at,
+            professor_name: fullReport.professor
+                ? `${fullReport.professor.first_name} ${fullReport.professor.last_name}`
+                : `${professorData.first_name} ${professorData.last_name}`,
+            subject_name: fullReport.subject?.name || subjectData.name,
+            professor: fullReport.professor
+                ? {
+                      id: fullReport.professor.id,
+                      first_name: fullReport.professor.first_name,
+                      last_name: fullReport.professor.last_name,
+                      email: fullReport.professor.email,
+                  }
+                : {
+                      id: reportData.professor_id,
+                      first_name: professorData.first_name,
+                      last_name: professorData.last_name,
+                  },
+            subject: fullReport.subject
+                ? {
+                      id: fullReport.subject.id,
+                      name: fullReport.subject.name,
+                      description: fullReport.subject.description,
+                  }
+                : {
+                      id: reportData.subject_id,
+                      name: subjectData.name,
+                  },
+        }
+
+        return mappedReport
+    } catch (error: any) {
+        console.error("Error creating report:", error?.message || error || "Error desconocido")
         return null
     }
 }
