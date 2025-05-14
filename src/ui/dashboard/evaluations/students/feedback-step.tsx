@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Slider } from "@/components/ui/slider"
-import { FeedbackStepProps } from "@/lib/@types/props"
+import type { FeedbackStepProps } from "@/lib/@types/props"
 
 export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
     const [sliderValue, setSliderValue] = useState(0)
@@ -20,7 +20,6 @@ export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
                 <h2 className="text-2xl font-bold">Retroalimentación</h2>
                 <p className="text-muted-foreground">Califica tu experiencia y proporciona comentarios</p>
             </div>
-
             <div className="space-y-6">
                 <div className="space-y-4">
                     <div>
@@ -43,7 +42,6 @@ export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
                         </div>
                     </div>
                 </div>
-
                 <div className="space-y-2">
                     <Label htmlFor="comments">Comentarios</Label>
                     <Textarea

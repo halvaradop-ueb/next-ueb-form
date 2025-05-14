@@ -30,11 +30,11 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Question, StageService } from "@/lib/@types/services"
+import type { Question, StageService } from "@/lib/@types/services"
 import { addQuestion, deleteQuestion, getQuestions, updateQuestion } from "@/services/questions"
 import { Search, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { getStages } from "@/services/stages"
-
+import { v4 as uuidv4 } from "uuid"
 const questionTypes: Record<Question["question_type"], string> = {
     text: "Texto",
     single_choice: "Selección única",
@@ -88,7 +88,7 @@ const QuizzesPage = () => {
     const handleCreateQuestion = () => {
         setNewQuestion({
             ...initialState,
-            id: `p${Date.now()}`,
+            id: uuidv4(),
         })
         setTextOptions("")
         setIdleForm("create")

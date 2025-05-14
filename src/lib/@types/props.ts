@@ -1,6 +1,6 @@
 import type { MouseEventHandler } from "react"
 import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
-import type { ProfessorFormState, StudentFormState } from "./types"
+import type { FormSchema, Step, StudentFormState } from "./types"
 
 export interface ChildrenProps {
     children: React.ReactNode
@@ -8,20 +8,23 @@ export interface ChildrenProps {
 
 export interface SelectSubjectStepProps<T extends object = StudentFormState> {
     formData: T
+    errors: Record<string, string>
     setFormData: (key: keyof T, value: any) => void
 }
 
-export interface EvaluationStepProps<T extends object = StudentFormState> {
+export interface EvaluationStepProps<T extends object = FormSchema> {
     questions: Question[]
     formData: T
+    errors: Record<string, string>
     setFormData: (key: keyof T, value: any) => void
     onChangeAnswer: (key: string, value: any) => void
 }
 
-export interface RenderQuestionProps {
+export interface RenderQuestionProps<T extends object = FormSchema> {
     question: Question
-    formData: StudentFormState
-    setFormData: (key: keyof StudentFormState, value: any) => void
+    formData: T
+    errors: Record<string, string>
+    setFormData: (key: keyof T, value: any) => void
     onChange: (key: string, value: any) => void
 }
 
@@ -31,19 +34,16 @@ export interface HeaderStepsProps {
         id: string
         name: string
         component: React.ReactNode
+        // schema: z.ZodObject<any>
     }>
 }
 
 export interface FooterStepsProps {
     indexStep: number
+    steps: Step[]
     onNextStep: MouseEventHandler
     onPrevStep: MouseEventHandler
     onSend: () => void
-    steps: Array<{
-        id: string
-        name: string
-        component: React.ReactNode
-    }>
 }
 
 export interface FeedbackStepProps {

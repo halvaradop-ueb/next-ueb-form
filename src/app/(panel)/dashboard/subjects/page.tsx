@@ -37,7 +37,7 @@ import {
     getProfessorsBySubject,
     getSubjects,
 } from "@/services/subjects"
-import { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
+import type { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
 import { SubjectAssignment } from "@/ui/subjects/subject-assignment"
 
@@ -150,7 +150,13 @@ const SubjectsPage = () => {
         if (!materiaActual.nombre.trim()) {
             nuevosErrores.nombre = "El nombre de la materia es obligatorio"
         }
+        const nombreExiste = subjects.some(
+            (subject) => subject.name.trim().toLowerCase() === materiaActual.nombre.trim().toLowerCase(),
+        )
 
+        if (modoFormulario === "crear" && nombreExiste) {
+            nuevosErrores.nombre = "Ya existe una materia con ese nombre"
+        }
         const codigoExistente = false
         if (codigoExistente) {
             nuevosErrores.codigo = "Este código ya está en uso por otra materia"

@@ -3,10 +3,10 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SubjectService } from "@/lib/@types/services"
 import { getSubjectsByProfessorId } from "@/services/subjects"
-import { SelectSubjectStepProps } from "@/lib/@types/props"
-import { ProfessorFormState } from "@/lib/@types/types"
+import type { SubjectService } from "@/lib/@types/services"
+import type { ProfessorFormState } from "@/lib/@types/types"
+import type { SelectSubjectStepProps } from "@/lib/@types/props"
 
 export const SelectSubject = ({ formData, setFormData }: SelectSubjectStepProps<ProfessorFormState>) => {
     const { data: session } = useSession()

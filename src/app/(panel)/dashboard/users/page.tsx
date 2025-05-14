@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -10,10 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
+import type { Role } from "@/lib/@types/types"
+import type { UserService } from "@/lib/@types/services"
 import { addUser, deleteUser, getUsers, updateUser } from "@/services/users"
-import { UserService } from "@/lib/@types/services"
-import { cn } from "@/lib/utils"
-import { Role } from "@/lib/@types/types"
 
 const roles: Record<Role, string> = {
     admin: "Administrador",

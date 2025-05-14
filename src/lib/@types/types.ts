@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export interface FormState {
     idle: "idle" | "loading" | "success" | "error"
     message: string
@@ -16,10 +18,9 @@ export interface ReportState {
 }
 
 export interface FeedbackState {
-    professor: string
-    subject: string
+    professorId: string
+    subjectId: string
     timeframe: string
-    averageRating: number
 }
 
 export interface StudentFormState {
@@ -52,4 +53,13 @@ export interface GoogleProfile {
     given_name: string
     iat: number
     exp: number
+}
+
+export type FormSchema = StudentFormState | ProfessorFormState
+
+export interface Step {
+    id: string
+    name: string
+    component: React.ReactNode
+    schema: z.ZodObject<any>
 }
