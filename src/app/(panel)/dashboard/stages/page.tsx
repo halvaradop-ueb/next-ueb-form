@@ -18,7 +18,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Search, Plus, Pencil, Trash2 } from "lucide-react"
-import { StageService } from "@/lib/@types/services"
+import type { StageService } from "@/lib/@types/services"
 import { addStage, deleteStage, getStages, updateStage } from "@/services/stages"
 import { v4 as uuidv4 } from "uuid"
 const initialStage = (): StageService => ({

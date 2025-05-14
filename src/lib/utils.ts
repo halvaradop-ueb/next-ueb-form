@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { Feedback, Question } from "./@types/services"
@@ -77,4 +78,33 @@ export const filterByPeriod = (feedback: Feedback[], date: string) => {
         const end = new Date(split[1])
         return dateItem >= start && dateItem <= end
     })
+}
+export const createQuestionSchema = (type: Pick<Question, "question_type">) => {
+    switch (type.question_type) {
+        case "text":
+            return z.string().min(1, "Este campo es obligatorio y debe contener texto.")
+        case "numeric":
+            return z
+                .string({
+                    errorMap: () => ({ message: "Este campo es obligatorio y debe ser un número mayor o igual a 1." }),
+                })
+                .regex(/^(10|[1-9])$/, "Este campo es obligatorio y debe ser un número mayor o igual a 1.")
+        case "single_choice":
+            return z.string().min(1, "Por favor selecciona una opción.")
+        case "multiple_choice":
+            return z.array(z.string()).min(1, "Por favor selecciona al menos una opción.")
+        default:
+            return z.string().optional()
+    }
+}
+
+export const generateSchema = (questions: Question[] = []): z.ZodObject<{}, "strip", z.ZodTypeAny, {}, {}> => {
+    const shema = questions.reduce(
+        (previous, now) => ({
+            ...previous,
+            [now.id]: createQuestionSchema(now),
+        }),
+        {},
+    )
+    return z.object(shema)
 }

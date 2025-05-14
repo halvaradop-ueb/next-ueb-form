@@ -1,5 +1,5 @@
-import { HeaderStepsProps } from "@/lib/@types/props"
 import { CheckCircle2 } from "lucide-react"
+import type { HeaderStepsProps } from "@/lib/@types/props"
 
 export const HeaderSteps = ({ steps, indexStep }: HeaderStepsProps) => {
     return steps.map((step, index) => (
