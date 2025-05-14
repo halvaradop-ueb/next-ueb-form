@@ -261,7 +261,6 @@ const AdminReportsPage = () => {
 
         doc.text(summary, marginLeft, y)
 
-
         doc.setDrawColor(180, 180, 180)
         doc.line(20, 285, 190, 285)
         doc.setFontSize(10)

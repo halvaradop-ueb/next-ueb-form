@@ -199,7 +199,6 @@ export const createReport = async (reportData: CreateReportDto): Promise<Report 
         if (insertError) throw insertError
         if (!newReport) throw new Error("No se pudo crear el reporte")
 
-
         const { data: fullReport, error: fullReportError } = await supabase
             .from("report")
             .select(
