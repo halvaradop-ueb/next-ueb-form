@@ -150,7 +150,13 @@ const SubjectsPage = () => {
         if (!materiaActual.nombre.trim()) {
             nuevosErrores.nombre = "El nombre de la materia es obligatorio"
         }
+        const nombreExiste = subjects.some(
+            (subject) => subject.name.trim().toLowerCase() === materiaActual.nombre.trim().toLowerCase(),
+        )
 
+        if (modoFormulario === "crear" && nombreExiste) {
+            nuevosErrores.nombre = "Ya existe una materia con ese nombre"
+        }
         const codigoExistente = false
         if (codigoExistente) {
             nuevosErrores.codigo = "Este código ya está en uso por otra materia"
