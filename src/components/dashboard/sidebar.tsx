@@ -61,8 +61,8 @@ export const linksByRole: Record<Role, { title: string; url: string }[]> = {
             url: "/dashboard/quizzes",
         },
         {
-            title: "Feedback",
-            url: "/dashboard/feedback",
+            title: "Feedback Personalizado",
+            url: "/dashboard/feedbackPersonal",
         },
 
         // TODO: implement reports

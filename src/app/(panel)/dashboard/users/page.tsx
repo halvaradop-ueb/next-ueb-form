@@ -43,6 +43,7 @@ const UserManagementPage = () => {
 
     const filteredUsers = users.filter(
         (user) =>
+            user.role !== "student" &&
             (activeTab === "all" || user.role === activeTab) &&
             (user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,7 +106,6 @@ const UserManagementPage = () => {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">Todos los Usuarios</TabsTrigger>
-                        <TabsTrigger value="student">Estudiantes</TabsTrigger>
                         <TabsTrigger value="professor">Docentes</TabsTrigger>
                         <TabsTrigger value="admin">Administradores</TabsTrigger>
                     </TabsList>
