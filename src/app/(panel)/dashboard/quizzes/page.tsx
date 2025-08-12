@@ -421,7 +421,7 @@ const QuizzesPage = () => {
                                 <TableRow>
                                     <TableHead className="w-[40%]">Pregunta</TableHead>
                                     <TableHead>Audiencia</TableHead>
-                                    <TableHead>Categoría</TableHead>
+                                    <TableHead>Etapa</TableHead>
                                     <TableHead>Tipo</TableHead>
                                     <TableHead>Estado</TableHead>
                                     <TableHead className="text-right">Acciones</TableHead>

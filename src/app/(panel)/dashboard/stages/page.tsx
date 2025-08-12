@@ -61,12 +61,9 @@ const StagePage = () => {
     }
 
     const handleDeleteStage = async (stageId: string) => {
-        const categoria = stages.find((stage) => stage.id === stageId)
-        if (categoria && categoria.questions.length === 0) {
-            setTextConfirmation("")
-            setStageToDelete(stageId)
-            setOpenDialogDeleteStage(true)
-        }
+        setTextConfirmation("")
+        setStageToDelete(stageId)
+        setOpenDialogDeleteStage(true)
     }
 
     const handleConfirmDeleting = async () => {
@@ -82,15 +79,17 @@ const StagePage = () => {
     const isValidForm = (): boolean => {
         const nuevosErrores: { [key: string]: string } = {}
         if (!stage.name.trim()) {
-            nuevosErrores.name = "El nombre de la categoría es obligatorio"
+            nuevosErrores.name = "El nombre de la etapa es obligatorio"
         } else if (
             stages.some(
-                (category) =>
-                    category.name.trim().toLowerCase() === stage.name.trim().toLowerCase() &&
-                    category.target_audience === stage.target_audience,
+                (stg) =>
+                    stg.name.trim().toLowerCase() === stage.name.trim().toLowerCase() &&
+                    stg.target_audience === stage.target_audience,
             )
         ) {
-            nuevosErrores.name = `Ya existe una etapa con este nombre para ${stage.target_audience === "student" ? "estudiantes" : "profesores"}`
+            if (idleForm === "create") {
+                nuevosErrores.name = `Ya existe una etapa con este nombre para ${stage.target_audience === "student" ? "estudiantes" : "profesores"}`
+            }
         }
         setErrors(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
@@ -269,7 +268,6 @@ const StagePage = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        disabled={stage.questions.length > 0}
                                                         title={
                                                             stage.questions.length > 0
                                                                 ? "No se puede eliminar una categoría con preguntas asociadas"
@@ -277,11 +275,7 @@ const StagePage = () => {
                                                         }
                                                         onClick={() => handleDeleteStage(stage.id)}
                                                     >
-                                                        <Trash2
-                                                            className={`h-4 w-4 ${
-                                                                stage.questions.length > 0 ? "text-gray-400" : "text-red-500"
-                                                            }`}
-                                                        />
+                                                        <Trash2 className="h-4 w-4 text-red-600" />
                                                         <span className="sr-only">Eliminar</span>
                                                     </Button>
                                                 </div>
