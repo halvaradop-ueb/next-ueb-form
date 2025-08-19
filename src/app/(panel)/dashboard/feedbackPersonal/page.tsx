@@ -137,7 +137,6 @@ const FeedbackPage = () => {
                     </Select>
                 </div>
             </div>
-            
             <Tabs className="w-full" defaultValue="summary">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="summary" disabled={optionsDisabled}>
