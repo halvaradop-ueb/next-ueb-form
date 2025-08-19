@@ -111,7 +111,6 @@ const StagePage = () => {
         setOpenDialog(false)
         return true
     }
-
     const handleChange = (field: keyof StageService, value: any) => {
         setStage((prev) => ({
             ...prev,

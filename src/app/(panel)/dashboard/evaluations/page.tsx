@@ -22,5 +22,4 @@ const EvaluationsPage = async () => {
         </div>
     )
 }
-
 export default EvaluationsPage

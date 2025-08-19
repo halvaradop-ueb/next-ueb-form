@@ -271,7 +271,6 @@ const AdminReportsPage = () => {
 
         doc.save(`Reporte_Historico_${savedReport.professor_name}_${currentDate.replace(/ /g, "_")}.pdf`)
     }
-
     useEffect(() => {
         const loadInitialData = async () => {
             setIsLoading(true)
