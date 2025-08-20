@@ -399,7 +399,7 @@ const SubjectsPage = () => {
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            filteredSubjects.map((subject, index) => {
+                                            filteredSubjects.map((subject) => {
                                                 return (
                                                     <SubjectAssignment
                                                         key={subject.id}
