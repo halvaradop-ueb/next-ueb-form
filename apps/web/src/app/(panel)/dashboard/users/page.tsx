@@ -122,7 +122,9 @@ const UserManagementPage = () => {
                                 />
                             </div>
                             <Button
-                                onClick={() => document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })}
+                                onClick={() =>
+                                    document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
+                                }
                             >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Agregar Usuario
@@ -143,13 +145,18 @@ const UserManagementPage = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredUsers.map((user) => (
-                                            <TableRow className={cn({ "opacity-50": user.role === "student" })} key={user.id}>
+                                            <TableRow
+                                                className={cn({ "opacity-50": user.role === "student" })}
+                                                key={user.id}
+                                            >
                                                 <TableCell className="font-medium">
                                                     {user.role === "student"
                                                         ? `********`
                                                         : `${user.first_name} ${user.last_name}`}
                                                 </TableCell>
-                                                <TableCell>{user.role === "student" ? `********` : user.email}</TableCell>
+                                                <TableCell>
+                                                    {user.role === "student" ? `********` : user.email}
+                                                </TableCell>
                                                 <TableCell className="capitalize">{roles[user.role]}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center">
@@ -198,7 +205,9 @@ const UserManagementPage = () => {
                         </Card>
                         <Card id="add-user-card">
                             <CardHeader>
-                                <CardTitle>{idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}</CardTitle>
+                                <CardTitle>
+                                    {idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}
+                                </CardTitle>
                                 <CardDescription>
                                     {idleForm === "create" ? "Crear una nueva cuenta de usuario" : "Actualizar usuario"}
                                 </CardDescription>

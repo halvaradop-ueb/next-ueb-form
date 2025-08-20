@@ -82,6 +82,7 @@ export const StudentForm = () => {
     }
 
     const handleNextStep = () => {
+        if(!(indexStep in steps) || !steps[indexStep]) return
         const data = steps[indexStep].id.includes("step-generated-") ? formData.answers : formData
         const isValid = steps[indexStep].schema.safeParse(data)
         if (indexStep < steps.length - 1) {
@@ -89,7 +90,7 @@ export const StudentForm = () => {
                 isValid.error.errors.forEach((error) => {
                     setErrors((prev) => ({
                         ...prev,
-                        [error.path[0]]: error.message,
+                        [error.path[0] as string]: error.message,
                     }))
                 })
             } else {
@@ -157,7 +158,7 @@ export const StudentForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep] && steps[indexStep].component}</div>
                     <FooterSteps
                         steps={steps}
                         indexStep={indexStep}

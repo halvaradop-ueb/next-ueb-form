@@ -176,7 +176,9 @@ const SubjectsPage = () => {
         if (!assignment.profesorId) {
             nuevosErrores.profesorId = "Debe seleccionar un profesor"
         }
-        const asignacionExistente = assignments.find((a) => a.subject_id === assignment.materiaId && a.id === assignment.id)
+        const asignacionExistente = assignments.find(
+            (a) => a.subject_id === assignment.materiaId && a.id === assignment.id,
+        )
         if (asignacionExistente) {
             nuevosErrores.general = "Ya existe una asignación con estos datos"
         }
@@ -394,7 +396,10 @@ const SubjectsPage = () => {
                                     <TableBody>
                                         {filteredSubjects.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                                <TableCell
+                                                    colSpan={7}
+                                                    className="text-center py-8 text-muted-foreground"
+                                                >
                                                     No se encontraron materias que coincidan con la búsqueda.
                                                 </TableCell>
                                             </TableRow>
@@ -447,7 +452,9 @@ const SubjectsPage = () => {
                             <CardContent>
                                 <div className="space-y-4">
                                     {assignments.length === 0 ? (
-                                        <p className="text-center text-muted-foreground">No hay asignaciones registradas.</p>
+                                        <p className="text-center text-muted-foreground">
+                                            No hay asignaciones registradas.
+                                        </p>
                                     ) : (
                                         assignments.map((assignment) => (
                                             <Card key={assignment.id}>
@@ -456,18 +463,25 @@ const SubjectsPage = () => {
                                                         <div className="space-y-1">
                                                             <div className="flex items-center gap-2">
                                                                 <BookOpen className="h-4 w-4 text-muted-foreground" />
-                                                                <span className="font-medium">{assignment.subject.name}</span>
+                                                                <span className="font-medium">
+                                                                    {assignment.subject.name}
+                                                                </span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
                                                                 <User className="h-4 w-4 text-muted-foreground" />
                                                                 <span>
-                                                                    {assignment.user.first_name} {assignment.user.last_name}
+                                                                    {assignment.user.first_name}{" "}
+                                                                    {assignment.user.last_name}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" title="Eliminar asignación">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    title="Eliminar asignación"
+                                                                >
                                                                     <Trash2 className="h-4 w-4 text-red-500" />
                                                                     <span className="sr-only">Eliminar</span>
                                                                 </Button>
@@ -478,14 +492,16 @@ const SubjectsPage = () => {
                                                                         ¿Está seguro de eliminar esta asignación?
                                                                     </AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Esta acción no se puede deshacer. La asignación se
-                                                                        eliminará permanentemente.
+                                                                        Esta acción no se puede deshacer. La asignación
+                                                                        se eliminará permanentemente.
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
                                                                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                                                     <AlertDialogAction
-                                                                        onClick={() => handleDeleteAssignment(assignment.id)}
+                                                                        onClick={() =>
+                                                                            handleDeleteAssignment(assignment.id)
+                                                                        }
                                                                         className="bg-red-600 hover:bg-red-700"
                                                                     >
                                                                         Eliminar
@@ -534,7 +550,10 @@ const SubjectsPage = () => {
                                         value={assignment.materiaId}
                                         onValueChange={(valor) => actualizarCampoAsignacion("materiaId", valor)}
                                     >
-                                        <SelectTrigger id="materiaId" className={errores.materiaId ? "border-red-500" : ""}>
+                                        <SelectTrigger
+                                            id="materiaId"
+                                            className={errores.materiaId ? "border-red-500" : ""}
+                                        >
                                             <SelectValue placeholder="Seleccionar materia" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -557,7 +576,10 @@ const SubjectsPage = () => {
                                     value={assignment.profesorId}
                                     onValueChange={(valor) => actualizarCampoAsignacion("profesorId", valor)}
                                 >
-                                    <SelectTrigger id="profesorId" className={errores.profesorId ? "border-red-500" : ""}>
+                                    <SelectTrigger
+                                        id="profesorId"
+                                        className={errores.profesorId ? "border-red-500" : ""}
+                                    >
                                         <SelectValue placeholder="Seleccionar profesor" />
                                     </SelectTrigger>
                                     <SelectContent>

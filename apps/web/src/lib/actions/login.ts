@@ -6,7 +6,8 @@ import { redirect } from "next/navigation"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { AuthError } from "next-auth"
 
-export const loginAction = async (previous: FormState, form: FormData): Promise<FormState> => {
+// @eslint-ignore
+export const loginAction = async (_: FormState, form: FormData): Promise<FormState> => {
     const entries = Object.fromEntries(form.entries())
     const isAuthenticated = LoginSchema.safeParse(entries)
     if (!isAuthenticated.success) {

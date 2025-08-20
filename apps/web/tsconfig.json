@@ -1,6 +1,7 @@
 {
   "extends": "@halvaradop/tsconfig/nextjs",
   "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
       "@/*": ["./src/*"],
       "@/auth": ["./src/lib/auth"],

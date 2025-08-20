@@ -99,7 +99,7 @@ export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sideb
     return (
         <Sidebar {...props}>
             <SidebarHeader>
-                <VersionSwitcher versions={data.versions} defaultVersion={data.versions[0]} />
+                <VersionSwitcher versions={data.versions} defaultVersion="0.1.0" />
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>

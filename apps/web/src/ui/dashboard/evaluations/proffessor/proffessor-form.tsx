@@ -133,7 +133,7 @@ export const ProffessorForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">{steps[indexStep] && steps[indexStep].component}</div>
                     <FooterSteps
                         indexStep={indexStep}
                         steps={steps}
