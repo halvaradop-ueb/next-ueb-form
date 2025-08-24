@@ -124,10 +124,7 @@ function SidebarProvider({
                             ...style,
                         } as React.CSSProperties
                     }
-                    className={cn(
-                        "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
-                        className,
-                    )}
+                    className={cn("group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full", className)}
                     {...props}
                 >
                     {children}
@@ -310,23 +307,13 @@ function SidebarInput({ className, ...props }: React.ComponentProps<typeof Input
 
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
     return (
-        <div
-            data-slot="sidebar-header"
-            data-sidebar="header"
-            className={cn("flex flex-col gap-2 p-2", className)}
-            {...props}
-        />
+        <div data-slot="sidebar-header" data-sidebar="header" className={cn("flex flex-col gap-2 p-2", className)} {...props} />
     )
 }
 
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
     return (
-        <div
-            data-slot="sidebar-footer"
-            data-sidebar="footer"
-            className={cn("flex flex-col gap-2 p-2", className)}
-            {...props}
-        />
+        <div data-slot="sidebar-footer" data-sidebar="footer" className={cn("flex flex-col gap-2 p-2", className)} {...props} />
     )
 }
 
@@ -366,11 +353,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
     )
 }
 
-function SidebarGroupLabel({
-    className,
-    asChild = false,
-    ...props
-}: React.ComponentProps<"div"> & { asChild?: boolean }) {
+function SidebarGroupLabel({ className, asChild = false, ...props }: React.ComponentProps<"div"> & { asChild?: boolean }) {
     const Comp = asChild ? Slot : "div"
 
     return (
@@ -387,11 +370,7 @@ function SidebarGroupLabel({
     )
 }
 
-function SidebarGroupAction({
-    className,
-    asChild = false,
-    ...props
-}: React.ComponentProps<"button"> & { asChild?: boolean }) {
+function SidebarGroupAction({ className, asChild = false, ...props }: React.ComponentProps<"button"> & { asChild?: boolean }) {
     const Comp = asChild ? Slot : "button"
 
     return (

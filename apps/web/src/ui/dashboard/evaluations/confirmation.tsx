@@ -7,8 +7,8 @@ export const Confirmation = () => {
             </div>
             <div className="rounded-lg border bg-muted/50 p-4">
                 <p className="text-sm">
-                    Al hacer clic en enviar, usted acepta nuestros términos y condiciones y confirma que toda la
-                    información proporcionada es correcta.
+                    Al hacer clic en enviar, usted acepta nuestros términos y condiciones y confirma que toda la información
+                    proporcionada es correcta.
                 </p>
             </div>
         </section>

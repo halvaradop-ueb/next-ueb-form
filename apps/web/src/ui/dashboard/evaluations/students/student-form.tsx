@@ -82,7 +82,7 @@ export const StudentForm = () => {
     }
 
     const handleNextStep = () => {
-        if(!(indexStep in steps) || !steps[indexStep]) return
+        if (!(indexStep in steps) || !steps[indexStep]) return
         const data = steps[indexStep].id.includes("step-generated-") ? formData.answers : formData
         const isValid = steps[indexStep].schema.safeParse(data)
         if (indexStep < steps.length - 1) {

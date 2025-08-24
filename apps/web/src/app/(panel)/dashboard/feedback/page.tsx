@@ -89,10 +89,7 @@ const FeedbackPage = () => {
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select
-                        value={options.professorId}
-                        onValueChange={(value) => handleSelectChange("professorId", value)}
-                    >
+                    <Select value={options.professorId} onValueChange={(value) => handleSelectChange("professorId", value)}>
                         <SelectTrigger id="selectedProfessor">
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
@@ -195,12 +192,8 @@ const FeedbackPage = () => {
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="text-center">
-                                                    <span className="text-3xl font-bold">
-                                                        {fileteredFeedback.length ?? 0}
-                                                    </span>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Total de Evaluaciones
-                                                    </p>
+                                                    <span className="text-3xl font-bold">{fileteredFeedback.length ?? 0}</span>
+                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
                                                 </div>
                                             </CardContent>
                                         </Card>

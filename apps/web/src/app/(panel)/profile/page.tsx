@@ -168,9 +168,7 @@ export default function ProfilePage() {
                                                 onChange={(e) => handleChange("email", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                {user.email}
-                                            </p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.email}</p>
                                         )}
                                     </div>
 
@@ -239,9 +237,7 @@ export default function ProfilePage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium">Generaste un informe</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Revisión Anual - Dr. Smith
-                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">Revisión Anual - Dr. Smith</p>
                                                     <p className="text-xs text-muted-foreground">Ayer</p>
                                                 </div>
                                             </div>
@@ -250,9 +246,7 @@ export default function ProfilePage() {
                                                     <Settings className="h-5 w-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">
-                                                        Actualizaste la configuración del sistema
-                                                    </p>
+                                                    <p className="font-medium">Actualizaste la configuración del sistema</p>
                                                     <p className="text-sm text-muted-foreground">
                                                         Cambiaste las fechas del periodo de evaluación
                                                     </p>
@@ -304,9 +298,7 @@ export default function ProfilePage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="font-medium">Exportación de Datos</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Exportar datos del sistema
-                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">Exportar datos del sistema</p>
                                                 </div>
                                                 <Badge>Acceso Completo</Badge>
                                             </div>

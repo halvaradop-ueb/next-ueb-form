@@ -209,10 +209,7 @@ const AdminReportsPage = () => {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Materia *</Label>
-                                        <Select
-                                            onValueChange={(value) => handleChange("subject", value)}
-                                            value={report.subject}
-                                        >
+                                        <Select onValueChange={(value) => handleChange("subject", value)} value={report.subject}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Selecciona una materia" />
                                             </SelectTrigger>
@@ -294,9 +291,7 @@ const AdminReportsPage = () => {
                                         <p>Cargando informes...</p>
                                     </div>
                                 ) : savedReports.length === 0 ? (
-                                    <p className="text-center text-muted-foreground py-8">
-                                        No hay informes guardados aún
-                                    </p>
+                                    <p className="text-center text-muted-foreground py-8">No hay informes guardados aún</p>
                                 ) : (
                                     <div className="space-y-4">
                                         {savedReports.map((report) => (
@@ -309,18 +304,14 @@ const AdminReportsPage = () => {
                                                                 {report.professor_name} • {report.subject_name}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground mt-1">
-                                                                {new Date(report.created_at).toLocaleDateString(
-                                                                    "es-ES",
-                                                                )}
+                                                                {new Date(report.created_at).toLocaleDateString("es-ES")}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                onClick={() =>
-                                                                    generateSavedReportPDF(savedReports, report.id)
-                                                                }
+                                                                onClick={() => generateSavedReportPDF(savedReports, report.id)}
                                                                 title="Descargar PDF"
                                                             >
                                                                 <Download className="h-4 w-4" />

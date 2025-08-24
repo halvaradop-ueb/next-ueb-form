@@ -1,0 +1,29 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript", "plugin:prettier/recommended", "prettier"],
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "tabWidth": 4,
+        "semi": false,
+        "printWidth": 130,
+        "overrides": [
+          {
+            "files": ["*.json", "*.yml", "*.yaml", "*.md"],
+            "options": {
+              "tabWidth": 2
+            }
+          }
+        ]
+      }
+    ],
+    "@typescript-eslint/no-empty-object-type": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-asserted-optional-chain": "off"
+  }
+}

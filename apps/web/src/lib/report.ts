@@ -63,23 +63,14 @@ export const generateSavedReportPDF = (reports: Report[], reportId: string) => {
     doc.line(20, 285, 190, 285)
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text(
-        "Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque",
-        105,
-        290,
-        {
-            align: "center",
-        },
-    )
+    doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
+        align: "center",
+    })
 
     doc.save(`Reporte_Historico_${savedReport.professor_name}_${currentDate.replace(/ /g, "_")}.pdf`)
 }
 
-export const generateNewReportPDF = (
-    report: ReportState,
-    professors: ProfessorService[],
-    subjects: SubjectService[],
-) => {
+export const generateNewReportPDF = (report: ReportState, professors: ProfessorService[], subjects: SubjectService[]) => {
     if (!report.title || !report.professor || !report.subject) {
         alert("Complete título, profesor y materia antes de generar el PDF")
         return
@@ -143,14 +134,9 @@ export const generateNewReportPDF = (
     doc.line(20, 285, 190, 285)
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text(
-        "Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque",
-        105,
-        290,
-        {
-            align: "center",
-        },
-    )
+    doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
+        align: "center",
+    })
 
     doc.save(`Reporte_Docente_${professor?.last_name}_${currentDate.replace(/ /g, "_")}.pdf`)
 }

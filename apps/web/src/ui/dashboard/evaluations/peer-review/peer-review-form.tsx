@@ -101,10 +101,7 @@ export const PeerReviewForm = () => {
                 <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                         <Label htmlFor="professor">Profesor *</Label>
-                        <Select
-                            onValueChange={(value) => handleChange("professor", value)}
-                            value={selectedOptions.professor}
-                        >
+                        <Select onValueChange={(value) => handleChange("professor", value)} value={selectedOptions.professor}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecciona un docente" />
                             </SelectTrigger>
@@ -120,10 +117,7 @@ export const PeerReviewForm = () => {
 
                     <div className="space-y-2">
                         <Label htmlFor="subject">Materia *</Label>
-                        <Select
-                            onValueChange={(value) => handleChange("subject", value)}
-                            value={selectedOptions.subject}
-                        >
+                        <Select onValueChange={(value) => handleChange("subject", value)} value={selectedOptions.subject}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecciona una materia" />
                             </SelectTrigger>
@@ -139,10 +133,7 @@ export const PeerReviewForm = () => {
 
                     <div className="space-y-2">
                         <Label htmlFor="timeframe">Periodo de Tiempo</Label>
-                        <Select
-                            value={selectedOptions.timeframe}
-                            onValueChange={(value) => handleChange("timeframe", value)}
-                        >
+                        <Select value={selectedOptions.timeframe} onValueChange={(value) => handleChange("timeframe", value)}>
                             <SelectTrigger id="timeframe">
                                 <SelectValue placeholder="Selecciona un periodo" />
                             </SelectTrigger>
