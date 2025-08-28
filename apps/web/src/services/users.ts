@@ -92,3 +92,22 @@ export const getAuthenticated = async (session: Session): Promise<UserService | 
         return null
     }
 }
+
+export const uploadUserPhoto = async (file: File, userId: string) => {
+  const fileExt = file.name.split(".").pop()
+  const filePath = `${userId}/${Date.now()}.${fileExt}`
+
+  const { error } = await supabase.storage.from("avatars").upload(filePath, file, {
+    cacheControl: "3600",
+    upsert: true,
+  })
+
+  if (error) {
+    console.error("Error uploading image:", error.message)
+    return null
+  }
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(filePath)
+
+  return data.publicUrl
+}

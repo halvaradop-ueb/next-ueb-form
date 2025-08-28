@@ -43,6 +43,7 @@ export interface UserService {
     status: boolean
     address: string
     phone: string
+    photo?: string // Optional photo field
 }
 
 export interface ProfessorService extends UserService {}

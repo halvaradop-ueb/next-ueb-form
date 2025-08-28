@@ -13,12 +13,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 import type { Role } from "@/lib/@types/types"
 import type { UserService } from "@/lib/@types/services"
-import { addUser, deleteUser, getUsers, updateUser } from "@/services/users"
+import { addUser, deleteUser, getUsers, updateUser,uploadUserPhoto } from "@/services/users"
 
 const roles: Record<Role, string> = {
     admin: "Administrador",
     professor: "Docente",
-    student: "Estudiante",
+student: "Estudiante", // Kept for type compatibility but not used in UI
+    
 }
 
 const initialState: UserService = {
@@ -32,10 +33,11 @@ const initialState: UserService = {
     status: true,
     address: "",
     phone: "",
+    photo: "",
 }
 
 const UserManagementPage = () => {
-    const [activeTab, setActiveTab] = useState("all")
+    const [activeTab, setActiveTab] = useState("professor")
     const [searchQuery, setSearchQuery] = useState("")
     const [users, setUsers] = useState<UserService[]>([])
     const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
@@ -43,7 +45,8 @@ const UserManagementPage = () => {
 
     const filteredUsers = users.filter(
         (user) =>
-            (activeTab === "all" || user.role === activeTab) &&
+            (user.role === "professor" || user.role === "admin") &&
+            (user.role === activeTab) &&
             (user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email.toLowerCase().includes(searchQuery.toLowerCase())),
@@ -103,9 +106,7 @@ const UserManagementPage = () => {
             <div className="container mx-auto py-6">
                 <h1 className="mb-6 text-3xl font-bold">Gestión de Usuarios</h1>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="all">Todos los Usuarios</TabsTrigger>
-                        <TabsTrigger value="student">Estudiantes</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="professor">Docentes</TabsTrigger>
                         <TabsTrigger value="admin">Administradores</TabsTrigger>
                     </TabsList>
@@ -133,6 +134,7 @@ const UserManagementPage = () => {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
+                                            <TableHead>Foto</TableHead>
                                             <TableHead>Nombre</TableHead>
                                             <TableHead>Correo Electrónico</TableHead>
                                             <TableHead>Rol</TableHead>
@@ -144,6 +146,20 @@ const UserManagementPage = () => {
                                     <TableBody>
                                         {filteredUsers.map((user) => (
                                             <TableRow className={cn({ "opacity-50": user.role === "student" })} key={user.id}>
+                                                <TableCell>
+                                                    {user.photo ? (
+                                                        <img
+                                                            src={user.photo}
+                                                            alt={`${user.first_name} ${user.last_name}`}
+                                                            className="h-10 w-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500">
+                                                            {user.first_name.charAt(0)}
+                                                            {user.last_name.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="font-medium">
                                                     {user.role === "student"
                                                         ? `********`
@@ -205,7 +221,7 @@ const UserManagementPage = () => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="grid gap-4 md:grid-cols-3">
                                         <div className="space-y-2">
                                             <Label htmlFor="first_name">Nombre</Label>
                                             <Input
@@ -225,6 +241,32 @@ const UserManagementPage = () => {
                                                 value={newUser.last_name}
                                                 onChange={(e) => handleChange("last_name", e.target.value)}
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="photo">Foto</Label>
+                                            <Input
+                                            id="photo"
+                                            type="file"
+                                            name="photo"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) {
+                                                const url = await uploadUserPhoto(file, newUser.id || crypto.randomUUID())
+                                                if (url) handleChange("photo", url)
+                                                }
+                                            }}
+                                            />
+
+                                            {newUser.photo && (
+                                            <div className="mt-2">
+                                                <img
+                                                src={newUser.photo}
+                                                alt="Preview"
+                                                className="h-16 w-16 rounded-full object-cover"
+                                                />
+                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
