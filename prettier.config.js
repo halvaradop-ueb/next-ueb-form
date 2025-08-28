@@ -1,4 +1,11 @@
-import { config } from "@halvaradop/prettier-config"
-
 /** @type {import("prettier").Config} */
-export default config
+const config = {
+  semi: true,
+  singleQuote: true,
+  tabWidth: 2,
+  trailingComma: 'es5',
+  printWidth: 80,
+  endOfLine: 'lf',
+};
+
+export default config;
