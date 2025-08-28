@@ -1,1 +1,1 @@
-export const getQuestionOptions = async () => {};
+export const getQuestionOptions = async () => {}
