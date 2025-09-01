@@ -1,344 +1,381 @@
-"use client"
-import { useState, useEffect } from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Download, FileText, Save } from "lucide-react"
-import { getProfessors } from "@/services/professors"
-import type { ProfessorService, SubjectService } from "@/lib/@types/services"
-import { getSubjects, getSubjectsByProfessorId } from "@/services/subjects"
-import { createReport, getReports } from "@/services/report"
-import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
-import type { Report } from "@/lib/@types/reports"
+'use client';
+import { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Download, FileText, Save } from 'lucide-react';
+import { getProfessors } from '@/services/professors';
+import type { ProfessorService, SubjectService } from '@/lib/@types/services';
+import { getSubjects, getSubjectsByProfessorId } from '@/services/subjects';
+import { createReport, getReports } from '@/services/report';
+import { generateNewReportPDF, generateSavedReportPDF } from '@/lib/report';
+import type { Report } from '@/lib/@types/reports';
 
 export interface ReportState {
-    title: string
-    professor: string
-    subject: string
-    timeframe?: string
-    comments?: string
-    recommendations?: string
-    [key: string]: any
+  title: string;
+  professor: string;
+  subject: string;
+  timeframe?: string;
+  comments?: string;
+  recommendations?: string;
+  [key: string]: any;
 }
 
-const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
+const timeframes = [{ id: 'all', name: 'Todo el Tiempo' }];
 
 const initialReportState: ReportState = {
-    title: "",
-    professor: "",
-    subject: "",
-    timeframe: "all",
-    comments: "",
-    recommendations: "",
-}
+  title: '',
+  professor: '',
+  subject: '',
+  timeframe: 'all',
+  comments: '',
+  recommendations: '',
+};
 
 const AdminReportsPage = () => {
-    const [activeTab, setActiveTab] = useState("new")
-    const [subjects, setSubjects] = useState<SubjectService[]>([])
-    const [professors, setProfessors] = useState<ProfessorService[]>([])
-    const [savedReports, setSavedReports] = useState<Report[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [report, setReport] = useState<ReportState>(initialReportState)
+  const [activeTab, setActiveTab] = useState('new');
+  const [subjects, setSubjects] = useState<SubjectService[]>([]);
+  const [professors, setProfessors] = useState<ProfessorService[]>([]);
+  const [savedReports, setSavedReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [report, setReport] = useState<ReportState>(initialReportState);
 
-    const handleChange = (key: keyof ReportState, value: any) => {
-        setReport((prev) => ({
-            ...prev,
-            [key]: value,
-        }))
+  const handleChange = (key: keyof ReportState, value: any) => {
+    setReport((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const resetForm = () => {
+    setReport(initialReportState);
+    setSubjects([]);
+  };
+
+  const handleSaveReport = async () => {
+    if (!report.title || !report.professor || !report.subject) {
+      alert(
+        'Por favor complete todos los campos obligatorios: título, profesor y materia'
+      );
+      return;
     }
 
-    const resetForm = () => {
-        setReport(initialReportState)
-        setSubjects([])
+    setIsLoading(true);
+    try {
+      const professor = professors.find((p) => p.id === report.professor);
+      const subject = subjects.find((s) => s.id === report.subject);
+
+      if (!professor || !subject) {
+        alert('No se encontró la información del profesor o materia.');
+        return;
+      }
+
+      const reportData = {
+        title: report.title,
+        professor_id: report.professor,
+        professor_name: `${professor.first_name} ${professor.last_name}`,
+        subject_id: report.subject,
+        subject_name: subject.name,
+        comments: report.comments || '',
+        recommendations: report.recommendations || '',
+      };
+
+      const newReport = await createReport(reportData);
+
+      if (newReport) {
+        setSavedReports((prev) => [newReport, ...prev]);
+        alert('Borrador guardado exitosamente!');
+        setActiveTab('saved');
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error al guardar el borrador:', error);
+      alert(
+        `Error al guardar: ${error instanceof Error ? error.message : 'Ocurrió un error'}`
+      );
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const handleSaveReport = async () => {
-        if (!report.title || !report.professor || !report.subject) {
-            alert("Por favor complete todos los campos obligatorios: título, profesor y materia")
-            return
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const [professorsData, reportsData] = await Promise.all([
+          getProfessors(),
+          getReports(),
+        ]);
+        setProfessors([
+          ...professorsData,
+          {
+            id: 'all',
+            first_name: 'Todos',
+            last_name: 'los Profesores',
+          } as ProfessorService,
+        ]);
+        setSavedReports(
+          reportsData.filter(
+            (r) =>
+              r.professor_id &&
+              r.subject_id &&
+              (r.professor_name ||
+                (r.professor?.first_name && r.professor?.last_name)) &&
+              r.subject_name
+          )
+        );
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        alert('Error al cargar los datos iniciales');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!report.professor) {
+        setSubjects([]);
+        return;
+      }
+
+      try {
+        if (report.professor === 'all') {
+          const data = await getSubjects();
+          setSubjects(data);
+        } else {
+          const data = await getSubjectsByProfessorId(report.professor);
+          setSubjects(data);
         }
+      } catch (error) {
+        console.error('Error al cargar las materias:', error);
+        setSubjects([]);
+      }
+    };
 
-        setIsLoading(true)
-        try {
-            const professor = professors.find((p) => p.id === report.professor)
-            const subject = subjects.find((s) => s.id === report.subject)
+    fetchSubjects();
+  }, [report.professor]);
 
-            if (!professor || !subject) {
-                alert("No se encontró la información del profesor o materia.")
-                return
-            }
+  return (
+    <section>
+      <div className="container mx-auto py-6">
+        <h1 className="mb-6 text-3xl font-bold">Informes de Profesores</h1>
 
-            const reportData = {
-                title: report.title,
-                professor_id: report.professor,
-                professor_name: `${professor.first_name} ${professor.last_name}`,
-                subject_id: report.subject,
-                subject_name: subject.name,
-                comments: report.comments || "",
-                recommendations: report.recommendations || "",
-            }
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="new">Crear Nuevo Informe</TabsTrigger>
+            <TabsTrigger value="saved">Informes Guardados</TabsTrigger>
+          </TabsList>
 
-            const newReport = await createReport(reportData)
+          <TabsContent value="new" className="space-y-6 pt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Nuevo Informe de Profesor</CardTitle>
+                <CardDescription>
+                  Crea un informe detallado basado en las evaluaciones de los
+                  estudiantes
+                </CardDescription>
+              </CardHeader>
 
-            if (newReport) {
-                setSavedReports((prev) => [newReport, ...prev])
-                alert("Borrador guardado exitosamente!")
-                setActiveTab("saved")
-                resetForm()
-            }
-        } catch (error) {
-            console.error("Error al guardar el borrador:", error)
-            alert(`Error al guardar: ${error instanceof Error ? error.message : "Ocurrió un error"}`)
-        } finally {
-            setIsLoading(false)
-        }
-    }
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="reportTitle">Título del Informe *</Label>
+                  <Input
+                    id="reportTitle"
+                    placeholder="Ej: Evaluación Semestral - Dr. García"
+                    value={report.title}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    required
+                  />
+                </div>
 
-    useEffect(() => {
-        const loadInitialData = async () => {
-            setIsLoading(true)
-            try {
-                const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
-                setProfessors([
-                    ...professorsData,
-                    {
-                        id: "all",
-                        first_name: "Todos",
-                        last_name: "los Profesores",
-                    } as ProfessorService,
-                ])
-                setSavedReports(
-                    reportsData.filter(
-                        (r) =>
-                            r.professor_id &&
-                            r.subject_id &&
-                            (r.professor_name || (r.professor?.first_name && r.professor?.last_name)) &&
-                            r.subject_name,
-                    ),
-                )
-            } catch (error) {
-                console.error("Error loading initial data:", error)
-                alert("Error al cargar los datos iniciales")
-            } finally {
-                setIsLoading(false)
-            }
-        }
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="professor">Profesor *</Label>
+                    <Select
+                      onValueChange={(value) =>
+                        handleChange('professor', value)
+                      }
+                      value={report.professor}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un docente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {professors.map((prof) => (
+                          <SelectItem key={prof.id} value={prof.id}>
+                            {prof.first_name} {prof.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-        loadInitialData()
-    }, [])
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Materia *</Label>
+                    <Select
+                      onValueChange={(value) => handleChange('subject', value)}
+                      value={report.subject}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una materia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-    useEffect(() => {
-        const fetchSubjects = async () => {
-            if (!report.professor) {
-                setSubjects([])
-                return
-            }
+                  <div className="space-y-2">
+                    <Label htmlFor="timeframe">Periodo de Tiempo</Label>
+                    <Select
+                      value={report.timeframe}
+                      onValueChange={(value) =>
+                        handleChange('timeframe', value)
+                      }
+                    >
+                      <SelectTrigger id="timeframe">
+                        <SelectValue placeholder="Selecciona un periodo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeframes.map((timeframe) => (
+                          <SelectItem key={timeframe.id} value={timeframe.id}>
+                            {timeframe.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            try {
-                if (report.professor === "all") {
-                    const data = await getSubjects()
-                    setSubjects(data)
-                } else {
-                    const data = await getSubjectsByProfessorId(report.professor)
-                    setSubjects(data)
-                }
-            } catch (error) {
-                console.error("Error al cargar las materias:", error)
-                setSubjects([])
-            }
-        }
+                <div className="space-y-2">
+                  <Label htmlFor="comments">Análisis y Comentarios</Label>
+                  <Textarea
+                    id="comments"
+                    placeholder="Ingresa tu análisis de los datos de evaluación..."
+                    value={report.comments}
+                    onChange={(e) => handleChange('comments', e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
 
-        fetchSubjects()
-    }, [report.professor])
+                <div className="space-y-2">
+                  <Label htmlFor="recommendations">Recomendaciones</Label>
+                  <Textarea
+                    id="recommendations"
+                    placeholder="Ingresa tus recomendaciones para mejorar..."
+                    value={report.recommendations}
+                    onChange={(e) =>
+                      handleChange('recommendations', e.target.value)
+                    }
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </CardContent>
 
-    return (
-        <section>
-            <div className="container mx-auto py-6">
-                <h1 className="mb-6 text-3xl font-bold">Informes de Profesores</h1>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={handleSaveReport}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Borrador
+                </Button>
+                <Button
+                  onClick={() =>
+                    generateNewReportPDF(report, professors, subjects)
+                  }
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Generar PDF
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="new">Crear Nuevo Informe</TabsTrigger>
-                        <TabsTrigger value="saved">Informes Guardados</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="new" className="space-y-6 pt-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Nuevo Informe de Profesor</CardTitle>
-                                <CardDescription>
-                                    Crea un informe detallado basado en las evaluaciones de los estudiantes
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="reportTitle">Título del Informe *</Label>
-                                    <Input
-                                        id="reportTitle"
-                                        placeholder="Ej: Evaluación Semestral - Dr. García"
-                                        value={report.title}
-                                        onChange={(e) => handleChange("title", e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="grid gap-4 md:grid-cols-3">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="professor">Profesor *</Label>
-                                        <Select
-                                            onValueChange={(value) => handleChange("professor", value)}
-                                            value={report.professor}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecciona un docente" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {professors.map((prof) => (
-                                                    <SelectItem key={prof.id} value={prof.id}>
-                                                        {prof.first_name} {prof.last_name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="subject">Materia *</Label>
-                                        <Select
-                                            onValueChange={(value) => handleChange("subject", value)}
-                                            value={report.subject}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecciona una materia" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {subjects.map((subject) => (
-                                                    <SelectItem key={subject.id} value={subject.id}>
-                                                        {subject.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="timeframe">Periodo de Tiempo</Label>
-                                        <Select
-                                            value={report.timeframe}
-                                            onValueChange={(value) => handleChange("timeframe", value)}
-                                        >
-                                            <SelectTrigger id="timeframe">
-                                                <SelectValue placeholder="Selecciona un periodo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {timeframes.map((timeframe) => (
-                                                    <SelectItem key={timeframe.id} value={timeframe.id}>
-                                                        {timeframe.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="comments">Análisis y Comentarios</Label>
-                                    <Textarea
-                                        id="comments"
-                                        placeholder="Ingresa tu análisis de los datos de evaluación..."
-                                        value={report.comments}
-                                        onChange={(e) => handleChange("comments", e.target.value)}
-                                        className="min-h-[100px]"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="recommendations">Recomendaciones</Label>
-                                    <Textarea
-                                        id="recommendations"
-                                        placeholder="Ingresa tus recomendaciones para mejorar..."
-                                        value={report.recommendations}
-                                        onChange={(e) => handleChange("recommendations", e.target.value)}
-                                        className="min-h-[100px]"
-                                    />
-                                </div>
-                            </CardContent>
-
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={handleSaveReport}>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Guardar Borrador
-                                </Button>
-                                <Button onClick={() => generateNewReportPDF(report, professors, subjects)}>
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Generar PDF
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </TabsContent>
-
-                    <TabsContent value="saved" className="pt-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Informes Guardados</CardTitle>
-                                <CardDescription>Accede y gestiona tus informes creados previamente</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {isLoading ? (
-                                    <div className="flex justify-center py-8">
-                                        <p>Cargando informes...</p>
-                                    </div>
-                                ) : savedReports.length === 0 ? (
-                                    <p className="text-center text-muted-foreground py-8">
-                                        No hay informes guardados aún
-                                    </p>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {savedReports.map((report) => (
-                                            <Card key={report.id}>
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <h3 className="font-medium">{report.title}</h3>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {report.professor_name} • {report.subject_name}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground mt-1">
-                                                                {new Date(report.created_at).toLocaleDateString(
-                                                                    "es-ES",
-                                                                )}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() =>
-                                                                    generateSavedReportPDF(savedReports, report.id)
-                                                                }
-                                                                title="Descargar PDF"
-                                                            >
-                                                                <Download className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))}
-                                    </div>
+          <TabsContent value="saved" className="pt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informes Guardados</CardTitle>
+                <CardDescription>
+                  Accede y gestiona tus informes creados previamente
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <p>Cargando informes...</p>
+                  </div>
+                ) : savedReports.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No hay informes guardados aún
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {savedReports.map((report) => (
+                      <Card key={report.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-medium">{report.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {report.professor_name} • {report.subject_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(report.created_at).toLocaleDateString(
+                                  'es-ES'
                                 )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </section>
-    )
-}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  generateSavedReportPDF(
+                                    savedReports,
+                                    report.id
+                                  )
+                                }
+                                title="Descargar PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </section>
+  );
+};
 
-export default AdminReportsPage
+export default AdminReportsPage;
