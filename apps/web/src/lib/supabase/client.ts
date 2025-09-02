@@ -1,14 +1,14 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient } from "@supabase/ssr"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
 
 export const createClient = () => {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
-    db: {
-      schema: 'public',
-    },
-  });
-};
+    return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+        db: {
+            schema: "public",
+        },
+    })
+}
 
-export const supabase = createClient();
+export const supabase = createClient()

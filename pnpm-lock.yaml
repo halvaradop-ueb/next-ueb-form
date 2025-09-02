@@ -12,8 +12,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       '@halvaradop/prettier-config':
-        specifier: ^1.1.0
-        version: 1.1.0(prettier@3.6.2)
+        specifier: ^1.2.0
+        version: 1.2.0(prettier@3.6.2)
       '@halvaradop/ts-utility-types':
         specifier: ^0.20.0
         version: 0.20.0
@@ -273,10 +273,10 @@ packages:
   '@halvaradop/eslint-config@1.0.0':
     resolution: {integrity: sha512-jkceubYfLC8uOlVqMUGHTzw+CMWHV5xwpFwvwN+KEl/qq3hx60GVSSz35I3GrncUtAlfZoUMajFuXFnWz7Le3w==}
 
-  '@halvaradop/prettier-config@1.1.0':
-    resolution: {integrity: sha512-0zefBhXc9K1AELuUVm6mcCnvunrTjxuZN9yGBFatvmy6TthyotxVTwYFYvW03rhKF6J8OPBAe2gbzM6srIOsKw==}
+  '@halvaradop/prettier-config@1.2.0':
+    resolution: {integrity: sha512-LsOVE/YbP02sFSaRydis0ZfoWOcHzBLwC33ko2BHoZjNC1EB7LJLgobO4h/0VHQpAMpPUcm3oZ4J+DfgAH7btA==}
     peerDependencies:
-      prettier: ^2.0.0
+      prettier: ^3.0.0
 
   '@halvaradop/ts-utility-types@0.20.0':
     resolution: {integrity: sha512-Q0LFrksy7yuma3SuJnftdu0m6nY3mCaXbiwcjRINhSMRyMRUKmNa2o/T5dMtVUtrP4XD/qL9TcnJXs30zFcE/w==}
@@ -2957,7 +2957,7 @@ snapshots:
 
   '@halvaradop/eslint-config@1.0.0': {}
 
-  '@halvaradop/prettier-config@1.1.0(prettier@3.6.2)':
+  '@halvaradop/prettier-config@1.2.0(prettier@3.6.2)':
     dependencies:
       prettier: 3.6.2
 
