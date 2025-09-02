@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabase/client"
-import type { SubjectAssignmentService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
+import type {
+    SubjectAssignmentService,
+    SubjectAssignmentWithProfessorService,
+    SubjectService,
+} from "@/lib/@types/services"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     try {

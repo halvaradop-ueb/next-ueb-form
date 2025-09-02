@@ -63,10 +63,18 @@ export const createPeriods = (start: Date) => {
         endDate.setDate(endDate.getDate() - 1)
         const period = startDate.getMonth() === 0 ? 1 : 2
         const name = `Periodo ${startDate.getFullYear()} - ${period}`
-        periods.unshift({ start: new Date(startDate), end: new Date(endDate), name })
+        periods.unshift({
+            start: new Date(startDate),
+            end: new Date(endDate),
+            name,
+        })
         startDate.setMonth(startDate.getMonth() + 6)
     }
-    periods.unshift({ start: new Date(start), end: new Date("2050-01-01"), name: "Todos los periodos" })
+    periods.unshift({
+        start: new Date(start),
+        end: new Date("2050-01-01"),
+        name: "Todos los periodos",
+    })
     return periods
 }
 
@@ -86,7 +94,9 @@ export const createQuestionSchema = (type: Pick<Question, "question_type">) => {
         case "numeric":
             return z
                 .string({
-                    errorMap: () => ({ message: "Este campo es obligatorio y debe ser un número mayor o igual a 1." }),
+                    errorMap: () => ({
+                        message: "Este campo es obligatorio y debe ser un número mayor o igual a 1.",
+                    }),
                 })
                 .regex(/^(10|[1-9])$/, "Este campo es obligatorio y debe ser un número mayor o igual a 1.")
         case "single_choice":

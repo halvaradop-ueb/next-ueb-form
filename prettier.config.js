@@ -1,4 +1,6 @@
 import { config } from "@halvaradop/prettier-config"
 
-/** @type {import("prettier").Config} */
+/**
+ * @type {import("prettier").Config}
+ */
 export default config

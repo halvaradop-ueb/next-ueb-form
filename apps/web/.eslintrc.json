@@ -5,12 +5,12 @@
     "prettier/prettier": [
       "error",
       {
-        "tabWidth": 4,
         "semi": false,
-        "printWidth": 130,
+        "tabWidth": 4,
+        "printWidth": 120,
         "overrides": [
           {
-            "files": ["*.json", "*.yml", "*.yaml", "*.md"],
+            "files": ["*.json", "*.md", "*.mdx", "*.yaml", "*.yml", "*.toml"],
             "options": {
               "tabWidth": 2
             }

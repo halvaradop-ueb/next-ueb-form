@@ -38,26 +38,45 @@ export const addUser = async (user: Omit<UserService, "created_at" | "id">): Pro
 
 export const updateUser = async (user: UserService): Promise<UserService | null> => {
     try {
-        const { data, error } = await supabase.from("User").update(user).eq("id", user.id).select().single()
+        // Separate password from other user fields to prevent accidental overwrites
+        const { password, ...userWithoutPassword } = user
+
+        // Update user profile information (excluding password)
+        const { data, error } = await supabase
+            .from("User")
+            .update(userWithoutPassword)
+            .eq("id", user.id)
+            .select()
+            .single()
+
         if (error) {
             throw new Error(`Error updating user: ${error.message}`)
         }
-        if (data.password === user.password) {
-            const hashedPassword = await hashPassword(user.password)
-            const { data: updatedData, error: updateError } = await supabase
-                .from("User")
-                .update({ password: hashedPassword })
-                .eq("id", user.id)
-                .select()
-                .single()
-            if (updateError) {
-                throw new Error(`Error updating user password: ${updateError.message}`)
-            }
-            return updatedData
-        }
+
         return data
     } catch (error) {
         console.error("Error updating user:", error)
+        return null
+    }
+}
+
+export const updateUserPassword = async (userId: string, newPassword: string): Promise<UserService | null> => {
+    try {
+        const hashedPassword = await hashPassword(newPassword)
+        const { data, error } = await supabase
+            .from("User")
+            .update({ password: hashedPassword })
+            .eq("id", userId)
+            .select()
+            .single()
+
+        if (error) {
+            throw new Error(`Error updating user password: ${error.message}`)
+        }
+
+        return data
+    } catch (error) {
+        console.error("Error updating user password:", error)
         return null
     }
 }
@@ -91,4 +110,23 @@ export const getAuthenticated = async (session: Session): Promise<UserService | 
         console.error("Error fetching logged user:", error)
         return null
     }
+}
+
+export const uploadUserPhoto = async (file: File, userId: string) => {
+    const fileExt = file.name.split(".").pop()
+    const filePath = `${userId}/${Date.now()}.${fileExt}`
+
+    const { error } = await supabase.storage.from("avatars").upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+    })
+
+    if (error) {
+        console.error("Error uploading image:", error.message)
+        return null
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(filePath)
+
+    return data.publicUrl
 }

@@ -13,6 +13,7 @@ import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "l
 import { getAuthenticated, updateUser } from "@/services/users"
 import type { UserService } from "@/lib/@types/services"
 import type { Role } from "@/lib/@types/types"
+import { supabase } from "@/lib/supabase/client"
 
 const roles: Record<Role, string> = {
     admin: "Administrador",
@@ -76,9 +77,42 @@ export default function ProfilePage() {
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex flex-col items-center space-y-4">
-                                <Avatar className="h-32 w-32">
-                                    <AvatarImage src="/placeholder-user.jpg" alt="Foto de perfil" />
+                                <Avatar className="h-32 w-32 relative">
+                                    <AvatarImage src={user.photo ?? "/placeholder-user.jpg"} alt="Foto de perfil" />
                                     <AvatarFallback>{`${user.first_name?.charAt(0)}${user.last_name?.charAt(0)}`}</AvatarFallback>
+
+                                    {isEditing && (
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={async (e) => {
+                                                if (!e.target.files?.[0]) return
+                                                const file = e.target.files[0]
+
+                                                // 👇 subir a Supabase
+                                                const { data, error } = await supabase.storage
+                                                    .from("avatars") // asegúrate que el bucket exista
+                                                    .upload(`users/${user.id}-${Date.now()}`, file, {
+                                                        cacheControl: "3600",
+                                                        upsert: true,
+                                                    })
+
+                                                if (error) {
+                                                    console.error("Error uploading image:", error.message)
+                                                    return
+                                                }
+
+                                                // 👇 obtener URL pública
+                                                const { data: urlData } = supabase.storage
+                                                    .from("avatars")
+                                                    .getPublicUrl(data.path)
+
+                                                // 👇 actualizar estado local para que se vea enseguida
+                                                handleChange("photo", urlData.publicUrl)
+                                            }}
+                                        />
+                                    )}
                                 </Avatar>
                                 <div className="text-center">
                                     <h2 className="text-2xl font-bold">
@@ -168,7 +202,9 @@ export default function ProfilePage() {
                                                 onChange={(e) => handleChange("email", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.email}</p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">
+                                                {user.email}
+                                            </p>
                                         )}
                                     </div>
 
@@ -237,7 +273,9 @@ export default function ProfilePage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium">Generaste un informe</p>
-                                                    <p className="text-sm text-muted-foreground">Revisión Anual - Dr. Smith</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Revisión Anual - Dr. Smith
+                                                    </p>
                                                     <p className="text-xs text-muted-foreground">Ayer</p>
                                                 </div>
                                             </div>
@@ -246,7 +284,9 @@ export default function ProfilePage() {
                                                     <Settings className="h-5 w-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">Actualizaste la configuración del sistema</p>
+                                                    <p className="font-medium">
+                                                        Actualizaste la configuración del sistema
+                                                    </p>
                                                     <p className="text-sm text-muted-foreground">
                                                         Cambiaste las fechas del periodo de evaluación
                                                     </p>
@@ -298,7 +338,9 @@ export default function ProfilePage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="font-medium">Exportación de Datos</p>
-                                                    <p className="text-sm text-muted-foreground">Exportar datos del sistema</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Exportar datos del sistema
+                                                    </p>
                                                 </div>
                                                 <Badge>Acceso Completo</Badge>
                                             </div>

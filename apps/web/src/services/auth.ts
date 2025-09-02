@@ -31,7 +31,14 @@ export const checkAndRegisterUser = async (profile: GoogleProfile): Promise<User
         const password = await hashPassword(randomPassword)
         const { data: newUser, error } = await supabase
             .from("User")
-            .insert({ email, password, role: "student", status: true, first_name: "unknown", last_name: "unknown" })
+            .insert({
+                email,
+                password,
+                role: "student",
+                status: true,
+                first_name: "unknown",
+                last_name: "unknown",
+            })
             .select()
             .single()
         if (error) {

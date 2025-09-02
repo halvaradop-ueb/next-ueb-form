@@ -29,7 +29,10 @@ export const addAnswer = async <FormSchema extends StudentFormState | ProfessorF
                 throw new Error("Failed to insert answer")
             }
 
-            const answerOptions = filteredValues.map((value) => ({ answer_id: answer.id, answer_text: value }))
+            const answerOptions = filteredValues.map((value) => ({
+                answer_id: answer.id,
+                answer_text: value,
+            }))
             const { error: errorOptions } = await supabase.from("answervalue").insert(answerOptions)
             if (errorOptions) {
                 console.error("Error inserting answer options:", errorOptions)

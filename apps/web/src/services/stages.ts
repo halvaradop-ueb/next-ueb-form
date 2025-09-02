@@ -17,7 +17,10 @@ export const getStages = async (): Promise<StageService[]> => {
         if (error) {
             throw new Error(`Error fetching stages: ${error.message}`)
         }
-        return data.map((state) => ({ ...state, questions: state.question })) as unknown as StageService[]
+        return data.map((state) => ({
+            ...state,
+            questions: state.question,
+        })) as unknown as StageService[]
     } catch (error) {
         console.error("Error fetching stages:", error)
         return []

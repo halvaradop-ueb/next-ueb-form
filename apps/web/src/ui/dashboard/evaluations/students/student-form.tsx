@@ -158,7 +158,9 @@ export const StudentForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep] && steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">
+                        {steps.length > 0 && steps[indexStep] && steps[indexStep].component}
+                    </div>
                     <FooterSteps
                         steps={steps}
                         indexStep={indexStep}

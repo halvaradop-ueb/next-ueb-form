@@ -2,6 +2,9 @@ import jsPDF from "jspdf"
 import type { Report } from "./@types/reports"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { ReportState } from "@/app/(panel)/dashboard/reports/page"
+import logoUEB from "@/assets/ueb.png"
+import logoMGOP from "@/assets/MGOP_EGDP.png"
+import logoGDP from "@/assets/GDPCirclo.png"
 
 export const generateSavedReportPDF = (reports: Report[], reportId: string) => {
     const savedReport = reports.find((r) => r.id === reportId)
@@ -59,18 +62,36 @@ export const generateSavedReportPDF = (reports: Report[], reportId: string) => {
 
     doc.text(summary, marginLeft, y)
 
+    let finalY = y + summary.length * 6 + 20
+    if (finalY > 240) {
+        doc.addPage()
+        finalY = 20
+    }
+
+    doc.addImage(logoMGOP.src, "PNG", 55, finalY, 100, 40)
+    const secondaryY = finalY + 45
+    doc.addImage(logoGDP.src, "PNG", 60, secondaryY, 40, 25)
+    doc.addImage(logoUEB.src, "PNG", 120, secondaryY, 40, 25)
+
     doc.setDrawColor(180, 180, 180)
     doc.line(20, 285, 190, 285)
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
-        align: "center",
-    })
+    doc.text(
+        "Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque",
+        105,
+        290,
+        { align: "center" },
+    )
 
     doc.save(`Reporte_Historico_${savedReport.professor_name}_${currentDate.replace(/ /g, "_")}.pdf`)
 }
 
-export const generateNewReportPDF = (report: ReportState, professors: ProfessorService[], subjects: SubjectService[]) => {
+export const generateNewReportPDF = (
+    report: ReportState,
+    professors: ProfessorService[],
+    subjects: SubjectService[],
+) => {
     if (!report.title || !report.professor || !report.subject) {
         alert("Complete título, profesor y materia antes de generar el PDF")
         return
@@ -130,13 +151,25 @@ export const generateNewReportPDF = (report: ReportState, professors: ProfessorS
     doc.text(recLines, marginLeft, y)
     y += recLines.length * 6 + 10
 
+    // Add images at the end of the PDF
+    if (y > 240) {
+        doc.addPage()
+        y = 20
+    }
+    doc.addImage(logoMGOP.src, "PNG", 55, y, 100, 40)
+    const secondaryY = y + 45
+    doc.addImage(logoGDP.src, "PNG", 60, secondaryY, 40, 25)
+    doc.addImage(logoUEB.src, "PNG", 120, secondaryY, 40, 25)
     doc.setDrawColor(180, 180, 180)
     doc.line(20, 285, 190, 285)
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text("Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El bosque", 105, 290, {
-        align: "center",
-    })
+    doc.text(
+        "Sistema de Evaluacion Docente Programas Postgrados Gerencia de Proyectos - Universidad El Bosque",
+        105,
+        290,
+        { align: "center" },
+    )
 
     doc.save(`Reporte_Docente_${professor?.last_name}_${currentDate.replace(/ /g, "_")}.pdf`)
 }
