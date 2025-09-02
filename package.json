@@ -6,9 +6,11 @@
   "description": "Evaluation system monorepo",
   "scripts": {
     "dev": "turbo dev --parallel",
+    "dev:api": "turbo dev --filter=api",
     "dev:web": "turbo dev --filter=web",
     "build": "turbo build --parallel",
     "build:web": "turbo build --filter=web",
+    "build:api": "turbo build --filter=api",
     "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
     "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
   },

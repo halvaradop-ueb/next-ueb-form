@@ -1,28 +1,47 @@
-import { supabase } from "@/lib/supabase/client"
-import type {
-    SubjectAssignmentService,
-    SubjectAssignmentWithProfessorService,
-    SubjectService,
-} from "@/lib/@types/services"
+import { supabase } from "../lib/supabase.js"
 
-/**
- * @experimental
- */
-const ROUTE = "http://localhost:4000/api/v1"
+export interface SubjectAssignmentService {
+    id: string
+    professor_id: string
+    subject_id: string
+    assigned_at: string
+}
+export interface SubjectAssignmentWithProfessorService {
+    id: string
+    subject_id: string
+    user: {
+        id: string
+        email: string
+        first_name: string
+        last_name: string
+    }
+    subject: {
+        id: string
+        name: string
+    }
+}
+export interface SubjectService {
+    id: string
+    name: string
+    description: string
+    /**
+     * @deprecated
+     */
+    professor_id: string
+}
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     try {
-        const response = await fetch(`${ROUTE}/subjects`)
-        if (!response.ok) {
-            throw new Error("Failed to fetch subjects")
+        const { data, error } = await supabase.from("subject").select("*")
+        if (error) {
+            throw new Error(`Error fetching subjects: ${error.message}`)
         }
-        return response.json()
+        return data
     } catch (error) {
         console.error("Error fetching subjects:", error)
         return []
     }
 }
-
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     try {
@@ -48,9 +67,12 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
     }
 }
 
+/**
+ * TODO: implement
+ */
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
     try {
-        const { data: relation, error: checkError } = await supabase
+        const { data: relation } = await supabase
             .from("subjectassignment")
             .select("*")
             .eq("professor_id", professorId)
@@ -74,6 +96,9 @@ export const addAssignment = async (professorId: string, subjectId: string): Pro
     }
 }
 
+/**
+ * TODOD: implement
+ */
 export const getProfessorsBySubject = async (subjectId: string): Promise<SubjectAssignmentWithProfessorService[]> => {
     try {
         const { data, error } = await supabase
@@ -110,6 +135,9 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
     }
 }
 
+/**
+ * TODO: implement
+ */
 export const deleteAssignment = async (assignmentId: string): Promise<boolean> => {
     try {
         const { error } = await supabase.from("subjectassignment").delete().eq("id", assignmentId)
