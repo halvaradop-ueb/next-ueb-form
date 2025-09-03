@@ -8,10 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, FileText, Save } from "lucide-react"
-import { getProfessors } from "@/services/professors"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
-import { getSubjects, getSubjectsByProfessorId } from "@/services/subjects"
-import { createReport, getReports } from "@/services/report"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
 
@@ -29,7 +26,7 @@ const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
 
 const initialReportState: ReportState = {
     title: "",
-    professor: "",
+    professor: "all",
     subject: "",
     timeframe: "all",
     comments: "",
@@ -45,17 +42,13 @@ const AdminReportsPage = () => {
     const [report, setReport] = useState<ReportState>(initialReportState)
 
     const handleChange = (key: keyof ReportState, value: any) => {
-        setReport((prev) => ({
-            ...prev,
-            [key]: value,
-        }))
+        setReport((prev) => ({ ...prev, [key]: value }))
     }
 
     const resetForm = () => {
         setReport(initialReportState)
         setSubjects([])
     }
-
     const handleSaveReport = async () => {
         if (!report.title || !report.professor || !report.subject) {
             alert("Por favor complete todos los campos obligatorios: título, profesor y materia")
@@ -64,35 +57,31 @@ const AdminReportsPage = () => {
 
         setIsLoading(true)
         try {
-            const professor = professors.find((p) => p.id === report.professor)
-            const subject = subjects.find((s) => s.id === report.subject)
+            const res = await fetch("/api/report", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: report.title,
+                    professor_id: report.professor === "all" ? null : report.professor,
+                    subject_id: report.subject === "all" ? null : report.subject,
+                    comments: report.comments || "",
+                    recommendations: report.recommendations || "",
+                }),
+            })
 
-            if (!professor || !subject) {
-                alert("No se encontró la información del profesor o materia.")
-                return
+            if (!res.ok) {
+                const text = await res.text()
+                throw new Error(text || "Error al guardar el reporte")
             }
 
-            const reportData = {
-                title: report.title,
-                professor_id: report.professor,
-                professor_name: `${professor.first_name} ${professor.last_name}`,
-                subject_id: report.subject,
-                subject_name: subject.name,
-                comments: report.comments || "",
-                recommendations: report.recommendations || "",
-            }
-
-            const newReport = await createReport(reportData)
-
-            if (newReport) {
-                setSavedReports((prev) => [newReport, ...prev])
-                alert("Borrador guardado exitosamente!")
-                setActiveTab("saved")
-                resetForm()
-            }
-        } catch (error) {
+            const newReport = await res.json()
+            setSavedReports((prev) => [newReport, ...prev])
+            alert("Borrador guardado exitosamente!")
+            setActiveTab("saved")
+            resetForm()
+        } catch (error: any) {
             console.error("Error al guardar el borrador:", error)
-            alert(`Error al guardar: ${error instanceof Error ? error.message : "Ocurrió un error"}`)
+            alert(`Error al guardar: ${error.message || "Ocurrió un error"}`)
         } finally {
             setIsLoading(false)
         }
@@ -102,27 +91,24 @@ const AdminReportsPage = () => {
         const loadInitialData = async () => {
             setIsLoading(true)
             try {
-                const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
+                const [professorsRes, reportsRes] = await Promise.all([
+                    fetch("/api/users?role=professor"),
+                    fetch("/api/reports"),
+                ])
+                const professorsData: ProfessorService[] = professorsRes.ok ? await professorsRes.json() : []
+                const reportsData: Report[] = reportsRes.ok ? await reportsRes.json() : []
+
                 setProfessors([
                     ...professorsData,
-                    {
-                        id: "all",
-                        first_name: "Todos",
-                        last_name: "los Profesores",
-                    } as ProfessorService,
+                    { id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService,
                 ])
-                setSavedReports(
-                    reportsData.filter(
-                        (r) =>
-                            r.professor_id &&
-                            r.subject_id &&
-                            (r.professor_name || (r.professor?.first_name && r.professor?.last_name)) &&
-                            r.subject_name,
-                    ),
-                )
+
+                setSavedReports(reportsData)
             } catch (error) {
                 console.error("Error loading initial data:", error)
                 alert("Error al cargar los datos iniciales")
+                setProfessors([{ id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService])
+                setSavedReports([])
             } finally {
                 setIsLoading(false)
             }
@@ -130,22 +116,23 @@ const AdminReportsPage = () => {
 
         loadInitialData()
     }, [])
-
     useEffect(() => {
         const fetchSubjects = async () => {
-            if (!report.professor) {
-                setSubjects([])
-                return
-            }
-
             try {
-                if (report.professor === "all") {
-                    const data = await getSubjects()
-                    setSubjects(data)
-                } else {
-                    const data = await getSubjectsByProfessorId(report.professor)
-                    setSubjects(data)
+                let url = "/api/subjects"
+                if (report.professor && report.professor !== "all") {
+                    url += `?professorId=${report.professor}`
                 }
+
+                const res = await fetch(url)
+                if (!res.ok) {
+                    console.error("HTTP error!", res.status)
+                    setSubjects([])
+                    return
+                }
+
+                const json = await res.json()
+                setSubjects(json.subjects || [])
             } catch (error) {
                 console.error("Error al cargar las materias:", error)
                 setSubjects([])
@@ -236,9 +223,9 @@ const AdminReportsPage = () => {
                                                 <SelectValue placeholder="Selecciona un periodo" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {timeframes.map((timeframe) => (
-                                                    <SelectItem key={timeframe.id} value={timeframe.id}>
-                                                        {timeframe.name}
+                                                {timeframes.map((tf) => (
+                                                    <SelectItem key={tf.id} value={tf.id}>
+                                                        {tf.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -271,12 +258,10 @@ const AdminReportsPage = () => {
 
                             <CardFooter className="flex justify-between">
                                 <Button variant="outline" onClick={handleSaveReport}>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Guardar Borrador
+                                    <Save className="mr-2 h-4 w-4" /> Guardar Borrador
                                 </Button>
                                 <Button onClick={() => generateNewReportPDF(report, professors, subjects)}>
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Generar PDF
+                                    <FileText className="mr-2 h-4 w-4" /> Generar PDF
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -299,19 +284,19 @@ const AdminReportsPage = () => {
                                     </p>
                                 ) : (
                                     <div className="space-y-4">
-                                        {savedReports.map((report) => (
-                                            <Card key={report.id}>
+                                        {savedReports.map((r) => (
+                                            <Card key={r.id}>
                                                 <CardContent className="p-4">
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <h3 className="font-medium">{report.title}</h3>
+                                                            <h3 className="font-medium">{r.title}</h3>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {report.professor_name} • {report.subject_name}
+                                                                {r.professor_name ||
+                                                                    `${r.professor?.first_name} ${r.professor?.last_name}`}{" "}
+                                                                • {r.subject_name || r.subject?.name}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground mt-1">
-                                                                {new Date(report.created_at).toLocaleDateString(
-                                                                    "es-ES",
-                                                                )}
+                                                                {new Date(r.created_at).toLocaleDateString("es-ES")}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center space-x-2">
@@ -319,7 +304,7 @@ const AdminReportsPage = () => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                    generateSavedReportPDF(savedReports, report.id)
+                                                                    generateSavedReportPDF(savedReports, r.id)
                                                                 }
                                                                 title="Descargar PDF"
                                                             >
