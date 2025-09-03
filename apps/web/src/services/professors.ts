@@ -1,12 +1,16 @@
 import { ProfessorService } from "@/lib/@types/services"
 import { getUsers } from "./users"
 
-export const getProfessors = async (): Promise<ProfessorService[]> => {
+// services/professors.ts
+export const getProfessors = async () => {
     try {
-        const professors = await getUsers()
-        return professors.filter((professor) => professor.role === "professor")
+        const res = await fetch("/api/users?role=professor")
+        if (!res.ok) throw new Error("No se pudieron cargar los profesores")
+        const data = await res.json()
+        // Asegurarse de que siempre devuelva un array
+        return Array.isArray(data) ? data : []
     } catch (error) {
-        console.error("Error fetching professors:", error)
+        console.error("Error en getProfessors:", error)
         return []
     }
 }

@@ -5,9 +5,6 @@ import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getProfessors } from "@/services/professors"
-import { getFeedback } from "@/services/feedback"
-import { getSubjectsByProfessorId } from "@/services/subjects"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
@@ -50,35 +47,54 @@ const FeedbackPage = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const [professors] = await Promise.all([getProfessors()])
-            setProfessors(professors)
+            try {
+                const res = await fetch("/api/professor")
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`)
+                }
+
+                const json = await res.json()
+                console.log(json)
+                setProfessors(json.users || [])
+            } catch (err) {
+                console.error("Fetch error:", err)
+            }
         }
+
         fetchData()
     }, [])
 
     useEffect(() => {
         const fetchSubjects = async () => {
             if (!options?.professorId) return
-            const subjects = await getSubjectsByProfessorId(options.professorId)
-            setSubjects(subjects)
+
+            try {
+                const res = await fetch(`/api/subjects?professorId=${options.professorId}`)
+                if (!res.ok) {
+                    console.error("HTTP error!", res.status)
+                    return
+                }
+                const json = await res.json()
+                setSubjects(json.subjects || [])
+            } catch (err) {
+                console.error("Fetch error:", err)
+            }
         }
+
         fetchSubjects()
     }, [options?.professorId])
 
     useEffect(() => {
         const fetchFeedback = async () => {
             if (!options?.professorId || !options?.subjectId) return
-            const feedback = await getFeedback(options.professorId, options.subjectId)
+            const res = await fetch(`/api/feedback?professorId=${options.professorId}&subjectId=${options.subjectId}`)
+            const feedback = await res.json()
             setFeedback(feedback)
             setRatings(ratingFeedback(feedback))
         }
         fetchFeedback()
     }, [options?.professorId, options?.subjectId])
-
-    useEffect(() => {
-        const ratings = ratingFeedback(fileteredFeedback)
-        setRatings(ratings)
-    }, [options.timeframe])
 
     return (
         <section className="space-y-6">
