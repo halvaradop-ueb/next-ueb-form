@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase/client"
-import { any } from "zod"
 export interface Report {
     id: string
     title: string
@@ -31,65 +30,7 @@ export interface CreateReportDto {
     comments?: string
     recommendations?: string
 }
-type SupabaseReportResponse = {
-    id: string
-    title: string
-    professor_id: string | null
-    subject_id: string | null
-    comments?: string | null
-    recommendations?: string | null
-    created_at: string
-    professor?:
-        | {
-              id: string
-              first_name: string
-              last_name: string
-              email?: string
-          }[]
-        | null
-    subject?:
-        | {
-              id: string
-              name: string
-              description?: string
-          }[]
-        | null
-}
-const mapReport = (item: SupabaseReportResponse): Report => {
-    const professorObj = item.professor?.[0]
-    const subjectObj = item.subject?.[0]
 
-    const professorName = professorObj ? `${professorObj.first_name} ${professorObj.last_name}` : "Profesor desconocido"
-
-    const subjectName = subjectObj ? subjectObj.name : "Materia desconocida"
-
-    return {
-        id: item.id,
-        title: item.title || "Sin título",
-        professor_id: item.professor_id || "",
-        subject_id: item.subject_id || "",
-        comments: item.comments || undefined,
-        recommendations: item.recommendations || undefined,
-        created_at: item.created_at,
-        professor_name: professorName,
-        subject_name: subjectName,
-        professor: professorObj
-            ? {
-                  id: professorObj.id,
-                  first_name: professorObj.first_name,
-                  last_name: professorObj.last_name,
-                  email: professorObj.email,
-              }
-            : undefined,
-        subject: subjectObj
-            ? {
-                  id: subjectObj.id,
-                  name: subjectObj.name,
-                  description: subjectObj.description,
-              }
-            : undefined,
-    }
-}
 export const getReports = async (): Promise<Report[]> => {
     try {
         const { data, error } = await supabase
@@ -164,6 +105,7 @@ export const getReports = async (): Promise<Report[]> => {
         return []
     }
 }
+
 export const createReport = async (reportData: CreateReportDto): Promise<Report | null> => {
     try {
         const { data: professorData, error: professorError } = await supabase
