@@ -47,3 +47,5 @@ dist
 
 package-lock.json
 .env*.local
+dist
+**/dist/
