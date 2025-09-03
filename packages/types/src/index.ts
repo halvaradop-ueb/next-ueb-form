@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 export interface QuestionService {
     id: string
     title: string
@@ -8,6 +11,9 @@ export interface QuestionService {
     stage_id: string
 }
 
+/**
+ * @deprecated
+ */
 export interface UserService {
     id: string
     first_name: string
@@ -21,5 +27,3 @@ export interface UserService {
     phone: string
     photo?: string
 }
-
-

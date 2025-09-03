@@ -1,24 +1,7 @@
 import { supabase } from "../lib/supabase.js"
+import { Stage } from "@ueb/types/stage"
 
-export interface QuestionService {
-    id: string
-    title: string
-    description?: string
-    question_type: "single_choice" | "multiple_choice" | "text" | "numeric"
-    required: boolean
-    target_audience: "student" | "professor"
-    stage_id: string
-}
-
-export interface StageService {
-    id: string
-    name: string
-    description: string
-    target_audience: "student" | "professor"
-    questions: Pick<QuestionService, "id" | "title" | "description">[]
-}
-
-export const getStages = async (): Promise<StageService[]> => {
+export const getStages = async (): Promise<Stage[]> => {
     try {
         const { data, error } = await supabase.from("stage").select(`
                 id,
@@ -37,14 +20,14 @@ export const getStages = async (): Promise<StageService[]> => {
         return data.map((state) => ({
             ...state,
             questions: state.question,
-        })) as unknown as StageService[]
+        })) as unknown as Stage[]
     } catch (error) {
         console.error("Error fetching stages:", error)
         return []
     }
 }
 
-export const addStage = async (stage: StageService): Promise<StageService | null> => {
+export const addStage = async (stage: Stage): Promise<Stage | null> => {
     const { name, description, target_audience } = stage
     try {
         const { data, error } = await supabase
@@ -56,15 +39,15 @@ export const addStage = async (stage: StageService): Promise<StageService | null
             throw new Error(`Error adding stage: ${error.message}`)
         }
 
-        return { ...data, questions: [] } as StageService
+        return { ...data, questions: [] } as Stage
     } catch (error) {
         console.error("Error adding stage:", error)
         return null
     }
 }
 
-export const updateStage = async (stage: StageService): Promise<StageService | null> => {
-    const { id, name, description, target_audience } = stage
+export const updateStage = async (id: string, stage: Stage): Promise<Stage | null> => {
+    const { name, description, target_audience } = stage
     try {
         const { data, error } = await supabase
             .from("stage")
@@ -88,7 +71,7 @@ export const updateStage = async (stage: StageService): Promise<StageService | n
             throw new Error(`Error updating stage: ${error.message}`)
         }
 
-        return { ...data, questions: data.question } as unknown as StageService
+        return { ...data, questions: data.question } as unknown as Stage
     } catch (error) {
         console.error("Error updating stage:", error)
         return null

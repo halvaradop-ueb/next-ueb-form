@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabase"
+import { supabase } from "../lib/supabase.js"
 
 export async function getAnswers() {
     const { data, error } = await supabase.from("answer").select("*, answervalue(id, answer_text)")
@@ -16,6 +16,10 @@ export async function getAnswerById(id: string) {
     return data
 }
 
+/**
+ * @deprecated
+ * @unstable
+ */
 export async function getAnswersByUser(userId: string) {
     const { data, error } = await supabase
         .from("answer")

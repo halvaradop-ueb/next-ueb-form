@@ -9,7 +9,7 @@ const ROUTE = "http://localhost:4000/api/v1"
 export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
         const response = await fetch(`${ROUTE}/users?role=professor`)
-        if(!response.ok) {
+        if (!response.ok) {
             return []
         }
         const json = await response.json()

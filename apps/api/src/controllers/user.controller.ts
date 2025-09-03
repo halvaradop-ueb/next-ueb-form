@@ -1,26 +1,60 @@
 import { Request, Response } from "express"
-import { createUser, deleteUser, getUserById, getUsers, updateUserPassword } from "../services/users.service.js"
+import {
+    createUser,
+    deleteUser,
+    getUserById,
+    getUsers,
+    updateUser,
+    updateUserPassword,
+    UserService,
+} from "../services/users.service.js"
+import { errorResponse } from "../lib/utils.js"
+import { APIResponse } from "../lib/types.js"
 
-export const getUsersController = async (req: Request, res: Response) => {
+/**
+ * TODO: improve filtering
+ */
+export const getUsersController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
-        const byRole = req.query.role as string
+        const byRole = req.query.role
+        const roles = Array.isArray(byRole) ? byRole : [byRole]
         const users = await getUsers()
-        const filteredUsers = byRole ? users.filter((user) => user.role === byRole) : users
+        const filteredUsers = roles.length > 0 ? users.filter((user) => roles.includes(user.role)) : users
         res.status(200).json({
             data: filteredUsers,
             errors: null,
             message: "Users retrieved successfully",
         })
     } catch {
-        res.status(500).json({
-            data: null,
-            errors: ["Failed to retrieve users"],
-            message: "Internal server error",
-        })
+        res.status(500).json(errorResponse("Failed to retrieve users"))
     }
 }
 
-export const getUserByIdController = async (req: Request, res: Response) => {
+export const updateUserController = async (req: Request, res: Response) => {
+    try {
+        const userId = req.params.id
+        if (!userId) {
+            return res.status(400).json({
+                data: null,
+                errors: ["User ID is required"],
+                message: "User ID is required",
+            })
+        }
+        const updatedUser = await updateUser({ ...req.body, id: userId })
+        if (!updatedUser) {
+            return res.status(404).json(errorResponse("User not found"))
+        }
+        res.status(200).json({
+            data: updatedUser,
+            errors: null,
+            message: "User updated successfully",
+        })
+    } catch {
+        res.status(500).json(errorResponse("Failed to update user"))
+    }
+}
+
+export const getUserByIdController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const id = req.params.id
         if (!id) {
@@ -32,11 +66,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
         }
         const user = await getUserById(id)
         if (!user) {
-            return res.status(404).json({
-                data: null,
-                errors: ["User not found"],
-                message: "User not found",
-            })
+            return res.status(404).json(errorResponse("User not found"))
         }
         res.status(200).json({
             data: user,
@@ -44,11 +74,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
             message: "User retrieved successfully",
         })
     } catch {
-        res.status(500).json({
-            data: null,
-            errors: ["Failed to retrieve user"],
-            message: "Internal server error",
-        })
+        res.status(500).json(errorResponse("Failed to retrieve user"))
     }
 }
 
@@ -61,11 +87,7 @@ export const createUserController = async (req: Request, res: Response) => {
             message: "User created successfully",
         })
     } catch {
-        res.status(500).json({
-            data: null,
-            errors: ["Failed to create user"],
-            message: "Internal server error",
-        })
+        res.status(500).json(errorResponse("Failed to create user"))
     }
 }
 
@@ -82,11 +104,7 @@ export const updatePasswordController = async (req: Request, res: Response) => {
         const { newPassword } = req.body
         const updatedUser = await updateUserPassword(userId, newPassword)
         if (!updatedUser) {
-            return res.status(404).json({
-                data: null,
-                errors: ["User not found"],
-                message: "User not found",
-            })
+            return res.status(404).json(errorResponse("User not found"))
         }
         res.status(200).json({
             data: updatedUser,
@@ -94,31 +112,19 @@ export const updatePasswordController = async (req: Request, res: Response) => {
             message: "Password updated successfully",
         })
     } catch {
-        res.status(500).json({
-            data: null,
-            errors: ["Failed to update password"],
-            message: "Internal server error",
-        })
+        res.status(500).json(errorResponse("Failed to update password"))
     }
 }
 
-export const deleteUserController = async (req: Request, res: Response) => {
+export const deleteUserController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const userId = req.params.id
         if (!userId) {
-            return res.status(400).json({
-                data: null,
-                errors: ["User ID is required"],
-                message: "User ID is required",
-            })
+            return res.status(400).json(errorResponse("User ID is required"))
         }
         const deletedUser = await deleteUser(userId)
         if (!deletedUser) {
-            return res.status(404).json({
-                data: null,
-                errors: ["User not found"],
-                message: "User not found",
-            })
+            return res.status(404).json(errorResponse("User not found"))
         }
         res.status(200).json({
             data: deletedUser,
@@ -126,10 +132,6 @@ export const deleteUserController = async (req: Request, res: Response) => {
             message: "User deleted successfully",
         })
     } catch {
-        res.status(500).json({
-            data: null,
-            errors: ["Failed to delete user"],
-            message: "Internal server error",
-        })
+        res.status(500).json(errorResponse("Failed to delete user"))
     }
 }

@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 export interface QuestionService {
     id: string;
     title: string;
@@ -7,6 +10,9 @@ export interface QuestionService {
     target_audience: "student" | "professor";
     stage_id: string;
 }
+/**
+ * @deprecated
+ */
 export interface UserService {
     id: string;
     first_name: string;

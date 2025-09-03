@@ -13,7 +13,22 @@
   "devDependencies": {
     "typescript": "^5.9.2",
     "@halvaradop/tsconfig": "^1.1.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./user": {
+      "types": "./dist/user.d.ts"
+    },
+    "./question": {
+      "types": "./dist/question.d.ts"
+    },
+    "./stage": {
+      "types": "./dist/stage.d.ts"
+    }
   }
 }
-
-

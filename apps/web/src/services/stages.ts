@@ -11,7 +11,9 @@ export const getStages = async (): Promise<StageService[]> => {
         if (!response.ok) {
             throw new Error("Failed to fetch stages")
         }
-        return response.json()
+        const json = await response.json()
+        console.log("Fetched stages:", json.data)
+        return json.data
     } catch (error) {
         console.error("Error fetching stages:", error)
         return []
@@ -31,7 +33,8 @@ export const addStage = async (stage: StageService): Promise<StageService | null
         if (!response.ok) {
             throw new Error("Failed to add stage")
         }
-        return response.json()
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error adding stage:", error)
         return null
@@ -41,17 +44,18 @@ export const addStage = async (stage: StageService): Promise<StageService | null
 export const updateStage = async (stage: StageService): Promise<StageService | null> => {
     const { id, name, description, target_audience } = stage
     try {
-        const response = await fetch(`${ROUTE}/stages`, {
+        const response = await fetch(`${ROUTE}/stages/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ id, name, description, target_audience }),
+            body: JSON.stringify({ name, description, target_audience }),
         })
         if (!response.ok) {
             throw new Error("Failed to update stage")
         }
-        return response.json()
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error updating stage:", error)
         return null

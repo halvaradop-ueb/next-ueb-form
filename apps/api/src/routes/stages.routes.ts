@@ -10,8 +10,8 @@ const router = Router()
 
 router.get("/", getStagesController)
 router.post("/", createStageController)
-router.put("/", updateStageController)
 
+router.put("/:id", updateStageController)
 router.delete("/:id", deleteStageController)
 
 export default router

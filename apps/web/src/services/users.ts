@@ -9,7 +9,8 @@ export const getUsers = async (): Promise<UserService[]> => {
     if (!response.ok) {
         throw new Error("Failed to fetch users")
     }
-    return response.json()
+    const json = await response.json()
+    return json.data
 }
 
 export const addUser = async (user: Omit<UserService, "created_at" | "id">): Promise<UserService | null> => {
@@ -23,7 +24,8 @@ export const addUser = async (user: Omit<UserService, "created_at" | "id">): Pro
     if (!response.ok) {
         throw new Error("Failed to add user")
     }
-    return response.json()
+    const json = await response.json()
+    return json.data
 }
 
 export const updateUser = async (user: UserService): Promise<UserService | null> => {
@@ -37,7 +39,8 @@ export const updateUser = async (user: UserService): Promise<UserService | null>
     if (!response.ok) {
         throw new Error("Failed to update user")
     }
-    return response.json()
+    const json = await response.json()
+    return json.data
 }
 
 export const updateUserPassword = async (userId: string, newPassword: string): Promise<UserService | null> => {
@@ -51,19 +54,24 @@ export const updateUserPassword = async (userId: string, newPassword: string): P
     if (!response.ok) {
         throw new Error("Failed to update user password")
     }
-    return response.json()
+    const json = await response.json()
+    return json.data
 }
 
 export const deleteUser = async (id: string): Promise<boolean> => {
-    const response = await fetch(`${ROUTE}/users/${id}`, {
-        method: "DELETE",
-    })
-    return response.ok
+    try {
+        const response = await fetch(`${ROUTE}/users/${id}`, {
+            method: "DELETE",
+        })
+        return response.ok
+    } catch {
+        return false
+    }
 }
 
 export const getAuthenticated = async (session: Session): Promise<UserService | null> => {
     try {
-        if (!session || !session.user) {
+        if (!session?.user) {
             return null
         }
         const { user } = session

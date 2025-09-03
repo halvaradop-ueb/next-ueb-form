@@ -1,4 +1,4 @@
-import { getUsers } from "./users.service"
+import { getUsers } from "./users.service.js"
 
 export async function getProfessors(): Promise<any[]> {
     try {

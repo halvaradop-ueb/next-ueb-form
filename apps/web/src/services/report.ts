@@ -30,30 +30,6 @@ export interface CreateReportDto {
     comments?: string
     recommendations?: string
 }
-type SupabaseReportResponse = {
-    id: string
-    title: string
-    professor_id: string | null
-    subject_id: string | null
-    comments?: string | null
-    recommendations?: string | null
-    created_at: string
-    professor?:
-        | {
-              id: string
-              first_name: string
-              last_name: string
-              email?: string
-          }[]
-        | null
-    subject?:
-        | {
-              id: string
-              name: string
-              description?: string
-          }[]
-        | null
-}
 
 export const getReports = async (): Promise<Report[]> => {
     try {
@@ -130,9 +106,6 @@ export const getReports = async (): Promise<Report[]> => {
     }
 }
 
-/**
- * SHIT STUFF
- */
 export const createReport = async (reportData: CreateReportDto): Promise<Report | null> => {
     try {
         const { data: professorData, error: professorError } = await supabase
