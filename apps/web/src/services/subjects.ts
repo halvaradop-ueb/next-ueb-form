@@ -132,6 +132,9 @@ export const addSubject = async (subject: Omit<SubjectService, "id" | "professor
             },
             body: JSON.stringify(subject),
         })
+        if (!response.ok) {
+            throw new Error(`Error adding subject: ${response.statusText}`)
+        }
         const json = await response.json()
         return json.data
     } catch (error) {

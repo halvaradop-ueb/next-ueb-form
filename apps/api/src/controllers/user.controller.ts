@@ -6,7 +6,6 @@ import {
     getUsers,
     updateUser,
     updateUserPassword,
-    UserService,
 } from "../services/users.service.js"
 import { errorResponse } from "../lib/utils.js"
 import { APIResponse } from "../lib/types.js"

@@ -12,7 +12,6 @@ export const getStages = async (): Promise<StageService[]> => {
             throw new Error("Failed to fetch stages")
         }
         const json = await response.json()
-        console.log("Fetched stages:", json.data)
         return json.data
     } catch (error) {
         console.error("Error fetching stages:", error)
