@@ -26,6 +26,9 @@
     },
     "./stage": {
       "types": "./dist/stage.d.ts"
+    },
+    "./report": {
+      "types": "./dist/report.d.ts"
     }
   }
 }

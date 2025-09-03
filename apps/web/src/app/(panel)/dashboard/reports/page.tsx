@@ -11,6 +11,9 @@ import { Download, FileText, Save } from "lucide-react"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
+import { getReports, createReport } from "@/services/report"
+import { getProfessors } from "@/services/professors"
+import { getSubjects } from "@/services/subjects"
 
 export interface ReportState {
     title: string
@@ -57,24 +60,25 @@ const AdminReportsPage = () => {
 
         setIsLoading(true)
         try {
-            const res = await fetch("/api/report", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title: report.title,
-                    professor_id: report.professor === "all" ? null : report.professor,
-                    subject_id: report.subject === "all" ? null : report.subject,
-                    comments: report.comments || "",
-                    recommendations: report.recommendations || "",
-                }),
-            })
-
-            if (!res.ok) {
-                const text = await res.text()
-                throw new Error(text || "Error al guardar el reporte")
+            // Only create report if both professor and subject are selected
+            if (report.professor === "all" || report.subject === "all") {
+                alert("Por favor seleccione un profesor y una materia específicos")
+                setIsLoading(false)
+                return
             }
 
-            const newReport = await res.json()
+            const newReport = await createReport({
+                title: report.title,
+                professor_id: report.professor,
+                subject_id: report.subject,
+                comments: report.comments || "",
+                recommendations: report.recommendations || "",
+            })
+
+            if (!newReport) {
+                throw new Error("Error al guardar el reporte")
+            }
+
             setSavedReports((prev) => [newReport, ...prev])
             alert("Borrador guardado exitosamente!")
             setActiveTab("saved")
@@ -93,17 +97,17 @@ const AdminReportsPage = () => {
             try {
                 const [professorsRes, reportsRes] = await Promise.all([
                     fetch("/api/users?role=professor"),
-                    fetch("/api/reports"),
+                    fetch("/api/report"),
                 ])
-                const professorsData: ProfessorService[] = professorsRes.ok ? await professorsRes.json() : []
-                const reportsData: Report[] = reportsRes.ok ? await reportsRes.json() : []
+                const professorsData = await professorsRes.json()
+                const reportsData = await reportsRes.json()
 
                 setProfessors([
-                    ...professorsData,
+                    ...(Array.isArray(professorsData) ? professorsData : []),
                     { id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService,
                 ])
 
-                setSavedReports(reportsData)
+                setSavedReports(Array.isArray(reportsData) ? reportsData : [])
             } catch (error) {
                 console.error("Error loading initial data:", error)
                 alert("Error al cargar los datos iniciales")
@@ -119,20 +123,15 @@ const AdminReportsPage = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                let url = "/api/subjects"
+                let subjectsData = []
                 if (report.professor && report.professor !== "all") {
-                    url += `?professorId=${report.professor}`
+                    // Assuming there's a function to get subjects by professor ID
+                    // For now, we'll fetch all subjects
+                    subjectsData = await getSubjects()
+                } else {
+                    subjectsData = await getSubjects()
                 }
-
-                const res = await fetch(url)
-                if (!res.ok) {
-                    console.error("HTTP error!", res.status)
-                    setSubjects([])
-                    return
-                }
-
-                const json = await res.json()
-                setSubjects(json.subjects || [])
+                setSubjects(subjectsData)
             } catch (error) {
                 console.error("Error al cargar las materias:", error)
                 setSubjects([])
