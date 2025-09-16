@@ -17,8 +17,7 @@ export interface PeerReviewState {
     subject: string
     timeframe?: string
     comments?: string
-    recommendations?: string
-    [key: string]: any
+    findings?: string
 }
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -28,7 +27,7 @@ const initialselectedOptionsState: PeerReviewState = {
     subject: "",
     timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
     comments: "",
-    recommendations: "",
+    findings: "",
 }
 
 export const PeerReviewForm = () => {
@@ -161,12 +160,22 @@ export const PeerReviewForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="recommendations">Recomendaciones</Label>
+                    <Label htmlFor="findings">Hallazgos</Label>
                     <Textarea
-                        id="recommendations"
-                        placeholder="Ingresa tus recomendaciones para mejorar..."
-                        value={selectedOptions.recommendations}
-                        onChange={(e) => handleChange("recommendations", e.target.value)}
+                        id="findings"
+                        placeholder="Ingresa tus hallazgos..."
+                        value={selectedOptions.findings}
+                        onChange={(e) => handleChange("findings", e.target.value)}
+                        className="min-h-[100px]"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="comments">Plan de Mejoramiento y Realimentación</Label>
+                    <Textarea
+                        id="comments"
+                        placeholder="Ingresa tus comentarios..."
+                        value={selectedOptions.comments}
+                        onChange={(e) => handleChange("comments", e.target.value)}
                         className="min-h-[100px]"
                     />
                 </div>

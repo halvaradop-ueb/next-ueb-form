@@ -1,4 +1,4 @@
-import type { MouseEventHandler } from "react"
+import type { Dispatch, MouseEventHandler, SetStateAction } from "react"
 import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
 import type { FormSchema, Step, StudentFormState } from "./types"
 
@@ -60,4 +60,13 @@ export interface SubjectAssignmentProps {
     onEditSubject: (subjectId: string) => void
     onDeleteSubject: (subjectId: string) => void
     onDeleteAssignment: (assignmentId: string) => void
+}
+
+export interface ConfirmActionProps {
+    title: string
+    text: string
+    setText: Dispatch<SetStateAction<string>>
+    open: boolean
+    setOpen: Dispatch<SetStateAction<boolean>>
+    onDelete: () => void
 }

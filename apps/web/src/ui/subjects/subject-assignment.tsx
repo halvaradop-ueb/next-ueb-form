@@ -1,19 +1,10 @@
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { SubjectAssignmentProps } from "@/lib/@types/props"
 import { ChevronDown, ChevronRight, Trash2, User, UserMinus, UserPlus } from "lucide-react"
+import { ConfirmAction } from "../common/confirm-action"
+import { useState } from "react"
 
 export const SubjectAssignment = ({
     subject,
@@ -26,6 +17,8 @@ export const SubjectAssignment = ({
 }: SubjectAssignmentProps) => {
     const isExpanded = expandedSubjects.includes(subject.id)
     const professors = assignments.filter((assignment) => assignment.subject_id === subject.id)
+    const [textConfirmation, setTextConfirmation] = useState("")
+    const [openDialogDeleteSubject, setOpenDialogDeleteSubject] = useState(false)
 
     return (
         <>
@@ -56,36 +49,23 @@ export const SubjectAssignment = ({
                             <UserPlus className="h-4 w-4" />
                             <span className="sr-only">Asignar profesor</span>
                         </Button>
-                        {/* <Button variant="ghost" size="icon" onClick={() => onEditSubject(subject.id)} title="Editar materia">
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Editar</span>
-                        </Button> */}
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" title="Eliminar materia">
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                    <span className="sr-only">Eliminar</span>
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Está seguro de eliminar esta materia?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. La materia y todas sus asignaciones se
-                                        eliminarán permanentemente.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={() => onDeleteSubject(subject.id)}
-                                        className="bg-red-600 hover:bg-red-700"
-                                    >
-                                        Eliminar
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Eliminar materia"
+                            onClick={() => setOpenDialogDeleteSubject(true)}
+                        >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <span className="sr-only">Eliminar</span>
+                        </Button>
+                        <ConfirmAction
+                            title="Materia"
+                            text={textConfirmation}
+                            setText={setTextConfirmation}
+                            open={openDialogDeleteSubject}
+                            setOpen={setOpenDialogDeleteSubject}
+                            onDelete={() => onDeleteSubject(subject.id)}
+                        />
                     </div>
                 </TableCell>
             </TableRow>
