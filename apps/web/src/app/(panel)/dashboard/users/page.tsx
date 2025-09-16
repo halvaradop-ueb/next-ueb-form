@@ -14,7 +14,7 @@ import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 import type { Role } from "@/lib/@types/types"
 import type { UserService } from "@/lib/@types/services"
 import { addUser, deleteUser, getUsers, updateUser, uploadUserPhoto } from "@/services/users"
-
+import Image from "next/image"
 const roles: Record<Role, string> = {
     admin: "Administrador",
     professor: "Docente",
@@ -154,7 +154,7 @@ const UserManagementPage = () => {
                                             >
                                                 <TableCell>
                                                     {user.photo ? (
-                                                        <img
+                                                        <Image
                                                             src={user.photo}
                                                             alt={`${user.first_name} ${user.last_name}`}
                                                             className="h-10 w-10 rounded-full object-cover"
@@ -273,7 +273,7 @@ const UserManagementPage = () => {
 
                                             {newUser.photo && (
                                                 <div className="mt-2">
-                                                    <img
+                                                    <Image
                                                         src={newUser.photo}
                                                         alt="Preview"
                                                         className="h-16 w-16 rounded-full object-cover"
