@@ -100,9 +100,7 @@ export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sideb
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            <SidebarMenu className="font-medium text-lg mt-3 mb-2">
-                                Secciones
-                            </SidebarMenu>
+                            <SidebarMenu className="font-medium text-lg mt-3 mb-2">Secciones</SidebarMenu>
                             {routes.map((item, index) => (
                                 <SidebarMenuItem key={index}>
                                     <SidebarMenuButton asChild>
