@@ -9,7 +9,6 @@ export const getQuestions = async (): Promise<any[]> => {
         question_type,
         target_audience,
         required,
-        target_audience,
         stage_id,
         stage: stage_id (
           id,

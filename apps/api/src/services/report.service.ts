@@ -15,7 +15,7 @@ type RawReport = {
 export const getReports = async (): Promise<Report[]> => {
     try {
         const { data, error } = await supabase
-            .from<"report", RawReport>("report")
+            .from("report")
             .select(
                 `
             *,

@@ -11,9 +11,9 @@ import { Download, FileText, Save } from "lucide-react"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
-import { getReports, createReport } from "@/services/report"
-import { getProfessors } from "@/services/professors"
+import { createReport } from "@/services/report"
 import { getSubjects } from "@/services/subjects"
+import { createPeriods } from "@/lib/utils"
 
 export interface ReportState {
     title: string
@@ -25,13 +25,13 @@ export interface ReportState {
     [key: string]: any
 }
 
-const timeframes = [{ id: "all", name: "Todo el Tiempo" }]
+const timeframes = createPeriods(new Date("2024-01-01"))
 
 const initialReportState: ReportState = {
     title: "",
     professor: "all",
     subject: "",
-    timeframe: "all",
+    timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
     comments: "",
     recommendations: "",
 }
@@ -124,13 +124,7 @@ const AdminReportsPage = () => {
         const fetchSubjects = async () => {
             try {
                 let subjectsData = []
-                if (report.professor && report.professor !== "all") {
-                    // Assuming there's a function to get subjects by professor ID
-                    // For now, we'll fetch all subjects
-                    subjectsData = await getSubjects()
-                } else {
-                    subjectsData = await getSubjects()
-                }
+                subjectsData = await getSubjects()
                 setSubjects(subjectsData)
             } catch (error) {
                 console.error("Error al cargar las materias:", error)
@@ -222,9 +216,12 @@ const AdminReportsPage = () => {
                                                 <SelectValue placeholder="Selecciona un periodo" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {timeframes.map((tf) => (
-                                                    <SelectItem key={tf.id} value={tf.id}>
-                                                        {tf.name}
+                                                {timeframes.map(({ name, start, end }, index) => (
+                                                    <SelectItem
+                                                        key={`timeframe-${name}`}
+                                                        value={`${start.toISOString()} - ${end.toISOString()}`}
+                                                    >
+                                                        {name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -273,15 +270,17 @@ const AdminReportsPage = () => {
                                 <CardDescription>Accede y gestiona tus informes creados previamente</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {isLoading ? (
+                                {isLoading && (
                                     <div className="flex justify-center py-8">
                                         <p>Cargando informes...</p>
                                     </div>
-                                ) : savedReports.length === 0 ? (
+                                )}
+                                {savedReports.length === 0 && (
                                     <p className="text-center text-muted-foreground py-8">
                                         No hay informes guardados aún
                                     </p>
-                                ) : (
+                                )}
+                                {savedReports.length > 0 && (
                                     <div className="space-y-4">
                                         {savedReports.map((r) => (
                                             <Card key={r.id}>

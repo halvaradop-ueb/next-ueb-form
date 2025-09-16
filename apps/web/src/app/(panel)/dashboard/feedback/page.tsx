@@ -148,7 +148,10 @@ const FeedbackPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                             {timeframes.map(({ name, start, end }, index) => (
-                                <SelectItem key={index} value={`${start.toISOString()} - ${end.toISOString()}`}>
+                                <SelectItem
+                                    key={`timeframe-${name}`}
+                                    value={`${start.toISOString()} - ${end.toISOString()}`}
+                                >
                                     {name}
                                 </SelectItem>
                             ))}
