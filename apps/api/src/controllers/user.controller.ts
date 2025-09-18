@@ -16,7 +16,12 @@ import { APIResponse } from "../lib/types.js"
 export const getUsersController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const byRole = req.query.role
-        const roles = Array.isArray(byRole) ? byRole : [byRole]
+        let roles: any[] = []
+        if (Array.isArray(byRole)) {
+            roles = byRole
+        } else if (byRole) {
+            roles = [byRole]
+        }
         const users = await getUsers()
         const filteredUsers = roles.length > 0 ? users.filter((user) => roles.includes(user.role)) : users
         res.status(200).json({

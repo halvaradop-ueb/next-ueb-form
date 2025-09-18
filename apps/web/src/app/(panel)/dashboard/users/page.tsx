@@ -155,6 +155,8 @@ const UserManagementPage = () => {
                                                 <TableCell>
                                                     {user.photo ? (
                                                         <Image
+                                                            width={40}
+                                                            height={40}
                                                             src={user.photo}
                                                             alt={`${user.first_name} ${user.last_name}`}
                                                             className="h-10 w-10 rounded-full object-cover"
