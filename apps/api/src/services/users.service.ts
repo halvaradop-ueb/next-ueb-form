@@ -16,9 +16,14 @@ export async function getUsers() {
 }
 
 export async function getUserById(userId: string): Promise<User | null> {
-    const { data, error } = await supabase.from("User").select("*").eq("id", userId).single()
-    if (error) return null
-    return data as User
+    try {
+        const { data, error } = await supabase.from("User").select("*").eq("id", userId).single()
+        if (error) return null
+        return data as User
+    } catch (error) {
+        console.error("Error fetching user by ID:", error)
+        return null
+    }
 }
 
 export async function createUser(user: User): Promise<User | null> {
@@ -90,24 +95,6 @@ export const updateUser = async (user: User): Promise<User | null> => {
         return data
     } catch (error) {
         console.error("Error updating user:", error)
-        return null
-    }
-}
-
-export const getAuthenticated = async (session: any): Promise<User | null> => {
-    try {
-        if (!session?.user) {
-            return null
-        }
-        const { user } = session
-        const { data, error } = await supabase.from("User").select("*").eq("id", user.id).single()
-        if (error) {
-            console.error("Error fetching logged user:", error)
-            return null
-        }
-        return data
-    } catch (error) {
-        console.error("Error fetching logged user:", error)
         return null
     }
 }
