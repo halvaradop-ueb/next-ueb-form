@@ -12,7 +12,6 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
-    console.log("Fetching subjects for professor ID:", professorId)
     const request = createRequest("GET", `/subjects?professorId=${professorId}`)
     return createService(request)
 }
