@@ -58,6 +58,7 @@
     "@types/node": "^20",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
+    "@ueb/types": "workspace:*",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
     "eslint-config-prettier": "^10.1.1",

@@ -21,6 +21,8 @@ import { Search, Plus, Pencil, Trash2 } from "lucide-react"
 import type { StageService } from "@/lib/@types/services"
 import { addStage, deleteStage, getStages, updateStage } from "@/services/stages"
 import { v4 as uuidv4 } from "uuid"
+import { ConfirmAction } from "@/ui/common/confirm-action"
+
 const initialStage = (): StageService => ({
     id: uuidv4(),
     name: "",
@@ -298,50 +300,14 @@ const StagePage = () => {
                     </CardContent>
                 </Card>
             </div>
-            <Dialog open={openDialogDeleteStage} onOpenChange={setOpenDialogDeleteStage}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-red-600">Confirmar eliminación de categoría</DialogTitle>
-                        <DialogDescription asChild>
-                            <div className="space-y-4 pt-2">
-                                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-amber-800">
-                                    <span className="font-medium">¡Atención! Esta acción no se spanuede deshacer.</span>
-                                    <span className="mt-1">
-                                        Está a punto de eliminar permanentemente una categoría del sistema. Esta acción:
-                                    </span>
-                                    <ul className="list-disc pl-5 mt-2 space-y-1">
-                                        <li>Eliminará la categoría de forma permanente</li>
-                                        <li>Podría afectar a la organización de las preguntas</li>
-                                        <li>Podría impactar en reportes históricos</li>
-                                    </ul>
-                                </div>
-                                <span>
-                                    Para confirmar que desea eliminar esta categoría, escriba{" "}
-                                    <span className="font-bold">eliminar</span> en el campo a continuación:
-                                </span>
-                                <Input
-                                    value={textConfirmation}
-                                    onChange={(e) => setTextConfirmation(e.target.value)}
-                                    placeholder="Escriba 'eliminar' para confirmar"
-                                    className="mt-2"
-                                />
-                            </div>
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setOpenDialogDeleteStage(false)}>
-                            Cancelar
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleConfirmDeleting}
-                            disabled={textConfirmation.toLowerCase() !== "eliminar"}
-                        >
-                            Eliminar Categoría
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmAction
+                title="Etapa"
+                text={textConfirmation}
+                setText={setTextConfirmation}
+                open={openDialogDeleteStage}
+                setOpen={setOpenDialogDeleteStage}
+                onDelete={handleConfirmDeleting}
+            />
         </section>
     )
 }

@@ -43,3 +43,9 @@ next-env.d.ts
 .vercel
 .turbo
 .cache
+dist
+
+package-lock.json
+.env*.local
+dist
+**/dist/

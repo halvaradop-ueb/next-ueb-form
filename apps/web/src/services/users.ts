@@ -1,102 +1,77 @@
 import { Session } from "next-auth"
-import { hashPassword } from "./auth"
+import type { UserService } from "@ueb/types"
 import { supabase } from "@/lib/supabase/client"
-import type { UserService } from "@/lib/@types/services"
+
+const ROUTE = "http://localhost:4000/api/v1"
 
 export const getUsers = async (): Promise<UserService[]> => {
-    try {
-        const { data: users, error } = await supabase.from("User").select("*")
-
-        if (error) {
-            throw new Error(`Error fetching users: ${error.message}`)
-        }
-        return users
-    } catch (error) {
-        console.error("Error fetching users:", error)
-        return []
+    const response = await fetch(`${ROUTE}/users`)
+    if (!response.ok) {
+        throw new Error("Failed to fetch users")
     }
+    const json = await response.json()
+    return json.data
 }
 
 export const addUser = async (user: Omit<UserService, "created_at" | "id">): Promise<UserService | null> => {
-    try {
-        const { password, ...spread } = user
-        const hashedPassword = await hashPassword(password)
-        const { data, error } = await supabase
-            .from("User")
-            .insert({ ...spread, password: hashedPassword })
-            .select()
-            .single()
-        if (error) {
-            throw new Error(`Error adding user: ${error.message}`)
-        }
-        return data
-    } catch (error) {
-        console.error("Error adding user:", error)
-        return null
+    const response = await fetch(`${ROUTE}/users`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+    })
+    if (!response.ok) {
+        throw new Error("Failed to add user")
     }
+    const json = await response.json()
+    return json.data
 }
 
 export const updateUser = async (user: UserService): Promise<UserService | null> => {
-    try {
-        // Separate password from other user fields to prevent accidental overwrites
-        const { password, ...userWithoutPassword } = user
-
-        // Update user profile information (excluding password)
-        const { data, error } = await supabase
-            .from("User")
-            .update(userWithoutPassword)
-            .eq("id", user.id)
-            .select()
-            .single()
-
-        if (error) {
-            throw new Error(`Error updating user: ${error.message}`)
-        }
-
-        return data
-    } catch (error) {
-        console.error("Error updating user:", error)
-        return null
+    const response = await fetch(`${ROUTE}/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+    })
+    if (!response.ok) {
+        throw new Error("Failed to update user")
     }
+    const json = await response.json()
+    return json.data
 }
 
 export const updateUserPassword = async (userId: string, newPassword: string): Promise<UserService | null> => {
-    try {
-        const hashedPassword = await hashPassword(newPassword)
-        const { data, error } = await supabase
-            .from("User")
-            .update({ password: hashedPassword })
-            .eq("id", userId)
-            .select()
-            .single()
-
-        if (error) {
-            throw new Error(`Error updating user password: ${error.message}`)
-        }
-
-        return data
-    } catch (error) {
-        console.error("Error updating user password:", error)
-        return null
+    const response = await fetch(`${ROUTE}/users/${userId}/password`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: newPassword }),
+    })
+    if (!response.ok) {
+        throw new Error("Failed to update user password")
     }
+    const json = await response.json()
+    return json.data
 }
 
 export const deleteUser = async (id: string): Promise<boolean> => {
     try {
-        const { error } = await supabase.from("User").delete().eq("id", id)
-        if (error) {
-            throw new Error(`Error deleting user: ${error.message}`)
-        }
-        return true
-    } catch (error) {
-        console.error("Error deleting user:", error)
+        const response = await fetch(`${ROUTE}/users/${id}`, {
+            method: "DELETE",
+        })
+        return response.ok
+    } catch {
         return false
     }
 }
 
 export const getAuthenticated = async (session: Session): Promise<UserService | null> => {
     try {
-        if (!session || !session.user) {
+        if (!session?.user) {
             return null
         }
         const { user } = session

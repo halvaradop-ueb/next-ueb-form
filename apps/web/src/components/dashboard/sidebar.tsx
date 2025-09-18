@@ -2,7 +2,6 @@ import * as React from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
-import { VersionSwitcher } from "@/components/dashboard/version"
 import {
     Sidebar,
     SidebarContent,
@@ -92,19 +91,16 @@ export const AppSidebar = async ({ ...props }: React.ComponentProps<typeof Sideb
     const role = session?.user?.role as Role
     if (!session || !role) {
         redirect("/auth")
-        return null
     }
     const routes = linksByRole[role]
 
     return (
         <Sidebar {...props}>
-            <SidebarHeader>
-                <VersionSwitcher versions={data.versions} defaultVersion="0.1.0" />
-            </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
+                            <SidebarMenu className="font-medium text-lg mt-3 mb-2">Secciones</SidebarMenu>
                             {routes.map((item, index) => (
                                 <SidebarMenuItem key={index}>
                                     <SidebarMenuButton asChild>

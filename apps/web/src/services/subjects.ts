@@ -5,13 +5,19 @@ import type {
     SubjectService,
 } from "@/lib/@types/services"
 
+/**
+ * @experimental
+ */
+const ROUTE = "http://localhost:4000/api/v1"
+
 export const getSubjects = async (): Promise<SubjectService[]> => {
     try {
-        const { data, error } = await supabase.from("subject").select("*")
-        if (error) {
-            throw new Error(`Error fetching subjects: ${error.message}`)
+        const response = await fetch(`${ROUTE}/subjects`)
+        if (!response.ok) {
+            throw new Error("Failed to fetch subjects")
         }
-        return data
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error fetching subjects:", error)
         return []
@@ -119,11 +125,18 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
     try {
-        const { data, error } = await supabase.from("subject").insert(subject).select().single()
-        if (error) {
-            throw new Error(`Error adding subject: ${error.message}`)
+        const response = await fetch(`${ROUTE}/subjects`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(subject),
+        })
+        if (!response.ok) {
+            throw new Error(`Error adding subject: ${response.statusText}`)
         }
-        return data
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error adding subject:", error)
         return {} as SubjectService
@@ -132,11 +145,11 @@ export const addSubject = async (subject: Omit<SubjectService, "id" | "professor
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     try {
-        const { error } = await supabase.from("subject").delete().eq("id", subjectId)
-        if (error) {
-            throw new Error(`Error deleting subject: ${error.message}`)
-        }
-        return true
+        const response = await fetch(`${ROUTE}/subjects/${subjectId}`, {
+            method: "DELETE",
+        })
+        const json = await response.json()
+        return !!json.data
     } catch (error) {
         console.error("Error deleting subject:", error)
         return false

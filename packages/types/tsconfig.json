@@ -1,0 +1,13 @@
+{
+  "extends": "@halvaradop/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "strict": true,
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src"]
+}

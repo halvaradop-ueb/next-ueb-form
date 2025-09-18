@@ -4,23 +4,22 @@ import logo2 from "@/assets/GDPCirclo.png"
 const DashboardPage = () => {
     return (
         <section className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            <div className="flex items-center justify-center gap-6 mb-6">
+            <figure className="grid items-center gap-6 mb-6 lg:grid-cols-[1fr_auto]">
                 <Image
+                    src={logo1}
+                    className="object-cover"
                     priority
                     alt="Logo de la Universidad El Bosque"
-                    className="w-100 max-w-xs rounded-lg"
                     draggable="false"
-                    src={logo1}
                 />
                 <Image
+                    src={logo2}
+                    className="w-40 mx-auto object-cover"
                     priority
                     alt="Logo secundario"
-                    className="w-20 max-w-xs rounded-lg"
                     draggable="false"
-                    src={logo2}
                 />
-            </div>
-
+            </figure>
             <div className="mb-6">
                 <h1 className="text-4xl font-extrabold leading-tight">Sistema de Evaluación Docente</h1>
                 <p className="mt-2 text-lg text-muted-foreground">

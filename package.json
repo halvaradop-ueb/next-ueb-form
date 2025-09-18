@@ -6,9 +6,11 @@
   "description": "Evaluation system monorepo",
   "scripts": {
     "dev": "turbo dev --parallel",
+    "dev:api": "turbo dev --filter=api",
     "dev:web": "turbo dev --filter=web",
     "build": "turbo build --parallel",
     "build:web": "turbo build --filter=web",
+    "build:api": "turbo build --filter=api",
     "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
     "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
   },
@@ -23,9 +25,15 @@
     "@halvaradop/prettier-config": "^1.2.0",
     "@halvaradop/ts-utility-types": "^0.20.0",
     "@halvaradop/tsconfig": "^1.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.3",
     "prettier": "^3.6.2",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0"
+  }
 }

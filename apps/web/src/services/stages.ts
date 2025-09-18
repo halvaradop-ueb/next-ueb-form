@@ -1,26 +1,18 @@
-import { supabase } from "@/lib/supabase/client"
 import { StageService } from "@/lib/@types/services"
+
+/**
+ * @experimental
+ */
+const ROUTE = "http://localhost:4000/api/v1"
 
 export const getStages = async (): Promise<StageService[]> => {
     try {
-        const { data, error } = await supabase.from("stage").select(`
-                id,
-                name,
-                description,
-                target_audience,
-                question (
-                    id,
-                    title,
-                    description
-                )        
-            `)
-        if (error) {
-            throw new Error(`Error fetching stages: ${error.message}`)
+        const response = await fetch(`${ROUTE}/stages`)
+        if (!response.ok) {
+            throw new Error("Failed to fetch stages")
         }
-        return data.map((state) => ({
-            ...state,
-            questions: state.question,
-        })) as unknown as StageService[]
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error fetching stages:", error)
         return []
@@ -30,16 +22,18 @@ export const getStages = async (): Promise<StageService[]> => {
 export const addStage = async (stage: StageService): Promise<StageService | null> => {
     const { name, description, target_audience } = stage
     try {
-        const { data, error } = await supabase
-            .from("stage")
-            .insert({ name: name.trim(), description, target_audience })
-            .select()
-            .single()
-        if (error) {
-            throw new Error(`Error adding stage: ${error.message}`)
+        const response = await fetch(`${ROUTE}/stages`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name, description, target_audience }),
+        })
+        if (!response.ok) {
+            throw new Error("Failed to add stage")
         }
-
-        return { ...data, questions: [] } as StageService
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error adding stage:", error)
         return null
@@ -49,29 +43,18 @@ export const addStage = async (stage: StageService): Promise<StageService | null
 export const updateStage = async (stage: StageService): Promise<StageService | null> => {
     const { id, name, description, target_audience } = stage
     try {
-        const { data, error } = await supabase
-            .from("stage")
-            .update({ name, description, target_audience })
-            .eq("id", id)
-            .select(
-                `
-                id,
-                name,
-                description,
-                target_audience,
-                question (
-                    id,
-                    title,
-                    description
-                )    
-            `,
-            )
-            .single()
-        if (error) {
-            throw new Error(`Error updating stage: ${error.message}`)
+        const response = await fetch(`${ROUTE}/stages/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name, description, target_audience }),
+        })
+        if (!response.ok) {
+            throw new Error("Failed to update stage")
         }
-
-        return { ...data, questions: data.question } as unknown as StageService
+        const json = await response.json()
+        return json.data
     } catch (error) {
         console.error("Error updating stage:", error)
         return null
@@ -80,9 +63,11 @@ export const updateStage = async (stage: StageService): Promise<StageService | n
 
 export const deleteStage = async (stageId: string): Promise<boolean> => {
     try {
-        const { error } = await supabase.from("stage").delete().eq("id", stageId)
-        if (error) {
-            throw new Error(`Error deleting stage: ${error.message}`)
+        const response = await fetch(`${ROUTE}/stages/${stageId}`, {
+            method: "DELETE",
+        })
+        if (!response.ok) {
+            throw new Error("Failed to delete stage")
         }
         return true
     } catch (error) {

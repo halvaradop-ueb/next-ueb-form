@@ -1,0 +1,34 @@
+{
+  "name": "@ueb/types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -w -p tsconfig.json",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "@halvaradop/tsconfig": "^1.1.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts"
+    },
+    "./user": {
+      "types": "./dist/user.d.ts"
+    },
+    "./question": {
+      "types": "./dist/question.d.ts"
+    },
+    "./stage": {
+      "types": "./dist/stage.d.ts"
+    },
+    "./report": {
+      "types": "./dist/report.d.ts"
+    }
+  }
+}
