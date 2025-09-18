@@ -1,91 +1,45 @@
 import { Session } from "next-auth"
-import type { UserService } from "@ueb/types"
+import type { User } from "@ueb/types/user"
 import { supabase } from "@/lib/supabase/client"
-import { API_ENDPOINT } from "./utils"
+import { createService, createRequest } from "./utils"
 
-export const getUsers = async (): Promise<UserService[]> => {
-    const response = await fetch(`${API_ENDPOINT}/users`)
-    if (!response.ok) {
-        throw new Error("Failed to fetch users")
-    }
-    const json = await response.json()
-    return json.data
+export const getUsers = async (): Promise<User[]> => {
+    const request = createRequest("GET", "users")
+    return createService(request)
 }
 
-export const addUser = async (user: Omit<UserService, "created_at" | "id">): Promise<UserService | null> => {
-    const response = await fetch(`${API_ENDPOINT}/users`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(user),
-    })
-    if (!response.ok) {
-        throw new Error("Failed to add user")
-    }
-    const json = await response.json()
-    return json.data
+export const addUser = async (user: Omit<User, "created_at" | "id">): Promise<User | null> => {
+    const request = createRequest("POST", "users", user)
+    return createService(request)
 }
 
-export const updateUser = async (user: UserService): Promise<UserService | null> => {
-    const response = await fetch(`${API_ENDPOINT}/users/${user.id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(user),
-    })
-    if (!response.ok) {
-        throw new Error("Failed to update user")
-    }
-    const json = await response.json()
-    return json.data
+export const updateUser = async (user: User): Promise<User | null> => {
+    const request = createRequest("PUT", `users/${user.id}`, user)
+    return createService(request)
 }
 
-export const updateUserPassword = async (userId: string, newPassword: string): Promise<UserService | null> => {
-    const response = await fetch(`${API_ENDPOINT}/users/${userId}/password`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password: newPassword }),
-    })
-    if (!response.ok) {
-        throw new Error("Failed to update user password")
-    }
-    const json = await response.json()
-    return json.data
+export const updateUserPassword = async (userId: string, newPassword: string): Promise<User | null> => {
+    const request = createRequest("PUT", `users/${userId}/password`, { password: newPassword })
+    return createService(request)
 }
 
 export const deleteUser = async (id: string): Promise<boolean> => {
-    try {
-        const response = await fetch(`${API_ENDPOINT}/users/${id}`, {
-            method: "DELETE",
-        })
-        return response.ok
-    } catch {
-        return false
-    }
+    const request = createRequest("DELETE", `users/${id}`)
+    const response = await createService(request)
+    return !!response
 }
 
-export const getAuthenticated = async (session: Session): Promise<UserService | null> => {
-    try {
-        if (!session?.user) {
-            return null
-        }
-        const { user } = session
-        const { data, error } = await supabase.from("User").select("*").eq("id", user.id).single()
-        if (error) {
-            console.error("Error fetching logged user:", error)
-            return null
-        }
-        return data
-    } catch (error) {
-        console.error("Error fetching logged user:", error)
-        return null
-    }
+export const getUserById = async (session: Session): Promise<User | null> => {
+    if (!session.user?.id) return null
+    const request = createRequest("GET", `users/${session.user.id}`)
+    return createService(request)
 }
 
+/**
+ * todo: move to API
+ * @deprecated
+ * @unstable
+ */
 export const uploadUserPhoto = async (file: File, userId: string) => {
     const fileExt = file.name.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`

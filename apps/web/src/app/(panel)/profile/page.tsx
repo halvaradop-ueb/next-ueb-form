@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
-import { getAuthenticated, updateUser } from "@/services/users"
+import { getUserById, updateUser } from "@/services/users"
 import type { UserService } from "@/lib/@types/services"
 import type { Role } from "@/lib/@types/types"
 import { supabase } from "@/lib/supabase/client"
@@ -43,7 +43,7 @@ export default function ProfilePage() {
     useEffect(() => {
         const fetchUser = async () => {
             if (!session) return
-            const user = await getAuthenticated(session)
+            const user = await getUserById(session)
             setUser(user!)
         }
         fetchUser()

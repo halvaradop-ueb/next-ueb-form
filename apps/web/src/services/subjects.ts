@@ -4,44 +4,16 @@ import type {
     SubjectAssignmentWithProfessorService,
     SubjectService,
 } from "@/lib/@types/services"
-import { API_ENDPOINT } from "./utils"
+import { API_ENDPOINT, createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
-    try {
-        const response = await fetch(`${API_ENDPOINT}/subjects`)
-        if (!response.ok) {
-            throw new Error("Failed to fetch subjects")
-        }
-        const json = await response.json()
-        return json.data
-    } catch (error) {
-        console.error("Error fetching subjects:", error)
-        return []
-    }
+    const request = createRequest("GET", "/subjects")
+    return createService(request)
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
-    try {
-        const { data, error } = await supabase
-            .from("subjectassignment")
-            .select(
-                `
-                subject (
-                    id,
-                    name,
-                    description
-                )
-            `,
-            )
-            .eq("professor_id", professorId)
-        if (error) {
-            throw new Error(`Error fetching subjects by professor ID: ${error.message}`)
-        }
-        return data.map((relation) => relation.subject) as unknown as SubjectService[]
-    } catch (error) {
-        console.error("Error fetching subjects by professor ID:", error)
-        return []
-    }
+    const request = createRequest("GET", `/subjects?professorId=${professorId}`)
+    return createService(request)
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
