@@ -47,15 +47,20 @@ export const getQuestions = async (): Promise<any[]> => {
 export const addQuestion = async (question: any): Promise<any | null> => {
     try {
         const { id, options, ...spread } = question
-        const { data: insertedData, error: insertError } = await supabase.from("question").insert(spread).select().single()
+        const { data: insertedData, error: insertError } = await supabase
+            .from("question")
+            .insert(spread)
+            .select()
+            .single()
         if (insertError) {
             throw new Error(`Error adding question: ${insertError.message}`)
         }
-        
+
         // Fetch the complete question with all fields including the ID
         const { data: completeQuestion, error: fetchError } = await supabase
             .from("question")
-            .select(`
+            .select(
+                `
                 id,
                 title,
                 description,
@@ -67,14 +72,15 @@ export const addQuestion = async (question: any): Promise<any | null> => {
                     id,
                     name
                 )
-            `)
+            `,
+            )
             .eq("id", insertedData.id)
             .single()
-        
+
         if (fetchError) {
             throw new Error(`Error fetching created question: ${fetchError.message}`)
         }
-        
+
         // Add options if needed
         if (question.question_type === "single_choice" || question.question_type === "multiple_choice") {
             const added = await addQuestionOptions(completeQuestion.id, options || [])
@@ -82,7 +88,7 @@ export const addQuestion = async (question: any): Promise<any | null> => {
                 throw new Error(`Error adding question options`)
             }
         }
-        
+
         return completeQuestion
     } catch (error) {
         console.error("Error adding question:", error)

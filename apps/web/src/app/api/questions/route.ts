@@ -67,7 +67,7 @@ export async function DELETE(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
         const id = searchParams.get("id")
-        
+
         if (!id) {
             return new Response(JSON.stringify({ error: "Missing question id" }), {
                 status: 400,
@@ -76,7 +76,7 @@ export async function DELETE(request: NextRequest) {
                 },
             })
         }
-        
+
         const result = await deleteQuestion(id)
         return new Response(JSON.stringify({ success: result }), {
             status: 200,

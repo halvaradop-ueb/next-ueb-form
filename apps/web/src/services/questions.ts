@@ -18,7 +18,7 @@ export const getQuestions = async (): Promise<Question[]> => {
 export const addQuestion = async (question: Question): Promise<Question | null> => {
     try {
         // Remove the id field when creating a new question
-        const { id, ...questionWithoutId } = question;
+        const { id, ...questionWithoutId } = question
         const response = await fetch(`${API_ENDPOINT}/questions`, {
             method: "POST",
             headers: {
