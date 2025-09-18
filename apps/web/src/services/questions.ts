@@ -1,14 +1,14 @@
-import { Question } from "@/lib/@types/services"
+import type { Question } from "@/lib/@types/services"
+import { API_ENDPOINT } from "./utils"
 
 export const getQuestions = async (): Promise<Question[]> => {
     try {
-        const res = await fetch("/api/questions")
-        if (!res.ok) {
-            console.error("No se pudieron cargar las preguntas")
-            return []
+        const response = await fetch(`${API_ENDPOINT}/questions`)
+        if (!response.ok) {
+            throw new Error(`Error fetching questions: ${response.statusText}`)
         }
-        const data = await res.json()
-        return Array.isArray(data.questions) ? data.questions : []
+        const json = await response.json()
+        return Array.isArray(json.questions) ? json.questions : []
     } catch (error) {
         console.error("Error en getQuestions:", error)
         return []
@@ -17,20 +17,21 @@ export const getQuestions = async (): Promise<Question[]> => {
 
 export const addQuestion = async (question: Question): Promise<Question | null> => {
     try {
-        const res = await fetch("/api/questions", {
+        // Remove the id field when creating a new question
+        const { id, ...questionWithoutId } = question;
+        const response = await fetch(`${API_ENDPOINT}/questions`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(question),
+            body: JSON.stringify(questionWithoutId),
         })
 
-        if (!res.ok) {
-            console.error("No se pudo agregar la pregunta")
-            return null
+        if (!response.ok) {
+            throw new Error(`Error adding question: ${response.statusText}`)
         }
 
-        const data = await res.json()
+        const data = await response.json()
         return data || null
     } catch (error) {
         console.error("Error en addQuestion:", error)
@@ -40,7 +41,7 @@ export const addQuestion = async (question: Question): Promise<Question | null> 
 
 export const updateQuestion = async (question: Question): Promise<Question | null> => {
     try {
-        const res = await fetch("/api/questions", {
+        const response = await fetch(`${API_ENDPOINT}/questions`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -48,12 +49,11 @@ export const updateQuestion = async (question: Question): Promise<Question | nul
             body: JSON.stringify(question),
         })
 
-        if (!res.ok) {
-            console.error("No se pudo actualizar la pregunta")
-            return null
+        if (!response.ok) {
+            throw new Error(`Error updating question: ${response.statusText}`)
         }
 
-        const data = await res.json()
+        const data = await response.json()
         return data || null
     } catch (error) {
         console.error("Error en updateQuestion:", error)
@@ -63,16 +63,15 @@ export const updateQuestion = async (question: Question): Promise<Question | nul
 
 export const deleteQuestion = async (id: string): Promise<boolean> => {
     try {
-        const res = await fetch(`/api/questions?id=${id}`, {
+        const response = await fetch(`${API_ENDPOINT}/questions?id=${id}`, {
             method: "DELETE",
         })
 
-        if (!res.ok) {
-            console.error("No se pudo eliminar la pregunta")
-            return false
+        if (!response.ok) {
+            throw new Error(`Error deleting question: ${response.statusText}`)
         }
 
-        const data = await res.json()
+        const data = await response.json()
         return data.success || false
     } catch (error) {
         console.error("Error en deleteQuestion:", error)
@@ -82,12 +81,11 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
 
 export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     try {
-        const res = await fetch("/api/questions?audience=student")
-        if (!res.ok) {
-            console.error("No se pudieron cargar las preguntas para estudiantes")
-            return [[], {}]
+        const response = await fetch(`${API_ENDPOINT}/questions?audience=student`)
+        if (!response.ok) {
+            throw new Error(`Error fetching questions for students: ${response.statusText}`)
         }
-        const data = await res.json()
+        const data = await response.json()
         return [data.questions || [], data.grouped || {}]
     } catch (error) {
         console.error("Error en getQuestionsForStudents:", error)
@@ -97,12 +95,11 @@ export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Re
 
 export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<Record<string, Question[]>>]> => {
     try {
-        const res = await fetch("/api/questions?audience=professor")
-        if (!res.ok) {
-            console.error("No se pudieron cargar las preguntas para profesores")
-            return [[], {}]
+        const response = await fetch(`${API_ENDPOINT}/questions?audience=professor`)
+        if (!response.ok) {
+            throw new Error(`Error fetching questions for professors: ${response.statusText}`)
         }
-        const data = await res.json()
+        const data = await response.json()
         return [data.questions || [], data.grouped || {}]
     } catch (error) {
         console.error("Error en getQuestionsForProfessors:", error)

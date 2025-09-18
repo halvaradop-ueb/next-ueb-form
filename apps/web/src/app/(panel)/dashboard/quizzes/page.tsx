@@ -34,7 +34,6 @@ import type { Question, StageService } from "@/lib/@types/services"
 import { addQuestion, deleteQuestion, getQuestions, updateQuestion } from "@/services/questions"
 import { Search, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { getStages } from "@/services/stages"
-import { v4 as uuidv4 } from "uuid"
 const questionTypes: Record<Question["question_type"], string> = {
     text: "Texto",
     single_choice: "Selección única",
@@ -87,10 +86,7 @@ const QuizzesPage = () => {
     })
 
     const handleCreateQuestion = () => {
-        setNewQuestion({
-            ...initialState,
-            id: uuidv4(),
-        })
+        setNewQuestion(initialState)
         setTextOptions("")
         setIdleForm("create")
         setIsOpenDialog(true)
@@ -146,8 +142,10 @@ const QuizzesPage = () => {
 
         if (idleForm === "create") {
             setTextOptions("")
-            addQuestion(finalQuestion)
-            setQuestions((previous) => [...previous, finalQuestion])
+            const createdQuestion = await addQuestion(finalQuestion)
+            if (createdQuestion) {
+                setQuestions((previous) => [...previous, createdQuestion])
+            }
         } else {
             setTextOptions("")
             await updateQuestion(finalQuestion)
