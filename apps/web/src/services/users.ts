@@ -1,11 +1,10 @@
 import { Session } from "next-auth"
 import type { UserService } from "@ueb/types"
 import { supabase } from "@/lib/supabase/client"
-
-const ROUTE = "http://localhost:4000/api/v1"
+import { API_ENDPOINT } from "./utils"
 
 export const getUsers = async (): Promise<UserService[]> => {
-    const response = await fetch(`${ROUTE}/users`)
+    const response = await fetch(`${API_ENDPOINT}/users`)
     if (!response.ok) {
         throw new Error("Failed to fetch users")
     }
@@ -14,7 +13,7 @@ export const getUsers = async (): Promise<UserService[]> => {
 }
 
 export const addUser = async (user: Omit<UserService, "created_at" | "id">): Promise<UserService | null> => {
-    const response = await fetch(`${ROUTE}/users`, {
+    const response = await fetch(`${API_ENDPOINT}/users`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -29,7 +28,7 @@ export const addUser = async (user: Omit<UserService, "created_at" | "id">): Pro
 }
 
 export const updateUser = async (user: UserService): Promise<UserService | null> => {
-    const response = await fetch(`${ROUTE}/users/${user.id}`, {
+    const response = await fetch(`${API_ENDPOINT}/users/${user.id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -44,7 +43,7 @@ export const updateUser = async (user: UserService): Promise<UserService | null>
 }
 
 export const updateUserPassword = async (userId: string, newPassword: string): Promise<UserService | null> => {
-    const response = await fetch(`${ROUTE}/users/${userId}/password`, {
+    const response = await fetch(`${API_ENDPOINT}/users/${userId}/password`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -60,7 +59,7 @@ export const updateUserPassword = async (userId: string, newPassword: string): P
 
 export const deleteUser = async (id: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${ROUTE}/users/${id}`, {
+        const response = await fetch(`${API_ENDPOINT}/users/${id}`, {
             method: "DELETE",
         })
         return response.ok

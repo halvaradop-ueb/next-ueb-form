@@ -4,15 +4,11 @@ import type {
     SubjectAssignmentWithProfessorService,
     SubjectService,
 } from "@/lib/@types/services"
-
-/**
- * @experimental
- */
-const ROUTE = "http://localhost:4000/api/v1"
+import { API_ENDPOINT } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     try {
-        const response = await fetch(`${ROUTE}/subjects`)
+        const response = await fetch(`${API_ENDPOINT}/subjects`)
         if (!response.ok) {
             throw new Error("Failed to fetch subjects")
         }
@@ -125,7 +121,7 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
     try {
-        const response = await fetch(`${ROUTE}/subjects`, {
+        const response = await fetch(`${API_ENDPOINT}/subjects`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -145,7 +141,7 @@ export const addSubject = async (subject: Omit<SubjectService, "id" | "professor
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${ROUTE}/subjects/${subjectId}`, {
+        const response = await fetch(`${API_ENDPOINT}/subjects/${subjectId}`, {
             method: "DELETE",
         })
         const json = await response.json()

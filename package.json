@@ -8,6 +8,7 @@
     "dev": "turbo dev --parallel",
     "dev:api": "turbo dev --filter=api",
     "dev:web": "turbo dev --filter=web",
+    "dev:server": "pnpm --filter api dev:server",
     "build": "turbo build --parallel",
     "build:web": "turbo build --filter=web",
     "build:api": "turbo build --filter=api",

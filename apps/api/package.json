@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsc --watch",
+    "dev:server": "node dist/index.js",
     "build": "tsc",
-    "start": "node dist/index.js",
     "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
     "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
   },
