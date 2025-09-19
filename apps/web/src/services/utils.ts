@@ -1,7 +1,7 @@
 const isProduction = process.env.NODE_ENV === "production"
 export const API_ENDPOINT =
-    isProduction && process.env.NEXT_PUBLIC_API_ENDPOINT
-        ? process.env.NEXT_PUBLIC_API_ENDPOINT
+    isProduction && process.env.NEXT_PUBLIC_API_URL
+        ? process.env.NEXT_PUBLIC_API_URL
         : "http://localhost:4000/api/v1"
 
 export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: string, body?: any) => {
