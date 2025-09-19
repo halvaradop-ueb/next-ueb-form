@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, ChangeEvent } from "react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -94,6 +94,13 @@ const UserManagementPage = () => {
     const handleCancelEdit = () => {
         setIdleForm("create")
         setNewUser(initialState)
+    }
+
+    const handleUploadPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        const url = await uploadUserPhoto(file, crypto.randomUUID())
+        if (url) handleChange("photo", url)
     }
 
     useEffect(() => {
@@ -298,24 +305,17 @@ const UserManagementPage = () => {
                                                 type="file"
                                                 name="photo"
                                                 accept="image/*"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0]
-                                                    if (file) {
-                                                        const url = await uploadUserPhoto(
-                                                            file,
-                                                            newUser.id || crypto.randomUUID(),
-                                                        )
-                                                        if (url) handleChange("photo", url)
-                                                    }
-                                                }}
+                                                onChange={handleUploadPhoto}
                                             />
 
                                             {newUser.photo && (
                                                 <div className="mt-2">
                                                     <Image
-                                                        src={newUser.photo}
-                                                        alt="Preview"
                                                         className="h-16 w-16 rounded-full object-cover"
+                                                        src={newUser.photo}
+                                                        width={64}
+                                                        height={64}
+                                                        alt="Preview"
                                                     />
                                                 </div>
                                             )}

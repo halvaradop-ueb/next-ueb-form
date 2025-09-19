@@ -99,11 +99,11 @@ export const updateUser = async (user: User): Promise<User | null> => {
     }
 }
 
-export const uploadUserPhoto = async (file: File, userId: string) => {
-    const fileExt = file.name.split(".").pop()
+export const uploadUserPhoto = async (file: Express.Multer.File, userId: string) => {
+    const fileExt = file.originalname.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`
 
-    const { error } = await supabase.storage.from("avatars").upload(filePath, file, {
+    const { error } = await supabase.storage.from("avatars").upload(filePath, file.buffer, {
         cacheControl: "3600",
         upsert: true,
     })

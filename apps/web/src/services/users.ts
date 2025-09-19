@@ -1,7 +1,7 @@
-import { Session } from "next-auth"
+import type { Session } from "next-auth"
 import type { User } from "@ueb/types/user"
-import { supabase } from "@/lib/supabase/client"
 import { createService, createRequest } from "./utils"
+import { supabase } from "@/lib/supabase/client"
 
 export const getUsers = async (): Promise<User[]> => {
     // In production, use Next.js API routes
@@ -30,8 +30,8 @@ export const updateUser = async (user: User): Promise<User | null> => {
     return createService(request)
 }
 
-export const updateUserPassword = async (userId: string, newPassword: string): Promise<User | null> => {
-    const request = createRequest("PUT", `users/${userId}/password`, { password: newPassword })
+export const updateUserPassword = async (userId: string, password: string): Promise<User | null> => {
+    const request = createRequest("PUT", `users/${userId}/password`, { password })
     return createService(request)
 }
 
@@ -47,11 +47,6 @@ export const getUserById = async (session: Session): Promise<User | null> => {
     return createService(request)
 }
 
-/**
- * todo: move to API
- * @deprecated
- * @unstable
- */
 export const uploadUserPhoto = async (file: File, userId: string) => {
     const fileExt = file.name.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`
