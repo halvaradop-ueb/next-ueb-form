@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
             {
                 status: 400,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
             {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     } catch (error) {
         console.error("Error fetching subjects by professor ID:", error)
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
             {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     }
 }

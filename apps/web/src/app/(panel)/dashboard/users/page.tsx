@@ -51,7 +51,7 @@ const UserManagementPage = () => {
                   user.role === activeTab &&
                   (user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      user.email.toLowerCase().includes(searchQuery.toLowerCase())),
+                      user.email.toLowerCase().includes(searchQuery.toLowerCase()))
           )
         : []
 
@@ -146,9 +146,7 @@ const UserManagementPage = () => {
                                 />
                             </div>
                             <Button
-                                onClick={() =>
-                                    document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
-                                }
+                                onClick={() => document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })}
                             >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Agregar Usuario
@@ -169,25 +167,29 @@ const UserManagementPage = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {loading ? (
+                                        {loading && (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <p>Cargando usuarios...</p>
                                                 </TableCell>
                                             </TableRow>
-                                        ) : error ? (
+                                        )}
+                                        {error && (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <p className="text-red-500">{error}</p>
                                                 </TableCell>
                                             </TableRow>
-                                        ) : filteredUsers.length === 0 ? (
+                                        )}
+                                        {filteredUsers.length === 0 && !loading && !error && (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <p>No se encontraron usuarios</p>
                                                 </TableCell>
                                             </TableRow>
-                                        ) : (
+                                        )}
+                                        {!loading &&
+                                            filteredUsers.length > 0 &&
                                             filteredUsers.map((user) => (
                                                 <TableRow
                                                     className={cn({
@@ -216,9 +218,7 @@ const UserManagementPage = () => {
                                                             ? `********`
                                                             : `${user.first_name} ${user.last_name}`}
                                                     </TableCell>
-                                                    <TableCell>
-                                                        {user.role === "student" ? `********` : user.email}
-                                                    </TableCell>
+                                                    <TableCell>{user.role === "student" ? `********` : user.email}</TableCell>
                                                     <TableCell className="capitalize">{roles[user.role]}</TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center">
@@ -260,17 +260,14 @@ const UserManagementPage = () => {
                                                         </DropdownMenu>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        )}
+                                            ))}
                                     </TableBody>
                                 </Table>
                             </CardContent>
                         </Card>
                         <Card id="add-user-card">
                             <CardHeader>
-                                <CardTitle>
-                                    {idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}
-                                </CardTitle>
+                                <CardTitle>{idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}</CardTitle>
                                 <CardDescription>
                                     {idleForm === "create" ? "Crear una nueva cuenta de usuario" : "Actualizar usuario"}
                                 </CardDescription>

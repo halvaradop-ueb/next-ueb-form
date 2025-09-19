@@ -1,9 +1,5 @@
 import { Router } from "express"
-import {
-    createSubjectController,
-    deleteSubjectController,
-    getSubjectsController,
-} from "../controllers/subject.controller.js"
+import { createSubjectController, deleteSubjectController, getSubjectsController } from "../controllers/subject.controller.js"
 
 const router = Router()
 

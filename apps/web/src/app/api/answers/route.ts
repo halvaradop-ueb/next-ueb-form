@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
                 {
                     status: 400,
                     headers: { "Content-Type": "application/json" },
-                },
+                }
             )
         }
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
             {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     } catch (error) {
         console.error("Error adding answers:", error)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
             {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     }
 }

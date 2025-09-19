@@ -185,10 +185,7 @@ const AdminReportsPage = () => {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Materia *</Label>
-                                        <Select
-                                            onValueChange={(value) => handleChange("subject", value)}
-                                            value={report.subject}
-                                        >
+                                        <Select onValueChange={(value) => handleChange("subject", value)} value={report.subject}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Selecciona una materia" />
                                             </SelectTrigger>
@@ -272,9 +269,7 @@ const AdminReportsPage = () => {
                                     </div>
                                 )}
                                 {savedReports.length === 0 && (
-                                    <p className="text-center text-muted-foreground py-8">
-                                        No hay informes guardados aún
-                                    </p>
+                                    <p className="text-center text-muted-foreground py-8">No hay informes guardados aún</p>
                                 )}
                                 {savedReports.length > 0 && (
                                     <div className="space-y-4">
@@ -297,9 +292,7 @@ const AdminReportsPage = () => {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                onClick={() =>
-                                                                    generateSavedReportPDF(savedReports, r.id)
-                                                                }
+                                                                onClick={() => generateSavedReportPDF(savedReports, r.id)}
                                                                 title="Descargar PDF"
                                                             >
                                                                 <Download className="h-4 w-4" />

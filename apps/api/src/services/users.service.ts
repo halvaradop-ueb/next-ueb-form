@@ -82,12 +82,7 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 export const updateUser = async (user: User): Promise<User | null> => {
     try {
         const { password, ...userWithoutPassword } = user
-        const { data, error } = await supabase
-            .from("User")
-            .update(userWithoutPassword)
-            .eq("id", user.id)
-            .select()
-            .single()
+        const { data, error } = await supabase.from("User").update(userWithoutPassword).eq("id", user.id).select().single()
 
         if (error) {
             throw new Error(`Error updating user: ${error.message}`)

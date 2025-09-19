@@ -71,7 +71,7 @@ const FeedbackPage = () => {
             console.log("Type of professor ID:", typeof options.professorId)
             console.log(
                 "Is professor ID a valid UUID:",
-                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(options.professorId),
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(options.professorId)
             )
 
             try {
@@ -104,10 +104,7 @@ const FeedbackPage = () => {
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select
-                        value={options.professorId}
-                        onValueChange={(value) => handleSelectChange("professorId", value)}
-                    >
+                    <Select value={options.professorId} onValueChange={(value) => handleSelectChange("professorId", value)}>
                         <SelectTrigger id="selectedProfessor">
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
@@ -147,10 +144,7 @@ const FeedbackPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                             {timeframes.map(({ name, start, end }, index) => (
-                                <SelectItem
-                                    key={`timeframe-${name}`}
-                                    value={`${start.toISOString()} - ${end.toISOString()}`}
-                                >
+                                <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
                                     {name}
                                 </SelectItem>
                             ))}
@@ -213,12 +207,8 @@ const FeedbackPage = () => {
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="text-center">
-                                                    <span className="text-3xl font-bold">
-                                                        {filteredFeedback.length ?? 0}
-                                                    </span>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Total de Evaluaciones
-                                                    </p>
+                                                    <span className="text-3xl font-bold">{filteredFeedback.length ?? 0}</span>
+                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
                                                 </div>
                                             </CardContent>
                                         </Card>

@@ -3,7 +3,7 @@ import { createService, createRequest } from "./utils"
 
 export const addAnswer = async <FormSchema extends StudentFormState | ProfessorFormState>(
     answer: FormSchema,
-    userId: string,
+    userId: string
 ): Promise<boolean> => {
     // In production, use Next.js API routes
     if (process.env.NODE_ENV === "production") {

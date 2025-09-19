@@ -1,9 +1,5 @@
 import { supabase } from "@/lib/supabase/client"
-import type {
-    SubjectAssignmentService,
-    SubjectAssignmentWithProfessorService,
-    SubjectService,
-} from "@/lib/@types/services"
+import type { SubjectAssignmentService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
@@ -64,7 +60,7 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
                     last_name,
                     email
                 )
-            `,
+            `
             )
             .eq("subject_id", subjectId)
         if (error) {

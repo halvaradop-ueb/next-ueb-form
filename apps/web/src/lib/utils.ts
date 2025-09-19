@@ -123,7 +123,7 @@ export const generateSchema = (questions: Question[] = []): z.ZodObject<{}, "str
             ...previous,
             [now.id]: createQuestionSchema(now),
         }),
-        {},
+        {}
     )
     return z.object(shema)
 }

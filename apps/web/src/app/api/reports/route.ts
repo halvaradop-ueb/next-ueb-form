@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
             {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     } catch (error) {
         console.error("Error fetching reports:", error)
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
             {
                 status: 500,
                 headers: { "Content-Type": "application/json" },
-            },
+            }
         )
     }
 }

@@ -22,7 +22,7 @@ const getSteps = (
     errors: Record<string, string>,
     onChange: (key: keyof StudentFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
-    stages: Partial<Record<string, Question[]>>,
+    stages: Partial<Record<string, Question[]>>
 ): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
         id: `step-generated-${index}`,
@@ -158,9 +158,7 @@ export const StudentForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">
-                        {steps.length > 0 && steps[indexStep] && steps[indexStep].component}
-                    </div>
+                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep] && steps[indexStep].component}</div>
                     <FooterSteps
                         steps={steps}
                         indexStep={indexStep}

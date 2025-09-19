@@ -12,7 +12,7 @@ app.use(
                 ? process.env.FRONTEND_URL || "https://your-app.vercel.app"
                 : "http://localhost:3000",
         credentials: true,
-    }),
+    })
 )
 app.use(express.json())
 
