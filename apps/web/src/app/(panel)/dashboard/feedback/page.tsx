@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
+import { getProfessors } from "@/services/professors"
+import { getSubjectsByProfessorId } from "@/services/subjects"
+import { getFeedback } from "@/services/feedback"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -48,15 +51,8 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch("/api/professor")
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
-
-                const json = await res.json()
-                console.log(json)
-                setProfessors(json.users || [])
+                const professorsData = await getProfessors()
+                setProfessors(professorsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -70,13 +66,8 @@ const FeedbackPage = () => {
             if (!options?.professorId) return
 
             try {
-                const res = await fetch(`/api/subjects?professorId=${options.professorId}`)
-                if (!res.ok) {
-                    console.error("HTTP error!", res.status)
-                    return
-                }
-                const json = await res.json()
-                setSubjects(json.subjects || [])
+                const subjectsData = await getSubjectsByProfessorId(options.professorId)
+                setSubjects(subjectsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -88,10 +79,9 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchFeedback = async () => {
             if (!options?.professorId || !options?.subjectId) return
-            const res = await fetch(`/api/feedback?professorId=${options.professorId}&subjectId=${options.subjectId}`)
-            const feedback = await res.json()
-            setFeedback(feedback)
-            setRatings(ratingFeedback(feedback))
+            const feedbackData = await getFeedback(options.professorId, options.subjectId)
+            setFeedback(feedbackData)
+            setRatings(ratingFeedback(feedbackData))
         }
         fetchFeedback()
     }, [options?.professorId, options?.subjectId])

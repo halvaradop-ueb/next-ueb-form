@@ -11,8 +11,9 @@ import { Download, FileText, Save } from "lucide-react"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
-import { createReport } from "@/services/report"
+import { createReport, getReports } from "@/services/report"
 import { getSubjects } from "@/services/subjects"
+import { getProfessors } from "@/services/professors"
 import { createPeriods } from "@/lib/utils"
 
 export interface ReportState {
@@ -95,19 +96,14 @@ const AdminReportsPage = () => {
         const loadInitialData = async () => {
             setIsLoading(true)
             try {
-                const [professorsRes, reportsRes] = await Promise.all([
-                    fetch("/api/users?role=professor"),
-                    fetch("/api/report"),
-                ])
-                const professorsData = await professorsRes.json()
-                const reportsData = await reportsRes.json()
+                const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
 
                 setProfessors([
-                    ...(Array.isArray(professorsData) ? professorsData : []),
+                    ...professorsData,
                     { id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService,
                 ])
 
-                setSavedReports(Array.isArray(reportsData) ? reportsData : [])
+                setSavedReports(reportsData)
             } catch (error) {
                 console.error("Error loading initial data:", error)
                 alert("Error al cargar los datos iniciales")

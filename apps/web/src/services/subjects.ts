@@ -7,7 +7,7 @@ import type {
 import { API_ENDPOINT, createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
-    const request = createRequest("GET", "/subjects")
+    const request = createRequest("GET", "subjects")
     return createService(request)
 }
 

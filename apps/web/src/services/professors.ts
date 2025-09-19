@@ -3,13 +3,10 @@ import { getUsers } from "./users"
 
 export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
-        const res = await fetch("/api/users?role=professor")
-        if (!res.ok) {
-            console.error("No se pudieron cargar los profesores")
-            return []
-        }
-        const data = await res.json()
-        return Array.isArray(data) ? data : []
+        // Get all users and filter for professors
+        const users = await getUsers()
+        const professors = users.filter((user) => user.role === "professor")
+        return professors as ProfessorService[]
     } catch (error) {
         console.error("Error en getProfessors:", error)
         return []
