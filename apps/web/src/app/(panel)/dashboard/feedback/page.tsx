@@ -42,8 +42,6 @@ const FeedbackPage = () => {
     const isEmptyFeedback = filteredFeedback.length === 0
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {
-        console.log(`Setting ${key} to:`, value)
-        console.log(`Type of ${key}:`, typeof value)
         setOptions((previous) => ({
             ...previous,
             [key]: value,

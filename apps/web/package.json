@@ -9,8 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
-    "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@halvaradop/ui-button": "1.0.0",

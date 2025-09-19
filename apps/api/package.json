@@ -7,8 +7,8 @@
     "dev": "tsc --watch",
     "dev:server": "node dist/index.js",
     "build": "tsc",
-    "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
-    "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0",

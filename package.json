@@ -12,8 +12,8 @@
     "build": "turbo build --parallel",
     "build:web": "turbo build --filter=web",
     "build:api": "turbo build --filter=api",
-    "format": "prettier --write . --cache --cache-location .cache/.prettiercache",
-    "format:check": "prettier --check . --cache --cache-location .cache/.prettiercache"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "Hernan Alvarado <hernanvid123@gmail.com>",
