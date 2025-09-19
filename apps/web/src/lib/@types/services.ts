@@ -32,6 +32,9 @@ export interface FeedbackService {
     rating: number
 }
 
+/**
+ * @deprecated
+ */
 export interface UserService {
     id: string
     first_name: string

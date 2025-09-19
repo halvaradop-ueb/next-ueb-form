@@ -1,18 +1,19 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ProfessorService, SubjectService } from "@/lib/@types/services"
-import { getSubjects, getSubjectsByProfessorId } from "@/services/subjects"
-import { getProfessors } from "@/services/professors"
-import { Save } from "lucide-react"
+import { getSubjectsByProfessorId } from "@/services/subjects"
+import { addCoevaluation, getAllCoevaluations, getProfessors } from "@/services/professors"
+import { Car, Save } from "lucide-react"
 import { createPeriods } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSession } from "next-auth/react"
 
 export interface PeerReviewState {
-    title: string
     professor: string
     subject: string
     timeframe?: string
@@ -22,7 +23,6 @@ export interface PeerReviewState {
 const timeframes = createPeriods(new Date("2024-01-01"))
 
 const initialselectedOptionsState: PeerReviewState = {
-    title: "",
     professor: "",
     subject: "",
     timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
@@ -31,10 +31,13 @@ const initialselectedOptionsState: PeerReviewState = {
 }
 
 export const PeerReviewForm = () => {
+    const [activeTab, setActiveTab] = useState("new")
     const [subjects, setSubjects] = useState<SubjectService[]>([])
     const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [selectedOptions, setSelectedOptions] = useState<PeerReviewState>(initialselectedOptionsState)
-    const [isLoading, setIsLoading] = useState(true)
+    const [isLoading, startTransition] = useTransition()
+    const [coevaluations, setCoevaluations] = useState([])
+    const session = useSession()
 
     const handleChange = (key: keyof PeerReviewState, value: any) => {
         setSelectedOptions((prev) => ({
@@ -48,18 +51,20 @@ export const PeerReviewForm = () => {
         setSelectedOptions(initialselectedOptionsState)
     }
 
+    const handleAddPeerReview = async () => {
+        console.log("Adding peer review with data:", selectedOptions)
+        addCoevaluation(selectedOptions, session.data?.user?.id!)
+        resetForm()
+    }
+
     useEffect(() => {
         const loadInitialData = async () => {
-            setIsLoading(true)
-            try {
-                const [professorsData] = await Promise.all([getProfessors()])
-                setProfessors(professorsData)
-            } catch (error) {
-                console.error("Error loading initial data:", error)
-                alert("Error al cargar los datos iniciales")
-            } finally {
-                setIsLoading(false)
-            }
+            startTransition(async () => {
+                const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
+                setProfessors(professors)
+                console.log("Fetched coevaluations:", coevaluations)
+                setCoevaluations(coevaluations)
+            })
         }
 
         loadInitialData()
@@ -71,110 +76,159 @@ export const PeerReviewForm = () => {
                 setSubjects([])
                 return
             }
-
-            try {
-                if (selectedOptions.professor === "all") {
-                    const data = await getSubjects()
-                    setSubjects(data)
-                } else {
-                    const data = await getSubjectsByProfessorId(selectedOptions.professor)
-                    setSubjects(data)
-                }
-            } catch (error) {
-                console.error("Error al cargar las materias:", error)
-                setSubjects([])
-            }
+            const data = await getSubjectsByProfessorId(selectedOptions.professor)
+            setSubjects(data)
         }
 
         fetchSubjects()
     }, [selectedOptions.professor])
 
     return (
-        <Card>
-            <CardHeader className="text-left">
-                <CardTitle className="justify-start">Coevalulación</CardTitle>
-                <CardDescription className="justify-start">Desarrollo de la coevualuación</CardDescription>
-            </CardHeader>
+        <section>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="new">Crear Nueva Coevaluación</TabsTrigger>
+                    <TabsTrigger value="saved">Coevaluaciones Guardadas</TabsTrigger>
+                </TabsList>
+                <TabsContent value="new">
+                    <Card>
+                        <CardHeader className="text-left">
+                            <CardTitle className="justify-start">Coevalulación</CardTitle>
+                            <CardDescription className="justify-start">Desarrollo de la coevualuación</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="professor">Profesor *</Label>
+                                    <Select
+                                        onValueChange={(value) => handleChange("professor", value)}
+                                        value={selectedOptions.professor}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un docente" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {professors.map((prof) => (
+                                                <SelectItem key={prof.id} value={prof.id}>
+                                                    {prof.first_name} {prof.last_name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="subject">Materia *</Label>
+                                    <Select
+                                        onValueChange={(value) => handleChange("subject", value)}
+                                        value={selectedOptions.subject}
+                                        disabled={!selectedOptions.professor}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona una materia" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {subjects.length > 0 &&
+                                                subjects.map((subject) => (
+                                                    <SelectItem key={subject.id} value={subject.id}>
+                                                        {subject.name}
+                                                    </SelectItem>
+                                                ))}
+                                            {subjects.length === 0 && (
+                                                <SelectItem disabled value="empty">
+                                                    No hay materias disponibles
+                                                </SelectItem>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="timeframe">Periodo de Tiempo</Label>
+                                    <Select
+                                        value={selectedOptions.timeframe}
+                                        onValueChange={(value) => handleChange("timeframe", value)}
+                                    >
+                                        <SelectTrigger id="timeframe">
+                                            <SelectValue placeholder="Selecciona un periodo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {timeframes.map(({ name, start, end }) => (
+                                                <SelectItem
+                                                    key={`timeframe-${name}`}
+                                                    value={`${start.toISOString()} - ${end.toISOString()}`}
+                                                >
+                                                    {name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="findings">Hallazgos</Label>
+                                <Textarea
+                                    className="min-h-[100px]"
+                                    id="findings"
+                                    placeholder="Ingresa tus hallazgos..."
+                                    value={selectedOptions.findings}
+                                    onChange={(e) => handleChange("findings", e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="comments">Plan de Mejoramiento y Realimentación</Label>
+                                <Textarea
+                                    className="min-h-[100px]"
+                                    id="comments"
+                                    placeholder="Ingresa tus comentarios..."
+                                    value={selectedOptions.comments}
+                                    onChange={(e) => handleChange("comments", e.target.value)}
+                                />
+                            </div>
+                        </CardContent>
 
-            <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                        <Label htmlFor="professor">Profesor *</Label>
-                        <Select onValueChange={(value) => handleChange("professor", value)} value={selectedOptions.professor}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecciona un docente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {professors.map((prof) => (
-                                    <SelectItem key={prof.id} value={prof.id}>
-                                        {prof.first_name} {prof.last_name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="subject">Materia *</Label>
-                        <Select onValueChange={(value) => handleChange("subject", value)} value={selectedOptions.subject}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecciona una materia" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {subjects.map((subject) => (
-                                    <SelectItem key={subject.id} value={subject.id}>
-                                        {subject.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="timeframe">Periodo de Tiempo</Label>
-                        <Select value={selectedOptions.timeframe} onValueChange={(value) => handleChange("timeframe", value)}>
-                            <SelectTrigger id="timeframe">
-                                <SelectValue placeholder="Selecciona un periodo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeframes.map(({ name, start, end }, index) => (
-                                    <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
-                                        {name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="findings">Hallazgos</Label>
-                    <Textarea
-                        id="findings"
-                        placeholder="Ingresa tus hallazgos..."
-                        value={selectedOptions.findings}
-                        onChange={(e) => handleChange("findings", e.target.value)}
-                        className="min-h-[100px]"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="comments">Plan de Mejoramiento y Realimentación</Label>
-                    <Textarea
-                        id="comments"
-                        placeholder="Ingresa tus comentarios..."
-                        value={selectedOptions.comments}
-                        onChange={(e) => handleChange("comments", e.target.value)}
-                        className="min-h-[100px]"
-                    />
-                </div>
-            </CardContent>
-
-            <CardFooter className="flex justify-between">
-                <Button variant="outline" disabled={isLoading}>
-                    <Save className="mr-2 h-4 w-4" />
-                    Guardar Coevaluación
-                </Button>
-            </CardFooter>
-        </Card>
+                        <CardFooter className="flex justify-end">
+                            <Button
+                                disabled={isLoading || !selectedOptions.professor || !selectedOptions.subject}
+                                onClick={handleAddPeerReview}
+                            >
+                                <Save className="mr-2 h-4 w-4" />
+                                Guardar Coevaluación
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="saved">
+                    <Card>
+                        <CardHeader className="text-left">
+                            <CardTitle>No hay coevaluaciones guardadas</CardTitle>
+                            <CardDescription>Accede y gestiona las coevaluaciones guardadas</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {coevaluations.map((evaluation: any) => (
+                                <Card className="p-4 items-start text-left" key={evaluation.id}>
+                                    <CardHeader className="w-full px-0">
+                                        <CardTitle>{evaluation.subject.name}</CardTitle>
+                                        <CardDescription>
+                                            {evaluation.professor.first_name} {evaluation.professor.last_name} -{" "}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="w-full px-0">
+                                        <div>
+                                            <h4 className="font-semibold">Hallazgos</h4>
+                                            <p className="line-clamp-3 text-muted-foreground">{evaluation.findings}</p>
+                                        </div>
+                                        <div className="mt-4">
+                                            <h4 className="font-semibold">Plan de Mejoramiento y Realimentación</h4>
+                                            <p className="line-clamp-3 text-muted-foreground">
+                                                {evaluation.improvement_plan ?? ""}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </section>
     )
 }

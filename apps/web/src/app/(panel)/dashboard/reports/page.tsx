@@ -61,7 +61,6 @@ const AdminReportsPage = () => {
 
         setIsLoading(true)
         try {
-            // Only create report if both professor and subject are selected
             if (report.professor === "all" || report.subject === "all") {
                 alert("Por favor seleccione un profesor y una materia específicos")
                 setIsLoading(false)

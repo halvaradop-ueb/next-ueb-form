@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ConfirmActionProps } from "@/lib/@types/props"
-import { set } from "zod"
 
 export const ConfirmAction = ({ title, text, setText, open, setOpen, onDelete }: ConfirmActionProps) => {
     const [textConfirmation, setTextConfirmation] = useState(text)

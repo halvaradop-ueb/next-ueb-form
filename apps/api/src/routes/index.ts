@@ -6,6 +6,8 @@ import answerRoutes from "./answer.routes.js"
 import questionRoutes from "./questions.routes.js"
 import questionOptionRoutes from "./question-options.routes.js"
 import feedbackRoutes from "./feedback.routes.js"
+import professorsRoutes from "./professors.routes.js"
+import coevaluationRoutes from "./coevaluation.routes.js"
 
 const router = Router()
 
@@ -16,5 +18,7 @@ router.use("/answers", answerRoutes)
 router.use("/questions", questionRoutes)
 router.use("/question-options", questionOptionRoutes)
 router.use("/feedback", feedbackRoutes)
+router.use("/professors", professorsRoutes)
+router.use("/co_evaluations", coevaluationRoutes)
 
 export default router

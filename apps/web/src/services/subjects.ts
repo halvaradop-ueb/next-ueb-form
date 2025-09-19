@@ -8,9 +8,6 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
     return result || []
 }
 
-/**
- * todo: implement
- */
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     const request = createRequest("GET", `subjects/${professorId}/professors`)
     return createService(request)

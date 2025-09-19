@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge"
 import { Feedback, Question } from "./@types/services"
 import { supabase } from "./supabase/client"
 import { hashPassword } from "@/services/auth"
+import { User } from "@ueb/types/user"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -126,4 +127,16 @@ export const generateSchema = (questions: Question[] = []): z.ZodObject<{}, "str
         {}
     )
     return z.object(shema)
+}
+
+export const searchUser = (users: User[], search: string, role: string) => {
+    const supportedRoles = ["professor", "admin"]
+    return users.filter((user) => {
+        const matchesRole = supportedRoles.includes(role) && user.role === role
+        const matchesSearch =
+            user.first_name.toLowerCase().includes(search.toLowerCase()) ||
+            user.last_name.toLowerCase().includes(search.toLowerCase()) ||
+            user.email.toLowerCase().includes(search.toLowerCase())
+        return matchesRole && matchesSearch
+    })
 }

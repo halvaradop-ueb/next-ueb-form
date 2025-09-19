@@ -5,23 +5,22 @@ import { supabase } from "@/lib/supabase/client"
 
 export const getUsers = async (): Promise<User[]> => {
     const request = createRequest("GET", "users")
-    const result = await createService(request)
-    return result || []
+    return await createService(request)
 }
 
 export const addUser = async (user: Omit<User, "created_at" | "id">): Promise<User | null> => {
     const request = createRequest("POST", "users", user)
-    return createService(request)
+    return await createService(request)
 }
 
 export const updateUser = async (user: User): Promise<User | null> => {
     const request = createRequest("PUT", `users/${user.id}`, user)
-    return createService(request)
+    return await createService(request)
 }
 
 export const updateUserPassword = async (userId: string, password: string): Promise<User | null> => {
     const request = createRequest("PUT", `users/${userId}/password`, { password })
-    return createService(request)
+    return await createService(request)
 }
 
 export const deleteUser = async (id: string): Promise<boolean> => {
@@ -33,7 +32,7 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 export const getUserById = async (session: Session): Promise<User | null> => {
     if (!session.user?.id) return null
     const request = createRequest("GET", `users/${session.user.id}`)
-    return createService(request)
+    return await createService(request)
 }
 
 export const uploadUserPhoto = async (file: File, userId: string) => {

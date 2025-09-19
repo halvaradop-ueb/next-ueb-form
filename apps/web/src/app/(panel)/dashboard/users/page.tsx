@@ -1,6 +1,7 @@
 "use client"
-import { useState, useEffect, ChangeEvent } from "react"
-import { cn } from "@/lib/utils"
+import Image from "next/image"
+import { useState, useEffect, ChangeEvent, useTransition } from "react"
+import { cn, searchUser } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -12,16 +13,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 import type { Role } from "@/lib/@types/types"
-import type { UserService } from "@/lib/@types/services"
+import type { User } from "@ueb/types/user"
 import { addUser, deleteUser, getUsers, updateUser, uploadUserPhoto } from "@/services/users"
-import Image from "next/image"
+import { ConfirmAction } from "@/ui/common/confirm-action"
+
 const roles: Record<Role, string> = {
     admin: "Administrador",
     professor: "Docente",
     student: "Estudiante", // Kept for type compatibility but not used in UI
 }
 
-const initialState: UserService = {
+const initialState: User = {
     id: "",
     created_at: "",
     first_name: "",
@@ -38,31 +40,24 @@ const initialState: UserService = {
 const UserManagementPage = () => {
     const [activeTab, setActiveTab] = useState("professor")
     const [searchQuery, setSearchQuery] = useState("")
-    const [users, setUsers] = useState<UserService[]>([])
-    const [loading, setLoading] = useState(true)
+    const [users, setUsers] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
     const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
-    const [newUser, setNewUser] = useState<UserService>(initialState)
+    const [newUser, setNewUser] = useState<User>(initialState)
+    const [textConfirm, setTextConfirm] = useState("")
+    const [isOpenConfirm, setIsOpenConfirm] = useState(false)
+    const [isPending, startTransition] = useTransition()
 
-    const filteredUsers = users
-        ? users.filter(
-              (user) =>
-                  (user.role === "professor" || user.role === "admin") &&
-                  user.role === activeTab &&
-                  (user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      user.email.toLowerCase().includes(searchQuery.toLowerCase()))
-          )
-        : []
+    const filteredUsers = searchUser(users, searchQuery, activeTab)
 
-    const handleChange = (key: keyof UserService, value: any) => {
+    const handleChange = (key: keyof User, value: any) => {
         setNewUser((previous) => ({
             ...previous,
             [key]: value,
         }))
     }
 
-    const handleSetEdit = (user: UserService) => {
+    const handleSetEdit = (user: User) => {
         setIdleForm("edit")
         setNewUser({ ...user, password: "" })
         document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
@@ -88,7 +83,6 @@ const UserManagementPage = () => {
     const handleDeleteUser = async (userId: string) => {
         deleteUser(userId)
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId))
-        alert("¡Usuario eliminado exitosamente!")
     }
 
     const handleCancelEdit = () => {
@@ -105,21 +99,10 @@ const UserManagementPage = () => {
 
     useEffect(() => {
         const fetchUsers = async () => {
-            setLoading(true)
-            setError(null)
-            try {
+            startTransition(async () => {
                 const users = await getUsers()
-                if (users) {
-                    setUsers(users)
-                } else {
-                    setError("Failed to fetch users")
-                }
-            } catch (err) {
-                setError("Failed to fetch users")
-                console.error("Error fetching users:", err)
-            } finally {
-                setLoading(false)
-            }
+                setUsers(users)
+            })
         }
         fetchUsers()
     }, [])
@@ -167,7 +150,7 @@ const UserManagementPage = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {loading && (
+                                        {isPending && (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <p>Cargando usuarios...</p>
@@ -181,14 +164,14 @@ const UserManagementPage = () => {
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                        {filteredUsers.length === 0 && !loading && !error && (
+                                        {filteredUsers.length === 0 && !isPending && !error && (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <p>No se encontraron usuarios</p>
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                        {!loading &&
+                                        {!isPending &&
                                             filteredUsers.length > 0 &&
                                             filteredUsers.map((user) => (
                                                 <TableRow
@@ -214,11 +197,9 @@ const UserManagementPage = () => {
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="font-medium">
-                                                        {user.role === "student"
-                                                            ? `********`
-                                                            : `${user.first_name} ${user.last_name}`}
+                                                        {`${user.first_name} ${user.last_name}`}
                                                     </TableCell>
-                                                    <TableCell>{user.role === "student" ? `********` : user.email}</TableCell>
+                                                    <TableCell>{user.email}</TableCell>
                                                     <TableCell className="capitalize">{roles[user.role]}</TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center">
@@ -252,11 +233,19 @@ const UserManagementPage = () => {
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
                                                                     className="text-red-600 hover:cursor-pointer"
-                                                                    onClick={() => handleDeleteUser(user.id)}
+                                                                    onClick={() => setIsOpenConfirm(true)}
                                                                 >
                                                                     Eliminar
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
+                                                            <ConfirmAction
+                                                                title="usuario"
+                                                                text={textConfirm}
+                                                                setText={setTextConfirm}
+                                                                open={isOpenConfirm}
+                                                                setOpen={setIsOpenConfirm}
+                                                                onDelete={() => handleDeleteUser(user.id)}
+                                                            />
                                                         </DropdownMenu>
                                                     </TableCell>
                                                 </TableRow>

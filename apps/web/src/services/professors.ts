@@ -1,10 +1,10 @@
 import { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { createRequest, createService } from "./utils"
 import { getUsers } from "./users"
+import type { PeerReview } from "@ueb/types"
 
 export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
-        // Get all users and filter for professors
         const users = await getUsers()
         const professors = users.filter((user) => user.role === "professor")
         return professors as ProfessorService[]
@@ -17,4 +17,21 @@ export const getProfessors = async (): Promise<ProfessorService[]> => {
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     const request = createRequest("GET", `professors/${professorId}/subjects`)
     return createService(request)
+}
+
+export const addCoevaluation = async (peerReview: PeerReview, admin: string) => {
+    if (!admin) return
+    const request = createRequest("POST", `professors/${peerReview.professor}/co_evaluation`, { ...peerReview, admin })
+    console.log("Request en addCoevaluation:", request)
+    return await createService(request)
+}
+
+export const getPeerReviewsByProfessorId = async (professorId: string) => {
+    const request = createRequest("GET", `professors/${professorId}/co_evaluation`)
+    return await createService(request)
+}
+
+export const getAllCoevaluations = async () => {
+    const request = createRequest("GET", `co_evaluations`)
+    return await createService(request)
 }
