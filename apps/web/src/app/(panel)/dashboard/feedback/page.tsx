@@ -37,11 +37,13 @@ const FeedbackPage = () => {
                   ? "Por favor selecciona una materia para ver la retroalimentación."
                   : "success"
 
-    const fileteredFeedback = filterByPeriod(feedback, options.timeframe)
-    const avgRating = getAverageRatings(fileteredFeedback)
-    const isEmptyFeedback = fileteredFeedback.length === 0
+    const filteredFeedback = filterByPeriod(feedback, options.timeframe)
+    const avgRating = getAverageRatings(filteredFeedback)
+    const isEmptyFeedback = filteredFeedback.length === 0
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {
+        console.log(`Setting ${key} to:`, value)
+        console.log(`Type of ${key}:`, typeof value)
         setOptions((previous) => ({
             ...previous,
             [key]: value,
@@ -64,6 +66,13 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             if (!options?.professorId) return
+
+            console.log("Fetching subjects for professor ID:", options.professorId)
+            console.log("Type of professor ID:", typeof options.professorId)
+            console.log(
+                "Is professor ID a valid UUID:",
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(options.professorId),
+            )
 
             try {
                 const subjectsData = await getSubjectsByProfessorId(options.professorId)
@@ -205,7 +214,7 @@ const FeedbackPage = () => {
                                             <CardContent>
                                                 <div className="text-center">
                                                     <span className="text-3xl font-bold">
-                                                        {fileteredFeedback.length ?? 0}
+                                                        {filteredFeedback.length ?? 0}
                                                     </span>
                                                     <p className="text-sm text-muted-foreground">
                                                         Total de Evaluaciones
@@ -250,23 +259,23 @@ const FeedbackPage = () => {
                             <p className="text-sm text-muted-foreground">No hay comentarios disponibles</p>
                         </div>
                     )}
-                    {fileteredFeedback.map(({ id, feedback_text, feedback_date, professor, subject, rating }) => (
-                        <Card key={id}>
+                    {filteredFeedback.map((item: Feedback) => (
+                        <Card key={item.id}>
                             <CardContent className="p-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="font-medium">
-                                                {professor.first_name} {professor.last_name}
+                                                {item.professor.first_name} {item.professor.last_name}
                                             </p>
-                                            <p className="text-sm text-muted-foreground">{subject.name}</p>
+                                            <p className="text-sm text-muted-foreground">{item.subject.name}</p>
                                         </div>
                                         <div className="flex items-center">
-                                            <span className="mr-1 font-medium">{rating}/10</span>
-                                            <span className="text-xs text-muted-foreground">{feedback_date}</span>
+                                            <span className="mr-1 font-medium">{item.rating}/10</span>
+                                            <span className="text-xs text-muted-foreground">{item.feedback_date}</span>
                                         </div>
                                     </div>
-                                    <p className="text-sm">{feedback_text}</p>
+                                    <p className="text-sm">{item.feedback_text}</p>
                                 </div>
                             </CardContent>
                         </Card>

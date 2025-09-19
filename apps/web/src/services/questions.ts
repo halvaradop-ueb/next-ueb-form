@@ -2,6 +2,22 @@ import type { Question } from "@/lib/@types/services"
 import { API_ENDPOINT } from "./utils"
 
 export const getQuestions = async (): Promise<Question[]> => {
+    // In production, use Next.js API routes
+    if (process.env.NODE_ENV === "production") {
+        try {
+            const response = await fetch("/api/questions")
+            if (!response.ok) {
+                throw new Error(`Error fetching questions: ${response.statusText}`)
+            }
+            const json = await response.json()
+            return Array.isArray(json.questions) ? json.questions : []
+        } catch (error) {
+            console.error("Error en getQuestions:", error)
+            return []
+        }
+    }
+
+    // In development, use the Express API
     try {
         const response = await fetch(`${API_ENDPOINT}/questions`)
         if (!response.ok) {

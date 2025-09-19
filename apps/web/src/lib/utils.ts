@@ -37,7 +37,16 @@ export const updateDatabase = async (role: string, value: string) => {
 
 export const ratingFeedback = (feedback: Feedback[] = []) => {
     const n = feedback.length
-    const groupBy = Object.groupBy(feedback, (item) => item.rating)
+    // Replace Object.groupBy with a compatible implementation
+    const groupBy: Record<number, Feedback[]> = {}
+    feedback.forEach((item) => {
+        const rating = item.rating
+        if (!groupBy[rating]) {
+            groupBy[rating] = []
+        }
+        groupBy[rating].push(item)
+    })
+
     return Array.from({ length: 10 }).map((_, index) => {
         const quantity = groupBy[index + 1]?.length || 0
         const percentage = (quantity / n) * 100

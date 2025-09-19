@@ -5,6 +5,7 @@ import stageRoutes from "./stages.routes.js"
 import answerRoutes from "./answer.routes.js"
 import questionRoutes from "./questions.routes.js"
 import questionOptionRoutes from "./question-options.routes.js"
+import feedbackRoutes from "./feedback.routes.js"
 
 const router = Router()
 
@@ -14,5 +15,6 @@ router.use("/stages", stageRoutes)
 router.use("/answers", answerRoutes)
 router.use("/questions", questionRoutes)
 router.use("/question-options", questionOptionRoutes)
+router.use("/feedback", feedbackRoutes)
 
 export default router

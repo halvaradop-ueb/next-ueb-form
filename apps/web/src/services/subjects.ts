@@ -8,12 +8,25 @@ import { API_ENDPOINT, createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     const request = createRequest("GET", "subjects")
-    return createService(request)
+    const result = await createService(request)
+    return result || []
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
-    const request = createRequest("GET", `/subjects?professorId=${professorId}`)
-    return createService(request)
+    // In production, use Next.js API routes
+    if (process.env.NODE_ENV === "production") {
+        const response = await fetch(`/api/subjects?professorId=${professorId}`)
+        if (!response.ok) {
+            throw new Error(`Error fetching subjects by professor ID: ${response.statusText}`)
+        }
+        const json = await response.json()
+        return json.data || []
+    }
+
+    // In development, use the Express API
+    const request = createRequest("GET", `/subjects/${professorId}`)
+    const result = await createService(request)
+    return result || []
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {

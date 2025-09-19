@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 
     try {
         const feedback = await getFeedback(professorId, subjectId)
-        return res.json(feedback)
+        return res.json({ data: feedback })
     } catch (error) {
         console.error("Error fetching feedback:", error)
         return res.status(500).json({ error: "Failed to fetch feedback" })
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
 
     try {
         const newFeedback = await addFeedback({ subject, professor, comment, rating }, studentId)
-        return res.json(newFeedback)
+        return res.json({ data: newFeedback })
     } catch (error) {
         console.error("Error adding feedback:", error)
         return res.status(500).json({ error: "Failed to add feedback" })
