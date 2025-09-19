@@ -4,17 +4,6 @@ import { createService, createRequest } from "./utils"
 import { supabase } from "@/lib/supabase/client"
 
 export const getUsers = async (): Promise<User[]> => {
-    // In production, use Next.js API routes
-    if (process.env.NODE_ENV === "production") {
-        const response = await fetch("/api/users")
-        if (!response.ok) {
-            throw new Error(`Error fetching users: ${response.statusText}`)
-        }
-        const json = await response.json()
-        return json.data || []
-    }
-
-    // In development, use the Express API
     const request = createRequest("GET", "users")
     const result = await createService(request)
     return result || []

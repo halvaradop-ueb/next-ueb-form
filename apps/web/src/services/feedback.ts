@@ -3,22 +3,6 @@ import { StudentFormState } from "@/lib/@types/types"
 import { createService, createRequest } from "./utils"
 
 export const getFeedback = async (professorId: string, subjectId: string): Promise<Feedback[]> => {
-    // In production, use Next.js API routes
-    if (process.env.NODE_ENV === "production") {
-        try {
-            const response = await fetch(`/api/feedback?professorId=${professorId}&subjectId=${subjectId}`)
-            if (!response.ok) {
-                throw new Error(`Error fetching feedback: ${response.statusText}`)
-            }
-            const json = await response.json()
-            return json.data || []
-        } catch (error) {
-            console.error("Error fetching feedback:", error)
-            return []
-        }
-    }
-
-    // In development, use the Express API
     try {
         const request = createRequest("GET", `feedback?professorId=${professorId}&subjectId=${subjectId}`)
         const result = await createService(request)

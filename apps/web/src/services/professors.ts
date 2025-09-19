@@ -1,5 +1,6 @@
 import { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { createRequest, createService } from "./utils"
+import { getUsers } from "./users"
 
 export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
