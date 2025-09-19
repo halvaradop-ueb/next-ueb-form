@@ -1,5 +1,5 @@
-import { ProfessorService } from "@/lib/@types/services"
-import { getUsers } from "./users"
+import { ProfessorService, SubjectService } from "@/lib/@types/services"
+import { createRequest, createService } from "./utils"
 
 export const getProfessors = async (): Promise<ProfessorService[]> => {
     try {
@@ -11,4 +11,9 @@ export const getProfessors = async (): Promise<ProfessorService[]> => {
         console.error("Error en getProfessors:", error)
         return []
     }
+}
+
+export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
+    const request = createRequest("GET", `professors/${professorId}/subjects`)
+    return createService(request)
 }

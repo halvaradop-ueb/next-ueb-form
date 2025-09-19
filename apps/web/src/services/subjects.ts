@@ -4,7 +4,7 @@ import type {
     SubjectAssignmentWithProfessorService,
     SubjectService,
 } from "@/lib/@types/services"
-import { API_ENDPOINT, createRequest, createService } from "./utils"
+import { createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     const request = createRequest("GET", "subjects")
@@ -12,21 +12,12 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
     return result || []
 }
 
+/**
+ * todo: implement
+ */
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
-    // In production, use Next.js API routes
-    if (process.env.NODE_ENV === "production") {
-        const response = await fetch(`/api/subjects?professorId=${professorId}`)
-        if (!response.ok) {
-            throw new Error(`Error fetching subjects by professor ID: ${response.statusText}`)
-        }
-        const json = await response.json()
-        return json.data || []
-    }
-
-    // In development, use the Express API
-    const request = createRequest("GET", `/subjects/${professorId}`)
-    const result = await createService(request)
-    return result || []
+    const request = createRequest("GET", `subjects/${professorId}/professors`)
+    return createService(request)
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
@@ -105,34 +96,11 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 }
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
-    try {
-        const response = await fetch(`${API_ENDPOINT}/subjects`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(subject),
-        })
-        if (!response.ok) {
-            throw new Error(`Error adding subject: ${response.statusText}`)
-        }
-        const json = await response.json()
-        return json.data
-    } catch (error) {
-        console.error("Error adding subject:", error)
-        return {} as SubjectService
-    }
+    const request = createRequest("POST", "subjects", subject)
+    return createService(request)
 }
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
-    try {
-        const response = await fetch(`${API_ENDPOINT}/subjects/${subjectId}`, {
-            method: "DELETE",
-        })
-        const json = await response.json()
-        return !!json.data
-    } catch (error) {
-        console.error("Error deleting subject:", error)
-        return false
-    }
+    const request = createRequest("DELETE", `subjects/${subjectId}`)
+    return createService(request)
 }

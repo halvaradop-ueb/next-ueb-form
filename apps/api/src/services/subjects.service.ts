@@ -96,9 +96,6 @@ export const addAssignment = async (professorId: string, subjectId: string): Pro
     }
 }
 
-/**
- * TODOD: implement
- */
 export const getProfessorsBySubject = async (subjectId: string): Promise<SubjectAssignmentWithProfessorService[]> => {
     try {
         const { data, error } = await supabase

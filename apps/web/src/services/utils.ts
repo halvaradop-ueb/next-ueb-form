@@ -11,7 +11,6 @@ export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: st
         },
         body: data,
     })
-    console.log("Request:", request)
     return request
 }
 

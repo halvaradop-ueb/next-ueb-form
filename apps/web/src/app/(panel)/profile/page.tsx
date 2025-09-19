@@ -89,10 +89,8 @@ export default function ProfilePage() {
                                             onChange={async (e) => {
                                                 if (!e.target.files?.[0]) return
                                                 const file = e.target.files[0]
-
-                                                // 👇 subir a Supabase
                                                 const { data, error } = await supabase.storage
-                                                    .from("avatars") // asegúrate que el bucket exista
+                                                    .from("avatars")
                                                     .upload(`users/${user.id}-${Date.now()}`, file, {
                                                         cacheControl: "3600",
                                                         upsert: true,
@@ -103,12 +101,10 @@ export default function ProfilePage() {
                                                     return
                                                 }
 
-                                                // 👇 obtener URL pública
                                                 const { data: urlData } = supabase.storage
                                                     .from("avatars")
                                                     .getPublicUrl(data.path)
 
-                                                // 👇 actualizar estado local para que se vea enseguida
                                                 handleChange("photo", urlData.publicUrl)
                                             }}
                                         />

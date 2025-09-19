@@ -40,7 +40,6 @@ import {
 import type { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
 import { SubjectAssignment } from "@/ui/subjects/subject-assignment"
-import { ConfirmAction } from "@/ui/common/confirm-action"
 
 interface Materia {
     id: string
