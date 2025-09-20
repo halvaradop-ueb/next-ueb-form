@@ -6,17 +6,20 @@ export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: st
     const data = typeof body === "object" && !(body instanceof FormData) ? JSON.stringify(body) : body
     const request = new Request(`${API_ENDPOINT}/${url}`, {
         method,
+        mode: "no-cors",
         headers: {
             "Content-Type": "application/json",
         },
         body: data,
     })
+    console.log("Request:", request)
     return request
 }
 
 export const createService = async (request: Request, error?: string) => {
     try {
         const response = await fetch(request)
+        console.log("Response:", response)
         if (!response.ok) {
             throw new Error(`Failed to fetch: ${error ?? response.statusText}`)
         }

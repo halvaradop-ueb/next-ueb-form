@@ -101,7 +101,7 @@ const UserManagementPage = () => {
         const fetchUsers = async () => {
             startTransition(async () => {
                 const users = await getUsers()
-                setUsers(users)
+                setUsers([])
             })
         }
         fetchUsers()
