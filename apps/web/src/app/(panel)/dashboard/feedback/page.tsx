@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
+import { getProfessors } from "@/services/professors"
+import { getSubjectsByProfessorId } from "@/services/subjects"
+import { getFeedback } from "@/services/feedback"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -34,9 +37,9 @@ const FeedbackPage = () => {
                   ? "Por favor selecciona una materia para ver la retroalimentación."
                   : "success"
 
-    const fileteredFeedback = filterByPeriod(feedback, options.timeframe)
-    const avgRating = getAverageRatings(fileteredFeedback)
-    const isEmptyFeedback = fileteredFeedback.length === 0
+    const filteredFeedback = filterByPeriod(feedback, options.timeframe)
+    const avgRating = getAverageRatings(filteredFeedback)
+    const isEmptyFeedback = filteredFeedback.length === 0
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {
         setOptions((previous) => ({
@@ -48,15 +51,8 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch("/api/professor")
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
-
-                const json = await res.json()
-                console.log(json)
-                setProfessors(json.users || [])
+                const professorsData = await getProfessors()
+                setProfessors(professorsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -69,14 +65,16 @@ const FeedbackPage = () => {
         const fetchSubjects = async () => {
             if (!options?.professorId) return
 
+            console.log("Fetching subjects for professor ID:", options.professorId)
+            console.log("Type of professor ID:", typeof options.professorId)
+            console.log(
+                "Is professor ID a valid UUID:",
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(options.professorId)
+            )
+
             try {
-                const res = await fetch(`/api/subjects?professorId=${options.professorId}`)
-                if (!res.ok) {
-                    console.error("HTTP error!", res.status)
-                    return
-                }
-                const json = await res.json()
-                setSubjects(json.subjects || [])
+                const subjectsData = await getSubjectsByProfessorId(options.professorId)
+                setSubjects(subjectsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -88,10 +86,9 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchFeedback = async () => {
             if (!options?.professorId || !options?.subjectId) return
-            const res = await fetch(`/api/feedback?professorId=${options.professorId}&subjectId=${options.subjectId}`)
-            const feedback = await res.json()
-            setFeedback(feedback)
-            setRatings(ratingFeedback(feedback))
+            const feedbackData = await getFeedback(options.professorId, options.subjectId)
+            setFeedback(feedbackData)
+            setRatings(ratingFeedback(feedbackData))
         }
         fetchFeedback()
     }, [options?.professorId, options?.subjectId])
@@ -105,10 +102,7 @@ const FeedbackPage = () => {
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select
-                        value={options.professorId}
-                        onValueChange={(value) => handleSelectChange("professorId", value)}
-                    >
+                    <Select value={options.professorId} onValueChange={(value) => handleSelectChange("professorId", value)}>
                         <SelectTrigger id="selectedProfessor">
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
@@ -148,10 +142,7 @@ const FeedbackPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                             {timeframes.map(({ name, start, end }, index) => (
-                                <SelectItem
-                                    key={`timeframe-${name}`}
-                                    value={`${start.toISOString()} - ${end.toISOString()}`}
-                                >
+                                <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
                                     {name}
                                 </SelectItem>
                             ))}
@@ -214,12 +205,8 @@ const FeedbackPage = () => {
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="text-center">
-                                                    <span className="text-3xl font-bold">
-                                                        {fileteredFeedback.length ?? 0}
-                                                    </span>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Total de Evaluaciones
-                                                    </p>
+                                                    <span className="text-3xl font-bold">{filteredFeedback.length ?? 0}</span>
+                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -260,23 +247,23 @@ const FeedbackPage = () => {
                             <p className="text-sm text-muted-foreground">No hay comentarios disponibles</p>
                         </div>
                     )}
-                    {fileteredFeedback.map(({ id, feedback_text, feedback_date, professor, subject, rating }) => (
-                        <Card key={id}>
+                    {filteredFeedback.map((item: Feedback) => (
+                        <Card key={item.id}>
                             <CardContent className="p-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="font-medium">
-                                                {professor.first_name} {professor.last_name}
+                                                {item.professor.first_name} {item.professor.last_name}
                                             </p>
-                                            <p className="text-sm text-muted-foreground">{subject.name}</p>
+                                            <p className="text-sm text-muted-foreground">{item.subject.name}</p>
                                         </div>
                                         <div className="flex items-center">
-                                            <span className="mr-1 font-medium">{rating}/10</span>
-                                            <span className="text-xs text-muted-foreground">{feedback_date}</span>
+                                            <span className="mr-1 font-medium">{item.rating}/10</span>
+                                            <span className="text-xs text-muted-foreground">{item.feedback_date}</span>
                                         </div>
                                     </div>
-                                    <p className="text-sm">{feedback_text}</p>
+                                    <p className="text-sm">{item.feedback_text}</p>
                                 </div>
                             </CardContent>
                         </Card>

@@ -7,11 +7,7 @@ export async function getAnswers() {
 }
 
 export async function getAnswerById(id: string) {
-    const { data, error } = await supabase
-        .from("answer")
-        .select("*, answervalue(id, answer_text)")
-        .eq("id", id)
-        .single()
+    const { data, error } = await supabase.from("answer").select("*, answervalue(id, answer_text)").eq("id", id).single()
     if (error) throw new Error(error.message)
     return data
 }
@@ -21,19 +17,13 @@ export async function getAnswerById(id: string) {
  * @unstable
  */
 export async function getAnswersByUser(userId: string) {
-    const { data, error } = await supabase
-        .from("answer")
-        .select("*, answervalue(id, answer_text)")
-        .eq("user_id", userId)
+    const { data, error } = await supabase.from("answer").select("*, answervalue(id, answer_text)").eq("user_id", userId)
     if (error) throw new Error(error.message)
     return data
 }
 
 export async function getAnswersByQuestion(questionId: string) {
-    const { data, error } = await supabase
-        .from("answer")
-        .select("*, answervalue(id, answer_text)")
-        .eq("question_id", questionId)
+    const { data, error } = await supabase.from("answer").select("*, answervalue(id, answer_text)").eq("question_id", questionId)
     if (error) throw new Error(error.message)
     return data
 }

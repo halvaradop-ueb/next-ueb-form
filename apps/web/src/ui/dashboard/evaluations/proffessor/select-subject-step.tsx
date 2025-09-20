@@ -25,9 +25,7 @@ export const SelectSubject = ({ formData, setFormData }: SelectSubjectStepProps<
         <section className="space-y-6">
             <div>
                 <h2 className="text-2xl font-bold">Autoevaluación</h2>
-                <p className="text-muted-foreground">
-                    Por favor reflexione sobre su enseñanza y proporcione comentarios
-                </p>
+                <p className="text-muted-foreground">Por favor reflexione sobre su enseñanza y proporcione comentarios</p>
             </div>
             <div className="space-y-4">
                 <div className="space-y-2">

@@ -45,7 +45,7 @@ const StagePage = () => {
     const filteredStages = stages.filter(
         (stage) =>
             stage.name.toLowerCase().includes(search.toLowerCase()) ||
-            stage.description.toLowerCase().includes(search.toLowerCase()),
+            stage.description.toLowerCase().includes(search.toLowerCase())
     )
 
     const initStage = () => {
@@ -86,7 +86,7 @@ const StagePage = () => {
             stages.some(
                 (stg) =>
                     stg.name.trim().toLowerCase() === stage.name.trim().toLowerCase() &&
-                    stg.target_audience === stage.target_audience,
+                    stg.target_audience === stage.target_audience
             )
         ) {
             if (idleForm === "create") {
@@ -161,9 +161,7 @@ const StagePage = () => {
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>
-                                    {idleForm === "create" ? "Crear Nueva Etapa" : "Editar Etapa"}
-                                </DialogTitle>
+                                <DialogTitle>{idleForm === "create" ? "Crear Nueva Etapa" : "Editar Etapa"}</DialogTitle>
                                 <DialogDescription>
                                     {idleForm === "create"
                                         ? "Crea una nueva etapa para clasificar preguntas."
@@ -258,22 +256,14 @@ const StagePage = () => {
                                             <TableCell className="font-medium">{stage.name}</TableCell>
                                             <TableCell className="max-w-xs truncate">{stage.description}</TableCell>
                                             <TableCell>
-                                                <Badge
-                                                    variant={
-                                                        stage.target_audience === "student" ? "default" : "secondary"
-                                                    }
-                                                >
+                                                <Badge variant={stage.target_audience === "student" ? "default" : "secondary"}>
                                                     {stage.target_audience === "student" ? "Estudiante" : "Profesor"}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>{stage.questions.length}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleSetEdit(stage)}
-                                                    >
+                                                    <Button variant="ghost" size="icon" onClick={() => handleSetEdit(stage)}>
                                                         <Pencil className="h-4 w-4" />
                                                         <span className="sr-only">Editar</span>
                                                     </Button>

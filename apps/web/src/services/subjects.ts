@@ -1,51 +1,16 @@
 import { supabase } from "@/lib/supabase/client"
-import type {
-    SubjectAssignmentService,
-    SubjectAssignmentWithProfessorService,
-    SubjectService,
-} from "@/lib/@types/services"
-
-/**
- * @experimental
- */
-const ROUTE = "http://localhost:4000/api/v1"
+import type { SubjectAssignmentService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
+import { createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
-    try {
-        const response = await fetch(`${ROUTE}/subjects`)
-        if (!response.ok) {
-            throw new Error("Failed to fetch subjects")
-        }
-        const json = await response.json()
-        return json.data
-    } catch (error) {
-        console.error("Error fetching subjects:", error)
-        return []
-    }
+    const request = createRequest("GET", "subjects")
+    const result = await createService(request)
+    return result || []
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
-    try {
-        const { data, error } = await supabase
-            .from("subjectassignment")
-            .select(
-                `
-                subject (
-                    id,
-                    name,
-                    description
-                )
-            `,
-            )
-            .eq("professor_id", professorId)
-        if (error) {
-            throw new Error(`Error fetching subjects by professor ID: ${error.message}`)
-        }
-        return data.map((relation) => relation.subject) as unknown as SubjectService[]
-    } catch (error) {
-        console.error("Error fetching subjects by professor ID:", error)
-        return []
-    }
+    const request = createRequest("GET", `subjects/${professorId}/professors`)
+    return createService(request)
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
@@ -92,7 +57,7 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
                     last_name,
                     email
                 )
-            `,
+            `
             )
             .eq("subject_id", subjectId)
         if (error) {
@@ -124,34 +89,11 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 }
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
-    try {
-        const response = await fetch(`${ROUTE}/subjects`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(subject),
-        })
-        if (!response.ok) {
-            throw new Error(`Error adding subject: ${response.statusText}`)
-        }
-        const json = await response.json()
-        return json.data
-    } catch (error) {
-        console.error("Error adding subject:", error)
-        return {} as SubjectService
-    }
+    const request = createRequest("POST", "subjects", subject)
+    return createService(request)
 }
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
-    try {
-        const response = await fetch(`${ROUTE}/subjects/${subjectId}`, {
-            method: "DELETE",
-        })
-        const json = await response.json()
-        return !!json.data
-    } catch (error) {
-        console.error("Error deleting subject:", error)
-        return false
-    }
+    const request = createRequest("DELETE", `subjects/${subjectId}`)
+    return createService(request)
 }

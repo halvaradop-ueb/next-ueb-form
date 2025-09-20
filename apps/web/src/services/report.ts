@@ -1,14 +1,10 @@
 import { Report, CreateReportDto } from "@ueb/types/report"
+import { createService, createRequest } from "./utils"
 
 export const getReports = async (): Promise<Report[]> => {
     try {
-        const res = await fetch("/api/report")
-        if (!res.ok) {
-            console.error("No se pudieron cargar los reportes")
-            return []
-        }
-        const data = await res.json()
-        return Array.isArray(data) ? data : []
+        const request = createRequest("GET", "report")
+        return createService(request) || []
     } catch (error) {
         console.error("Error en getReports:", error)
         return []
@@ -17,21 +13,8 @@ export const getReports = async (): Promise<Report[]> => {
 
 export const createReport = async (reportData: CreateReportDto): Promise<Report | null> => {
     try {
-        const res = await fetch("/api/report", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(reportData),
-        })
-
-        if (!res.ok) {
-            console.error("No se pudo crear el reporte")
-            return null
-        }
-
-        const data = await res.json()
-        return data || null
+        const request = createRequest("POST", "report", reportData)
+        return createService(request)
     } catch (error) {
         console.error("Error en createReport:", error)
         return null

@@ -15,3 +15,11 @@ export type QuestionService = Question
  * @deprecated
  */
 export type UserService = User
+
+export interface PeerReview {
+    professor: string
+    subject: string
+    timeframe?: string
+    comments?: string
+    findings?: string
+}

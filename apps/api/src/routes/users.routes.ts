@@ -18,4 +18,6 @@ router.put("/:id", updateUserController)
 router.delete("/:id", deleteUserController)
 router.put("/:id/password", updatePasswordController)
 
+//router.post("/:id/photo", upload.single("photo"), uploadUserPhotoController)
+
 export default router

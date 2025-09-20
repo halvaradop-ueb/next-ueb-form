@@ -5,12 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import type { FormSchema } from "@/lib/@types/types"
 import type { RenderQuestionProps } from "@/lib/@types/props"
 
-export const RenderQuestion = <T extends FormSchema>({
-    question,
-    formData,
-    errors,
-    onChange,
-}: RenderQuestionProps<T>) => {
+export const RenderQuestion = <T extends FormSchema>({ question, formData, errors, onChange }: RenderQuestionProps<T>) => {
     const { id, question_type } = question
     switch (question_type) {
         case "text":
@@ -76,11 +71,7 @@ export const RenderQuestion = <T extends FormSchema>({
                     >
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
                             <div className="flex items-center flex-col gap-y-1" key={value}>
-                                <RadioGroupItem
-                                    className="peer sr-only"
-                                    value={value.toString()}
-                                    id={`${id}-${value}`}
-                                />
+                                <RadioGroupItem className="peer sr-only" value={value.toString()} id={`${id}-${value}`} />
                                 <Label
                                     className="flex size-8 cursor-pointer items-center justify-center text-xs rounded-full border-2 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
                                     htmlFor={`${id}-${value}`}

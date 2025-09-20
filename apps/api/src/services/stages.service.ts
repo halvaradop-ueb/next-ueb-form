@@ -64,7 +64,7 @@ export const updateStage = async (id: string, stage: Stage): Promise<Stage | nul
                     title,
                     description
                 )    
-            `,
+            `
             )
             .single()
         if (error) {

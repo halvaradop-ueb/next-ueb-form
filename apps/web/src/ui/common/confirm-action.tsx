@@ -1,16 +1,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ConfirmActionProps } from "@/lib/@types/props"
-import { set } from "zod"
 
 export const ConfirmAction = ({ title, text, setText, open, setOpen, onDelete }: ConfirmActionProps) => {
     const [textConfirmation, setTextConfirmation] = useState(text)
@@ -60,11 +52,7 @@ export const ConfirmAction = ({ title, text, setText, open, setOpen, onDelete }:
                     <Button variant="outline" onClick={() => setOpen(false)}>
                         Cancelar
                     </Button>
-                    <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        disabled={textConfirmation.toLowerCase() !== "eliminar"}
-                    >
+                    <Button variant="destructive" onClick={handleDelete} disabled={textConfirmation.toLowerCase() !== "eliminar"}>
                         Eliminar {title}
                     </Button>
                 </DialogFooter>

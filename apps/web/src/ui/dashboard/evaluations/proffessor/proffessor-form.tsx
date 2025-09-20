@@ -20,7 +20,7 @@ const getSteps = (
     errors: Record<string, string>,
     onChange: (key: keyof ProfessorFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
-    stages: Partial<Record<string, Question[]>>,
+    stages: Partial<Record<string, Question[]>>
 ): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
         id: `step-${index + 10}`,

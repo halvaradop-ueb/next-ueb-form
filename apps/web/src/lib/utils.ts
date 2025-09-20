@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge"
 import { Feedback, Question } from "./@types/services"
 import { supabase } from "./supabase/client"
 import { hashPassword } from "@/services/auth"
+import { User } from "@ueb/types/user"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -37,7 +38,16 @@ export const updateDatabase = async (role: string, value: string) => {
 
 export const ratingFeedback = (feedback: Feedback[] = []) => {
     const n = feedback.length
-    const groupBy = Object.groupBy(feedback, (item) => item.rating)
+    // Replace Object.groupBy with a compatible implementation
+    const groupBy: Record<number, Feedback[]> = {}
+    feedback.forEach((item) => {
+        const rating = item.rating
+        if (!groupBy[rating]) {
+            groupBy[rating] = []
+        }
+        groupBy[rating].push(item)
+    })
+
     return Array.from({ length: 10 }).map((_, index) => {
         const quantity = groupBy[index + 1]?.length || 0
         const percentage = (quantity / n) * 100
@@ -114,7 +124,19 @@ export const generateSchema = (questions: Question[] = []): z.ZodObject<{}, "str
             ...previous,
             [now.id]: createQuestionSchema(now),
         }),
-        {},
+        {}
     )
     return z.object(shema)
+}
+
+export const searchUser = (users: User[], search: string, role: string) => {
+    const supportedRoles = ["professor", "admin"]
+    return users.filter((user) => {
+        const matchesRole = supportedRoles.includes(role) && user.role === role
+        const matchesSearch =
+            user.first_name.toLowerCase().includes(search.toLowerCase()) ||
+            user.last_name.toLowerCase().includes(search.toLowerCase()) ||
+            user.email.toLowerCase().includes(search.toLowerCase())
+        return matchesRole && matchesSearch
+    })
 }
