@@ -6,10 +6,7 @@ type QuestionOptionRow = {
 
 export const getQuestionOptions = async (questionId: string): Promise<string[]> => {
     try {
-        const { data, error } = await supabase
-            .from("questionoptions")
-            .select("option_value")
-            .eq("question_id", questionId)
+        const { data, error } = await supabase.from("questionoptions").select("option_value").eq("question_id", questionId)
 
         if (error) throw new Error(`Error fetching options for question ${questionId}: ${error.message}`)
 

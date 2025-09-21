@@ -1,7 +1,7 @@
 const isProduction = process.env.NODE_ENV === "production"
 
 export const API_ENDPOINT =
-    isProduction && process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000/api/v1"
+    isProduction && process.env.NEXT_PUBLIC_API_ENDPOINT ? process.env.NEXT_PUBLIC_API_ENDPOINT : "http://localhost:4000/api/v1"
 
 export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: string, body?: any) => {
     const data = typeof body === "object" && !(body instanceof FormData) ? JSON.stringify(body) : body
@@ -23,10 +23,15 @@ export const createService = async (request: Request, error?: string) => {
         if (!response.ok) {
             throw new Error(`Failed to fetch: ${error ?? response.statusText}`)
         }
+
+        if (response.status === 204) {
+            return true
+        }
+
         const json = await response.json()
         return json?.data ?? null
     } catch (error) {
         console.error("Error fetching data:", error)
-        throw error // Re-throw to let the calling function handle it
+        throw error
     }
 }

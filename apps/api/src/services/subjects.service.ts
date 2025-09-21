@@ -54,7 +54,7 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
                     name,
                     description
                 )
-            `,
+            `
             )
             .eq("professor_id", professorId)
         if (error) {
@@ -114,7 +114,7 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
                     last_name,
                     email
                 )
-            `,
+            `
             )
             .eq("subject_id", subjectId)
         if (error) {

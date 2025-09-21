@@ -29,7 +29,7 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
                         professor_id,
                         subject_id,
                         semester
-                    `,
+                    `
                     )
                     .eq("professor_id", professorId)
                     .eq("subject_id", subjectId)
@@ -74,7 +74,7 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
                         professor_id,
                         subject_id,
                         semester
-                    `,
+                    `
                     )
                     .eq("professor_id", professorId)
 

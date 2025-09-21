@@ -17,8 +17,23 @@ export const SubjectAssignment = ({
 }: SubjectAssignmentProps) => {
     const isExpanded = expandedSubjects.includes(subject.id)
     const professors = assignments.filter((assignment) => assignment.subject_id === subject.id)
-    const [textConfirmation, setTextConfirmation] = useState("")
+    const [textConfirmationSubject, setTextConfirmationSubject] = useState("")
+    const [textConfirmationAssignment, setTextConfirmationAssignment] = useState("")
     const [openDialogDeleteSubject, setOpenDialogDeleteSubject] = useState(false)
+    const [openDialogDeleteAssignment, setOpenDialogDeleteAssignment] = useState(false)
+    const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null)
+
+    const handleDeleteAssignment = (assignmentId: string) => {
+        setAssignmentToDelete(assignmentId)
+        setOpenDialogDeleteAssignment(true)
+    }
+
+    const confirmDeleteAssignment = () => {
+        if (assignmentToDelete) {
+            onDeleteAssignment(assignmentToDelete)
+            setAssignmentToDelete(null)
+        }
+    }
 
     return (
         <>
@@ -55,11 +70,19 @@ export const SubjectAssignment = ({
                         </Button>
                         <ConfirmAction
                             title="Materia"
-                            text={textConfirmation}
-                            setText={setTextConfirmation}
+                            text={textConfirmationSubject}
+                            setText={setTextConfirmationSubject}
                             open={openDialogDeleteSubject}
                             setOpen={setOpenDialogDeleteSubject}
                             onDelete={() => onDeleteSubject(subject.id)}
+                        />
+                        <ConfirmAction
+                            title="asignación"
+                            text={textConfirmationAssignment}
+                            setText={setTextConfirmationAssignment}
+                            open={openDialogDeleteAssignment}
+                            setOpen={setOpenDialogDeleteAssignment}
+                            onDelete={confirmDeleteAssignment}
                         />
                     </div>
                 </TableCell>
@@ -84,7 +107,7 @@ export const SubjectAssignment = ({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => onDeleteAssignment(assignmentId)}
+                                                onClick={() => handleDeleteAssignment(assignmentId)}
                                                 title="Eliminar asignación"
                                             >
                                                 <UserMinus className="h-4 w-4 text-red-500" />

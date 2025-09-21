@@ -16,19 +16,9 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ConfirmAction } from "@/ui/common/confirm-action"
 import {
     addAssignment,
     addSubject,
@@ -90,6 +80,11 @@ const SubjectsPage = () => {
     const [errores, setErrores] = useState<{ [key: string]: string }>({})
 
     const [expandedSubjects, setExpandedSubjects] = useState<string[]>([])
+
+    // ConfirmAction state for assignment deletion
+    const [confirmDeleteAssignmentOpen, setConfirmDeleteAssignmentOpen] = useState(false)
+    const [confirmDeleteAssignmentText, setConfirmDeleteAssignmentText] = useState("")
+    const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null)
 
     const filteredSubjects = subjects.filter(
         (subjects) =>
@@ -231,6 +226,18 @@ const SubjectsPage = () => {
     const handleDeleteAssignment = async (assignmentId: string) => {
         await deleteAssignment(assignmentId)
         setAssignments((previous) => previous.filter((assignment) => assignment.id !== assignmentId))
+    }
+
+    const handleDeleteAssignmentRequest = (assignmentId: string) => {
+        setAssignmentToDelete(assignmentId)
+        setConfirmDeleteAssignmentOpen(true)
+    }
+
+    const confirmDeleteAssignment = async () => {
+        if (assignmentToDelete) {
+            await handleDeleteAssignment(assignmentToDelete)
+            setAssignmentToDelete(null)
+        }
     }
 
     const actualizarCampoMateria = (campo: keyof Materia, valor: any) => {
@@ -465,34 +472,15 @@ const SubjectsPage = () => {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" title="Eliminar asignación">
-                                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                                    <span className="sr-only">Eliminar</span>
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
-                                                                        ¿Está seguro de eliminar esta asignación?
-                                                                    </AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Esta acción no se puede deshacer. La asignación se
-                                                                        eliminará permanentemente.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleDeleteAssignment(assignment.id)}
-                                                                        className="bg-red-600 hover:bg-red-700"
-                                                                    >
-                                                                        Eliminar
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleDeleteAssignmentRequest(assignment.id)}
+                                                            title="Eliminar asignación"
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                            <span className="sr-only">Eliminar</span>
+                                                        </Button>
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -579,6 +567,14 @@ const SubjectsPage = () => {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <ConfirmAction
+                    title="asignación"
+                    text={confirmDeleteAssignmentText}
+                    setText={setConfirmDeleteAssignmentText}
+                    open={confirmDeleteAssignmentOpen}
+                    setOpen={setConfirmDeleteAssignmentOpen}
+                    onDelete={confirmDeleteAssignment}
+                />
             </div>
         </section>
     )
