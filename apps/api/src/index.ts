@@ -17,10 +17,10 @@ app.use(
     })
 )
 
-app.options("/*", cors())
 app.use(express.json())
 
 app.use("/api/v1", routes)
+
 app.use("/get", (_, res) => {
     res.json({ message: "GET request received" })
 })
