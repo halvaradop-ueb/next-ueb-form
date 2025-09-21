@@ -6,19 +6,20 @@ import {
     getUsers,
     updateUser,
     updateUserPassword,
+    uploadUserPhoto,
 } from "../services/users.service.js"
 import { errorResponse } from "../lib/utils.js"
 import { APIResponse } from "../lib/types.js"
 
-/**
- * TODO: improve filtering
- */
 export const getUsersController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const byRole = req.query.role
-        const roles = Array.isArray(byRole) ? byRole : [byRole]
         const users = await getUsers()
-        const filteredUsers = roles.length > 0 ? users.filter((user) => roles.includes(user.role)) : users
+        let filteredUsers = users
+        if (byRole !== undefined) {
+            const roles = Array.isArray(byRole) ? byRole : [byRole]
+            filteredUsers = users.filter((user) => roles.includes(user.role))
+        }
         res.status(200).json({
             data: filteredUsers,
             errors: null,
@@ -132,5 +133,29 @@ export const deleteUserController = async (req: Request, res: Response<APIRespon
         })
     } catch {
         res.status(500).json(errorResponse("Failed to delete user"))
+    }
+}
+
+export const uploadUserPhotoController = async (req: Request, res: Response) => {
+    try {
+        if (!req.params.id) {
+            return res.status(400).json(errorResponse("User ID is required"))
+        }
+        const file = (req as any).file
+        console.log("File received:", file)
+        if (!file) {
+            return res.status(400).json(errorResponse("No file uploaded"))
+        }
+        const photoUrl = await uploadUserPhoto(file, req.params.id)
+        if (!photoUrl) {
+            return res.status(500).json(errorResponse("Failed to upload user photo"))
+        }
+        res.status(200).json({
+            data: { photoUrl },
+            errors: null,
+            message: "User photo uploaded successfully",
+        })
+    } catch {
+        res.status(500).json(errorResponse("Failed to upload user photo"))
     }
 }

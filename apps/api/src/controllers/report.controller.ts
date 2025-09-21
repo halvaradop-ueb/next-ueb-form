@@ -4,7 +4,7 @@ import { errorResponse } from "../lib/utils.js"
 import { APIResponse } from "../lib/types.js"
 import { Report, CreateReportDto } from "@ueb/types/report"
 
-export const getReportsController = async (req: Request, res: Response<APIResponse<Report[]>>) => {
+export const getReportsController = async (_req: Request, res: Response<APIResponse<Report[]>>) => {
     try {
         const reports: Report[] = await getReports()
         return res.status(200).json({

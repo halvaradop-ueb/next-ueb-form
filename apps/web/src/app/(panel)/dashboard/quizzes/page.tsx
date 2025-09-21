@@ -34,7 +34,6 @@ import type { Question, StageService } from "@/lib/@types/services"
 import { addQuestion, deleteQuestion, getQuestions, updateQuestion } from "@/services/questions"
 import { Search, Plus, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { getStages } from "@/services/stages"
-import { v4 as uuidv4 } from "uuid"
 const questionTypes: Record<Question["question_type"], string> = {
     text: "Texto",
     single_choice: "Selección única",
@@ -78,8 +77,7 @@ const QuizzesPage = () => {
 
     const filteredQuestions = questions.filter(({ title, description, question_type, target_audience }) => {
         const matchesSearch =
-            title.toLowerCase().includes(search.toLowerCase()) ||
-            description?.toLowerCase().includes(search.toLowerCase())
+            title.toLowerCase().includes(search.toLowerCase()) || description?.toLowerCase().includes(search.toLowerCase())
         const matchesCategory = filterCategory === "all"
         const matchesType = filterQuestionType === "all" || question_type === filterQuestionType
         const matchesAudience = filterAudience === "all" || target_audience === filterAudience
@@ -87,10 +85,7 @@ const QuizzesPage = () => {
     })
 
     const handleCreateQuestion = () => {
-        setNewQuestion({
-            ...initialState,
-            id: uuidv4(),
-        })
+        setNewQuestion(initialState)
         setTextOptions("")
         setIdleForm("create")
         setIsOpenDialog(true)
@@ -146,8 +141,10 @@ const QuizzesPage = () => {
 
         if (idleForm === "create") {
             setTextOptions("")
-            addQuestion(finalQuestion)
-            setQuestions((previous) => [...previous, finalQuestion])
+            const createdQuestion = await addQuestion(finalQuestion)
+            if (createdQuestion) {
+                setQuestions((previous) => [...previous, createdQuestion])
+            }
         } else {
             setTextOptions("")
             await updateQuestion(finalQuestion)
@@ -238,9 +235,7 @@ const QuizzesPage = () => {
                                         <SelectContent>
                                             <SelectItem value="all">Todas las etapas</SelectItem>
                                             {stages
-                                                .filter(
-                                                    (stage) => stage.target_audience === newQuestion.target_audience,
-                                                )
+                                                .filter((stage) => stage.target_audience === newQuestion.target_audience)
                                                 .map((stage) => (
                                                     <SelectItem key={stage.id} value={stage.name}>
                                                         {stage.name}
@@ -278,9 +273,7 @@ const QuizzesPage = () => {
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[600px]">
                             <DialogHeader>
-                                <DialogTitle>
-                                    {idleForm === "create" ? "Crear Nueva Pregunta" : "Editar Pregunta"}
-                                </DialogTitle>
+                                <DialogTitle>{idleForm === "create" ? "Crear Nueva Pregunta" : "Editar Pregunta"}</DialogTitle>
                                 <DialogDescription>
                                     Complete el formulario para{" "}
                                     {idleForm === "create" ? "crear una nueva pregunta" : "actualizar la pregunta"}.
@@ -290,9 +283,7 @@ const QuizzesPage = () => {
                             {Object.keys(errors).length > 0 && (
                                 <Alert variant="destructive" className="mt-2">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        Por favor corrija los errors antes de continuar.
-                                    </AlertDescription>
+                                    <AlertDescription>Por favor corrija los errors antes de continuar.</AlertDescription>
                                 </Alert>
                             )}
 
@@ -334,10 +325,7 @@ const QuizzesPage = () => {
                                             <SelectContent>
                                                 {/* TODO: FIX */}
                                                 {stages
-                                                    .filter(
-                                                        (stage) =>
-                                                            stage.target_audience === newQuestion.target_audience,
-                                                    )
+                                                    .filter((stage) => stage.target_audience === newQuestion.target_audience)
                                                     .map((stage) => (
                                                         <SelectItem key={stage.id} value={stage.id}>
                                                             {stage.name}
@@ -470,11 +458,7 @@ const QuizzesPage = () => {
                                                             options && (
                                                                 <div className="mt-1 flex flex-wrap gap-1">
                                                                     {options.slice(0, 3).map((opcion, index) => (
-                                                                        <Badge
-                                                                            key={index}
-                                                                            variant="outline"
-                                                                            className="text-xs"
-                                                                        >
+                                                                        <Badge key={index} variant="outline" className="text-xs">
                                                                             {opcion}
                                                                         </Badge>
                                                                     ))}
@@ -519,8 +503,8 @@ const QuizzesPage = () => {
                                                                         ¿Está seguro de eliminar esta pregunta?
                                                                     </AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Esta acción no se puede deshacer. La pregunta se
-                                                                        eliminará permanentemente del sistema.
+                                                                        Esta acción no se puede deshacer. La pregunta se eliminará
+                                                                        permanentemente del sistema.
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
@@ -537,7 +521,7 @@ const QuizzesPage = () => {
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
-                                        ),
+                                        )
                                     )
                                 )}
                             </TableBody>

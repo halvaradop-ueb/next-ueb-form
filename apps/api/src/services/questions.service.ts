@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase.js"
+import { getQuestionOptions, addQuestionOptions, deleteQuestionOptions } from "./question-options.service.js"
 
 export const getQuestions = async (): Promise<any[]> => {
     try {
@@ -13,7 +14,7 @@ export const getQuestions = async (): Promise<any[]> => {
         stage: stage_id (
           id,
           name
-        )    
+        )
       `)
         if (error) {
             throw new Error(`Error fetching questions: ${error.message}`)
@@ -22,18 +23,10 @@ export const getQuestions = async (): Promise<any[]> => {
         const questionsWithOptions = await Promise.all(
             (questions || []).map(async (question: any) => {
                 if (["single_choice", "multiple_choice"].includes(question.question_type)) {
-                    const { data: options, error } = await supabase
-                        .from("questionoptions")
-                        .select("option_value")
-                        .eq("question_id", question.id)
-
-                    if (error) {
-                        throw new Error(`Error fetching options for question ${question.id}: ${error.message}`)
-                    }
-
+                    const options = await getQuestionOptions(question.id)
                     return {
                         ...question,
-                        options: (options || []).map((option: any) => option.option_value),
+                        options,
                     }
                 }
 
@@ -41,7 +34,7 @@ export const getQuestions = async (): Promise<any[]> => {
                     ...question,
                     options: null,
                 }
-            }),
+            })
         )
 
         return questionsWithOptions
@@ -54,37 +47,48 @@ export const getQuestions = async (): Promise<any[]> => {
 export const addQuestion = async (question: any): Promise<any | null> => {
     try {
         const { id, options, ...spread } = question
-        const { data: questionId, error } = await supabase.from("question").insert(spread).select("id").single()
-        if (error) {
-            throw new Error(`Error adding question: ${error.message}`)
+        const { data: insertedData, error: insertError } = await supabase.from("question").insert(spread).select().single()
+        if (insertError) {
+            throw new Error(`Error adding question: ${insertError.message}`)
         }
+
+        // Fetch the complete question with all fields including the ID
+        const { data: completeQuestion, error: fetchError } = await supabase
+            .from("question")
+            .select(
+                `
+                id,
+                title,
+                description,
+                question_type,
+                target_audience,
+                required,
+                stage_id,
+                stage: stage_id (
+                    id,
+                    name
+                )
+            `
+            )
+            .eq("id", insertedData.id)
+            .single()
+
+        if (fetchError) {
+            throw new Error(`Error fetching created question: ${fetchError.message}`)
+        }
+
+        // Add options if needed
         if (question.question_type === "single_choice" || question.question_type === "multiple_choice") {
-            const questionOptions = options?.map((option: any) => ({
-                question_id: questionId.id,
-                option_value: option,
-            }))
-            const { error: optionsError } = await supabase.from("questionoptions").insert(questionOptions).select("id")
-            if (optionsError) {
-                throw new Error(`Error adding question options: ${optionsError.message}`)
+            const added = await addQuestionOptions(completeQuestion.id, options || [])
+            if (!added) {
+                throw new Error(`Error adding question options`)
             }
         }
-        return question
+
+        return completeQuestion
     } catch (error) {
         console.error("Error adding question:", error)
         return null
-    }
-}
-
-export const cleanQuestionOptions = async (questionId: string): Promise<boolean> => {
-    try {
-        const { error } = await supabase.from("questionoptions").delete().eq("question_id", questionId)
-        if (error) {
-            throw new Error(`Error cleaning question options: ${error.message}`)
-        }
-        return true
-    } catch (error) {
-        console.error("Error cleaning question:", error)
-        return false
     }
 }
 
@@ -95,15 +99,11 @@ export const updateQuestion = async (question: any): Promise<any | null> => {
         if (error) {
             throw new Error(`Error updating question: ${error.message}`)
         }
-        await cleanQuestionOptions(id)
+        await deleteQuestionOptions(id)
         if (question.question_type === "single_choice" || question.question_type === "multiple_choice") {
-            const questionOptions = options?.map((option: any) => ({
-                question_id: id,
-                option_value: option,
-            }))
-            const { error: optionsError } = await supabase.from("questionoptions").upsert(questionOptions).select("id")
-            if (optionsError) {
-                throw new Error(`Error updating question options: ${optionsError.message}`)
+            const added = await addQuestionOptions(id, options || [])
+            if (!added) {
+                throw new Error(`Error updating question options`)
             }
         }
         return data
@@ -115,6 +115,8 @@ export const updateQuestion = async (question: any): Promise<any | null> => {
 
 export const deleteQuestion = async (id: string): Promise<boolean> => {
     try {
+        // Delete associated options first
+        await deleteQuestionOptions(id)
         const { error } = await supabase.from("question").delete().eq("id", id)
         if (error) {
             throw new Error(`Error deleting question: ${error.message}`)

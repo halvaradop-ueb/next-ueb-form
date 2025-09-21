@@ -32,6 +32,9 @@ export interface FeedbackService {
     rating: number
 }
 
+/**
+ * @deprecated
+ */
 export interface UserService {
     id: string
     first_name: string
@@ -107,4 +110,13 @@ export interface StageService {
     description: string
     target_audience: "student" | "professor"
     questions: Pick<QuestionService, "id" | "title" | "description">[]
+}
+
+export interface AutoEvaluationAnswer {
+    id: string
+    answer_id: string
+    answer_text: string
+    professor_id: string
+    subject_id: string
+    semester: string
 }

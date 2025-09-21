@@ -1,13 +1,7 @@
 import { Request, Response } from "express"
 import { APIResponse } from "../lib/types.js"
 import { errorResponse } from "../lib/utils.js"
-import {
-    getAnswers,
-    getAnswerById,
-    getAnswersByUser,
-    getAnswersByQuestion,
-    addAnswer,
-} from "../services/answer.service.js"
+import { getAnswers, getAnswerById, getAnswersByUser, getAnswersByQuestion, addAnswer } from "../services/answer.service.js"
 
 export const getAnswersController = async (_: Request, res: Response<APIResponse>) => {
     try {

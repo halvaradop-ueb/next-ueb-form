@@ -16,9 +16,14 @@ export async function getUsers() {
 }
 
 export async function getUserById(userId: string): Promise<User | null> {
-    const { data, error } = await supabase.from("User").select("*").eq("id", userId).single()
-    if (error) return null
-    return data as User
+    try {
+        const { data, error } = await supabase.from("User").select("*").eq("id", userId).single()
+        if (error) return null
+        return data as User
+    } catch (error) {
+        console.error("Error fetching user by ID:", error)
+        return null
+    }
 }
 
 export async function createUser(user: User): Promise<User | null> {
@@ -77,12 +82,7 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 export const updateUser = async (user: User): Promise<User | null> => {
     try {
         const { password, ...userWithoutPassword } = user
-        const { data, error } = await supabase
-            .from("User")
-            .update(userWithoutPassword)
-            .eq("id", user.id)
-            .select()
-            .single()
+        const { data, error } = await supabase.from("User").update(userWithoutPassword).eq("id", user.id).select().single()
 
         if (error) {
             throw new Error(`Error updating user: ${error.message}`)
@@ -94,29 +94,11 @@ export const updateUser = async (user: User): Promise<User | null> => {
     }
 }
 
-export const getAuthenticated = async (session: any): Promise<User | null> => {
-    try {
-        if (!session?.user) {
-            return null
-        }
-        const { user } = session
-        const { data, error } = await supabase.from("User").select("*").eq("id", user.id).single()
-        if (error) {
-            console.error("Error fetching logged user:", error)
-            return null
-        }
-        return data
-    } catch (error) {
-        console.error("Error fetching logged user:", error)
-        return null
-    }
-}
-
-export const uploadUserPhoto = async (file: File, userId: string) => {
-    const fileExt = file.name.split(".").pop()
+export const uploadUserPhoto = async (file: any, userId: string) => {
+    const fileExt = file.originalname.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`
 
-    const { error } = await supabase.storage.from("avatars").upload(filePath, file, {
+    const { error } = await supabase.storage.from("avatars").upload(filePath, file.buffer, {
         cacheControl: "3600",
         upsert: true,
     })

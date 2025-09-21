@@ -8,6 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
+import { getProfessors } from "@/services/professors"
+import { getSubjectsByProfessorId } from "@/services/subjects"
+import { getFeedback } from "@/services/feedback"
+import { getAutoEvaluationAnswers, type AutoEvaluationAnswer } from "@/services/auto-evaluation"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -21,6 +25,7 @@ const FeedbackPage = () => {
     const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [options, setOptions] = useState<FeedbackState>(initialState)
     const [ratings, setRatings] = useState<ReturnType<typeof ratingFeedback>>([])
+    const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationAnswer[]>([])
 
     const optionsDisabled = !options.professorId || !options.subjectId
     const defaultCardMessage =
@@ -34,9 +39,9 @@ const FeedbackPage = () => {
                   ? "Por favor selecciona una materia para ver la retroalimentación."
                   : "success"
 
-    const fileteredFeedback = filterByPeriod(feedback, options.timeframe)
-    const avgRating = getAverageRatings(fileteredFeedback)
-    const isEmptyFeedback = fileteredFeedback.length === 0
+    const filteredFeedback = filterByPeriod(feedback, options.timeframe)
+    const avgRating = getAverageRatings(filteredFeedback)
+    const isEmptyFeedback = filteredFeedback.length === 0
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {
         setOptions((previous) => ({
@@ -48,15 +53,8 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch("/api/professor")
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
-                }
-
-                const json = await res.json()
-                console.log(json)
-                setProfessors(json.users || [])
+                const professorsData = await getProfessors()
+                setProfessors(professorsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -69,14 +67,16 @@ const FeedbackPage = () => {
         const fetchSubjects = async () => {
             if (!options?.professorId) return
 
+            console.log("Fetching subjects for professor ID:", options.professorId)
+            console.log("Type of professor ID:", typeof options.professorId)
+            console.log(
+                "Is professor ID a valid UUID:",
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(options.professorId)
+            )
+
             try {
-                const res = await fetch(`/api/subjects?professorId=${options.professorId}`)
-                if (!res.ok) {
-                    console.error("HTTP error!", res.status)
-                    return
-                }
-                const json = await res.json()
-                setSubjects(json.subjects || [])
+                const subjectsData = await getSubjectsByProfessorId(options.professorId)
+                setSubjects(subjectsData)
             } catch (err) {
                 console.error("Fetch error:", err)
             }
@@ -88,12 +88,26 @@ const FeedbackPage = () => {
     useEffect(() => {
         const fetchFeedback = async () => {
             if (!options?.professorId || !options?.subjectId) return
-            const res = await fetch(`/api/feedback?professorId=${options.professorId}&subjectId=${options.subjectId}`)
-            const feedback = await res.json()
-            setFeedback(feedback)
-            setRatings(ratingFeedback(feedback))
+            const feedbackData = await getFeedback(options.professorId, options.subjectId)
+            setFeedback(feedbackData)
+            setRatings(ratingFeedback(feedbackData))
         }
         fetchFeedback()
+    }, [options?.professorId, options?.subjectId])
+
+    useEffect(() => {
+        const fetchAutoEvaluation = async () => {
+            if (!options?.professorId || !options?.subjectId) return
+
+            try {
+                const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
+                setAutoEvaluationAnswers(autoEvaluationData)
+            } catch (error) {
+                console.error("Error in fetchAutoEvaluation:", error)
+                setAutoEvaluationAnswers([])
+            }
+        }
+        fetchAutoEvaluation()
     }, [options?.professorId, options?.subjectId])
 
     return (
@@ -105,10 +119,7 @@ const FeedbackPage = () => {
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select
-                        value={options.professorId}
-                        onValueChange={(value) => handleSelectChange("professorId", value)}
-                    >
+                    <Select value={options.professorId} onValueChange={(value) => handleSelectChange("professorId", value)}>
                         <SelectTrigger id="selectedProfessor">
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
@@ -148,10 +159,7 @@ const FeedbackPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                             {timeframes.map(({ name, start, end }, index) => (
-                                <SelectItem
-                                    key={`timeframe-${name}`}
-                                    value={`${start.toISOString()} - ${end.toISOString()}`}
-                                >
+                                <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
                                     {name}
                                 </SelectItem>
                             ))}
@@ -160,7 +168,7 @@ const FeedbackPage = () => {
                 </div>
             </div>
             <Tabs className="w-full" defaultValue="summary">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="summary" disabled={optionsDisabled}>
                         Resumen
                     </TabsTrigger>
@@ -169,6 +177,9 @@ const FeedbackPage = () => {
                     </TabsTrigger>
                     <TabsTrigger value="comments" disabled={optionsDisabled}>
                         Comentarios
+                    </TabsTrigger>
+                    <TabsTrigger value="autoevaluation" disabled={optionsDisabled}>
+                        Autoevaluación
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary" className="space-y-4 pt-4">
@@ -214,12 +225,8 @@ const FeedbackPage = () => {
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="text-center">
-                                                    <span className="text-3xl font-bold">
-                                                        {fileteredFeedback.length ?? 0}
-                                                    </span>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Total de Evaluaciones
-                                                    </p>
+                                                    <span className="text-3xl font-bold">{filteredFeedback.length ?? 0}</span>
+                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -260,23 +267,66 @@ const FeedbackPage = () => {
                             <p className="text-sm text-muted-foreground">No hay comentarios disponibles</p>
                         </div>
                     )}
-                    {fileteredFeedback.map(({ id, feedback_text, feedback_date, professor, subject, rating }) => (
-                        <Card key={id}>
+                    {filteredFeedback.map((item: Feedback) => (
+                        <Card key={item.id}>
                             <CardContent className="p-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="font-medium">
-                                                {professor.first_name} {professor.last_name}
+                                                {item.professor.first_name} {item.professor.last_name}
                                             </p>
-                                            <p className="text-sm text-muted-foreground">{subject.name}</p>
+                                            <p className="text-sm text-muted-foreground">{item.subject.name}</p>
                                         </div>
                                         <div className="flex items-center">
-                                            <span className="mr-1 font-medium">{rating}/10</span>
-                                            <span className="text-xs text-muted-foreground">{feedback_date}</span>
+                                            <span className="mr-1 font-medium">{item.rating}/10</span>
+                                            <span className="text-xs text-muted-foreground">{item.feedback_date}</span>
                                         </div>
                                     </div>
-                                    <p className="text-sm">{feedback_text}</p>
+                                    <p className="text-sm">{item.feedback_text}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </TabsContent>
+                <TabsContent value="autoevaluation" className="space-y-4 pt-4">
+                    <div className="flex items-center justify-center w-full h-32">
+                        <div className="text-center">
+                            <p className="text-lg font-medium">🔍 Debug Autoevaluación</p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                                Profesor ID: {options.professorId || "No seleccionado"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">Materia ID: {options.subjectId || "No seleccionado"}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Datos cargados: {autoEvaluationAnswers.length} respuestas
+                            </p>
+                            <div className="mt-4">
+                                <p className="text-xs text-muted-foreground">Datos de ejemplo:</p>
+                                <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                                    {JSON.stringify(autoEvaluationAnswers.slice(0, 2), null, 2)}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                    {autoEvaluationAnswers.length === 0 && (
+                        <div className="flex items-center justify-center w-full h-32">
+                            <p className="text-sm text-muted-foreground">No hay respuestas de autoevaluación disponibles</p>
+                        </div>
+                    )}
+                    {autoEvaluationAnswers.map((answer: AutoEvaluationAnswer) => (
+                        <Card key={answer.id}>
+                            <CardContent className="p-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium">Respuesta de Autoevaluación</p>
+                                            <p className="text-sm text-muted-foreground">ID de respuesta: {answer.answer_id}</p>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Semestre: {answer.semester}</div>
+                                    </div>
+                                    <div className="bg-muted p-3 rounded-md">
+                                        <p className="text-sm">{answer.answer_text}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

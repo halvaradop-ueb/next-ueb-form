@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
-import { getAuthenticated, updateUser } from "@/services/users"
+import { getUserById, updateUser } from "@/services/users"
 import type { UserService } from "@/lib/@types/services"
 import type { Role } from "@/lib/@types/types"
 import { supabase } from "@/lib/supabase/client"
@@ -43,7 +43,7 @@ export default function ProfilePage() {
     useEffect(() => {
         const fetchUser = async () => {
             if (!session) return
-            const user = await getAuthenticated(session)
+            const user = await getUserById(session)
             setUser(user!)
         }
         fetchUser()
@@ -89,10 +89,8 @@ export default function ProfilePage() {
                                             onChange={async (e) => {
                                                 if (!e.target.files?.[0]) return
                                                 const file = e.target.files[0]
-
-                                                // 👇 subir a Supabase
                                                 const { data, error } = await supabase.storage
-                                                    .from("avatars") // asegúrate que el bucket exista
+                                                    .from("avatars")
                                                     .upload(`users/${user.id}-${Date.now()}`, file, {
                                                         cacheControl: "3600",
                                                         upsert: true,
@@ -103,12 +101,8 @@ export default function ProfilePage() {
                                                     return
                                                 }
 
-                                                // 👇 obtener URL pública
-                                                const { data: urlData } = supabase.storage
-                                                    .from("avatars")
-                                                    .getPublicUrl(data.path)
+                                                const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(data.path)
 
-                                                // 👇 actualizar estado local para que se vea enseguida
                                                 handleChange("photo", urlData.publicUrl)
                                             }}
                                         />
@@ -202,9 +196,7 @@ export default function ProfilePage() {
                                                 onChange={(e) => handleChange("email", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
-                                                {user.email}
-                                            </p>
+                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.email}</p>
                                         )}
                                     </div>
 
@@ -273,9 +265,7 @@ export default function ProfilePage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium">Generaste un informe</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Revisión Anual - Dr. Smith
-                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">Revisión Anual - Dr. Smith</p>
                                                     <p className="text-xs text-muted-foreground">Ayer</p>
                                                 </div>
                                             </div>
@@ -284,9 +274,7 @@ export default function ProfilePage() {
                                                     <Settings className="h-5 w-5" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium">
-                                                        Actualizaste la configuración del sistema
-                                                    </p>
+                                                    <p className="font-medium">Actualizaste la configuración del sistema</p>
                                                     <p className="text-sm text-muted-foreground">
                                                         Cambiaste las fechas del periodo de evaluación
                                                     </p>
@@ -338,9 +326,7 @@ export default function ProfilePage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="font-medium">Exportación de Datos</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Exportar datos del sistema
-                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">Exportar datos del sistema</p>
                                                 </div>
                                                 <Badge>Acceso Completo</Badge>
                                             </div>

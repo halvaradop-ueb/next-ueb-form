@@ -36,6 +36,9 @@ router.post("/", async (req, res) => {
     try {
         const body = req.body
         const newQuestion = await addQuestion(body)
+        if (!newQuestion) {
+            return res.status(500).json({ error: "Failed to add question" })
+        }
         return res.json(newQuestion)
     } catch (error) {
         console.error("Error adding question:", error)

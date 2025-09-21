@@ -6,4 +6,9 @@ export interface Question {
     required: boolean
     target_audience: "student" | "professor"
     stage_id: string
+    stage?: {
+        id: string
+        name: string
+    } | null
+    options?: string[] | null
 }

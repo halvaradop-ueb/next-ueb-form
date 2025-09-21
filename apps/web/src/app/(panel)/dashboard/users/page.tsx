@@ -1,6 +1,7 @@
 "use client"
-import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
+import Image from "next/image"
+import { useState, useEffect, ChangeEvent, useTransition } from "react"
+import { cn, searchUser } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -12,16 +13,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
 import type { Role } from "@/lib/@types/types"
-import type { UserService } from "@/lib/@types/services"
+import type { User } from "@ueb/types/user"
 import { addUser, deleteUser, getUsers, updateUser, uploadUserPhoto } from "@/services/users"
-import Image from "next/image"
+import { ConfirmAction } from "@/ui/common/confirm-action"
+
 const roles: Record<Role, string> = {
     admin: "Administrador",
     professor: "Docente",
     student: "Estudiante", // Kept for type compatibility but not used in UI
 }
 
-const initialState: UserService = {
+const initialState: User = {
     id: "",
     created_at: "",
     first_name: "",
@@ -38,27 +40,24 @@ const initialState: UserService = {
 const UserManagementPage = () => {
     const [activeTab, setActiveTab] = useState("professor")
     const [searchQuery, setSearchQuery] = useState("")
-    const [users, setUsers] = useState<UserService[]>([])
+    const [users, setUsers] = useState<User[]>([])
+    const [error, setError] = useState<string | null>(null)
     const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
-    const [newUser, setNewUser] = useState<UserService>(initialState)
+    const [newUser, setNewUser] = useState<User>(initialState)
+    const [textConfirm, setTextConfirm] = useState("")
+    const [isOpenConfirm, setIsOpenConfirm] = useState(false)
+    const [isPending, startTransition] = useTransition()
 
-    const filteredUsers = users.filter(
-        (user) =>
-            (user.role === "professor" || user.role === "admin") &&
-            user.role === activeTab &&
-            (user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchQuery.toLowerCase())),
-    )
+    const filteredUsers = searchUser(users, searchQuery, activeTab)
 
-    const handleChange = (key: keyof UserService, value: any) => {
+    const handleChange = (key: keyof User, value: any) => {
         setNewUser((previous) => ({
             ...previous,
             [key]: value,
         }))
     }
 
-    const handleSetEdit = (user: UserService) => {
+    const handleSetEdit = (user: User) => {
         setIdleForm("edit")
         setNewUser({ ...user, password: "" })
         document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
@@ -84,7 +83,6 @@ const UserManagementPage = () => {
     const handleDeleteUser = async (userId: string) => {
         deleteUser(userId)
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId))
-        alert("¡Usuario eliminado exitosamente!")
     }
 
     const handleCancelEdit = () => {
@@ -92,10 +90,19 @@ const UserManagementPage = () => {
         setNewUser(initialState)
     }
 
+    const handleUploadPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        const url = await uploadUserPhoto(file, crypto.randomUUID())
+        if (url) handleChange("photo", url)
+    }
+
     useEffect(() => {
         const fetchUsers = async () => {
-            const users = await getUsers()
-            setUsers(users)
+            startTransition(async () => {
+                const users = await getUsers()
+                setUsers(users)
+            })
         }
         fetchUsers()
     }, [])
@@ -122,9 +129,7 @@ const UserManagementPage = () => {
                                 />
                             </div>
                             <Button
-                                onClick={() =>
-                                    document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
-                                }
+                                onClick={() => document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })}
                             >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Agregar Usuario
@@ -145,86 +150,113 @@ const UserManagementPage = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {filteredUsers.map((user) => (
-                                            <TableRow
-                                                className={cn({
-                                                    "opacity-50": user.role === "student",
-                                                })}
-                                                key={user.id}
-                                            >
-                                                <TableCell>
-                                                    {user.photo ? (
-                                                        <Image
-                                                            src={user.photo}
-                                                            alt={`${user.first_name} ${user.last_name}`}
-                                                            className="h-10 w-10 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500">
-                                                            {user.first_name.charAt(0)}
-                                                            {user.last_name.charAt(0)}
-                                                        </div>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="font-medium">
-                                                    {user.role === "student"
-                                                        ? `********`
-                                                        : `${user.first_name} ${user.last_name}`}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {user.role === "student" ? `********` : user.email}
-                                                </TableCell>
-                                                <TableCell className="capitalize">{roles[user.role]}</TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center">
-                                                        <div
-                                                            className={`mr-2 h-2 w-2 rounded-full ${
-                                                                user.status ? "bg-green-500" : "bg-gray-300"
-                                                            }`}
-                                                        ></div>
-                                                        <span className="capitalize">{user.status}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>{new Date().toLocaleString()}</TableCell>
-                                                <TableCell>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                            className="hover:cursor-pointer"
-                                                            disabled={user.role === "student"}
-                                                            asChild
-                                                        >
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                                <span className="sr-only">Acciones</span>
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem
-                                                                className="hover:cursor-pointer"
-                                                                onClick={() => handleSetEdit(user)}
-                                                            >
-                                                                Editar
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                className="text-red-600 hover:cursor-pointer"
-                                                                onClick={() => handleDeleteUser(user.id)}
-                                                            >
-                                                                Eliminar
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                        {isPending && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-8">
+                                                    <p>Cargando usuarios...</p>
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
+                                        )}
+                                        {error && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-8">
+                                                    <p className="text-red-500">{error}</p>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                        {filteredUsers.length === 0 && !isPending && !error && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-8">
+                                                    <p>No se encontraron usuarios</p>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                        {!isPending &&
+                                            filteredUsers.length > 0 &&
+                                            filteredUsers.map((user) => (
+                                                <TableRow
+                                                    className={cn({
+                                                        "opacity-50": user.role === "student",
+                                                    })}
+                                                    key={user.id}
+                                                >
+                                                    <TableCell>
+                                                        {user.photo ? (
+                                                            <Image
+                                                                width={40}
+                                                                height={40}
+                                                                src={user.photo}
+                                                                alt={`${user.first_name} ${user.last_name}`}
+                                                                className="h-10 w-10 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500">
+                                                                {user.first_name.charAt(0)}
+                                                                {user.last_name.charAt(0)}
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">
+                                                        {`${user.first_name} ${user.last_name}`}
+                                                    </TableCell>
+                                                    <TableCell>{user.email}</TableCell>
+                                                    <TableCell className="capitalize">{roles[user.role]}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center">
+                                                            <div
+                                                                className={`mr-2 h-2 w-2 rounded-full ${
+                                                                    user.status ? "bg-green-500" : "bg-gray-300"
+                                                                }`}
+                                                            ></div>
+                                                            <span className="capitalize">{user.status}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{new Date().toLocaleString()}</TableCell>
+                                                    <TableCell>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                className="hover:cursor-pointer"
+                                                                disabled={user.role === "student"}
+                                                                asChild
+                                                            >
+                                                                <Button variant="ghost" size="icon">
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <span className="sr-only">Acciones</span>
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem
+                                                                    className="hover:cursor-pointer"
+                                                                    onClick={() => handleSetEdit(user)}
+                                                                >
+                                                                    Editar
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    className="text-red-600 hover:cursor-pointer"
+                                                                    onClick={() => setIsOpenConfirm(true)}
+                                                                >
+                                                                    Eliminar
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                            <ConfirmAction
+                                                                title="usuario"
+                                                                text={textConfirm}
+                                                                setText={setTextConfirm}
+                                                                open={isOpenConfirm}
+                                                                setOpen={setIsOpenConfirm}
+                                                                onDelete={() => handleDeleteUser(user.id)}
+                                                            />
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
                                     </TableBody>
                                 </Table>
                             </CardContent>
                         </Card>
                         <Card id="add-user-card">
                             <CardHeader>
-                                <CardTitle>
-                                    {idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}
-                                </CardTitle>
+                                <CardTitle>{idleForm === "create" ? "Agregar Nuevo Usuario" : "Editar Usuario"}</CardTitle>
                                 <CardDescription>
                                     {idleForm === "create" ? "Crear una nueva cuenta de usuario" : "Actualizar usuario"}
                                 </CardDescription>
@@ -259,24 +291,17 @@ const UserManagementPage = () => {
                                                 type="file"
                                                 name="photo"
                                                 accept="image/*"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0]
-                                                    if (file) {
-                                                        const url = await uploadUserPhoto(
-                                                            file,
-                                                            newUser.id || crypto.randomUUID(),
-                                                        )
-                                                        if (url) handleChange("photo", url)
-                                                    }
-                                                }}
+                                                onChange={handleUploadPhoto}
                                             />
 
                                             {newUser.photo && (
                                                 <div className="mt-2">
                                                     <Image
-                                                        src={newUser.photo}
-                                                        alt="Preview"
                                                         className="h-16 w-16 rounded-full object-cover"
+                                                        src={newUser.photo}
+                                                        width={64}
+                                                        height={64}
+                                                        alt="Preview"
                                                     />
                                                 </div>
                                             )}

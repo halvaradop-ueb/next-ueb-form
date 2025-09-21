@@ -11,8 +11,9 @@ import { Download, FileText, Save } from "lucide-react"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
-import { createReport } from "@/services/report"
+import { createReport, getReports } from "@/services/report"
 import { getSubjects } from "@/services/subjects"
+import { getProfessors } from "@/services/professors"
 import { createPeriods } from "@/lib/utils"
 
 export interface ReportState {
@@ -43,6 +44,7 @@ const AdminReportsPage = () => {
     const [savedReports, setSavedReports] = useState<Report[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [report, setReport] = useState<ReportState>(initialReportState)
+    const [error, setError] = useState<string | null>(null)
 
     const handleChange = (key: keyof ReportState, value: any) => {
         setReport((prev) => ({ ...prev, [key]: value }))
@@ -60,7 +62,6 @@ const AdminReportsPage = () => {
 
         setIsLoading(true)
         try {
-            // Only create report if both professor and subject are selected
             if (report.professor === "all" || report.subject === "all") {
                 alert("Por favor seleccione un profesor y una materia específicos")
                 setIsLoading(false)
@@ -79,7 +80,7 @@ const AdminReportsPage = () => {
                 throw new Error("Error al guardar el reporte")
             }
 
-            setSavedReports((prev) => [newReport, ...prev])
+            setSavedReports((prev) => [newReport, ...(prev || [])])
             alert("Borrador guardado exitosamente!")
             setActiveTab("saved")
             resetForm()
@@ -94,23 +95,19 @@ const AdminReportsPage = () => {
     useEffect(() => {
         const loadInitialData = async () => {
             setIsLoading(true)
+            setError(null)
             try {
-                const [professorsRes, reportsRes] = await Promise.all([
-                    fetch("/api/users?role=professor"),
-                    fetch("/api/report"),
-                ])
-                const professorsData = await professorsRes.json()
-                const reportsData = await reportsRes.json()
+                const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
 
                 setProfessors([
-                    ...(Array.isArray(professorsData) ? professorsData : []),
+                    ...professorsData,
                     { id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService,
                 ])
 
-                setSavedReports(Array.isArray(reportsData) ? reportsData : [])
+                setSavedReports(reportsData || [])
             } catch (error) {
                 console.error("Error loading initial data:", error)
-                alert("Error al cargar los datos iniciales")
+                setError("Error al cargar los datos iniciales")
                 setProfessors([{ id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService])
                 setSavedReports([])
             } finally {
@@ -189,10 +186,7 @@ const AdminReportsPage = () => {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="subject">Materia *</Label>
-                                        <Select
-                                            onValueChange={(value) => handleChange("subject", value)}
-                                            value={report.subject}
-                                        >
+                                        <Select onValueChange={(value) => handleChange("subject", value)} value={report.subject}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Selecciona una materia" />
                                             </SelectTrigger>
@@ -275,12 +269,12 @@ const AdminReportsPage = () => {
                                         <p>Cargando informes...</p>
                                     </div>
                                 )}
-                                {savedReports.length === 0 && (
+                                {(!savedReports || savedReports.length === 0) && (
                                     <p className="text-center text-muted-foreground py-8">
-                                        No hay informes guardados aún
+                                        {error ? `Error: ${error}` : "No hay informes guardados aún"}
                                     </p>
                                 )}
-                                {savedReports.length > 0 && (
+                                {savedReports && savedReports.length > 0 && (
                                     <div className="space-y-4">
                                         {savedReports.map((r) => (
                                             <Card key={r.id}>
@@ -301,9 +295,7 @@ const AdminReportsPage = () => {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                onClick={() =>
-                                                                    generateSavedReportPDF(savedReports, r.id)
-                                                                }
+                                                                onClick={() => generateSavedReportPDF(savedReports || [], r.id)}
                                                                 title="Descargar PDF"
                                                             >
                                                                 <Download className="h-4 w-4" />

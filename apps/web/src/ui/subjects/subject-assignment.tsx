@@ -17,19 +17,29 @@ export const SubjectAssignment = ({
 }: SubjectAssignmentProps) => {
     const isExpanded = expandedSubjects.includes(subject.id)
     const professors = assignments.filter((assignment) => assignment.subject_id === subject.id)
-    const [textConfirmation, setTextConfirmation] = useState("")
+    const [textConfirmationSubject, setTextConfirmationSubject] = useState("")
+    const [textConfirmationAssignment, setTextConfirmationAssignment] = useState("")
     const [openDialogDeleteSubject, setOpenDialogDeleteSubject] = useState(false)
+    const [openDialogDeleteAssignment, setOpenDialogDeleteAssignment] = useState(false)
+    const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null)
+
+    const handleDeleteAssignment = (assignmentId: string) => {
+        setAssignmentToDelete(assignmentId)
+        setOpenDialogDeleteAssignment(true)
+    }
+
+    const confirmDeleteAssignment = () => {
+        if (assignmentToDelete) {
+            onDeleteAssignment(assignmentToDelete)
+            setAssignmentToDelete(null)
+        }
+    }
 
     return (
         <>
             <TableRow className={isExpanded ? "border-b-0" : ""}>
                 <TableCell>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setExpandedSubjects(subject.id)}
-                        className="h-6 w-6"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => setExpandedSubjects(subject.id)} className="h-6 w-6">
                         {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </Button>
                 </TableCell>
@@ -60,11 +70,19 @@ export const SubjectAssignment = ({
                         </Button>
                         <ConfirmAction
                             title="Materia"
-                            text={textConfirmation}
-                            setText={setTextConfirmation}
+                            text={textConfirmationSubject}
+                            setText={setTextConfirmationSubject}
                             open={openDialogDeleteSubject}
                             setOpen={setOpenDialogDeleteSubject}
                             onDelete={() => onDeleteSubject(subject.id)}
+                        />
+                        <ConfirmAction
+                            title="asignación"
+                            text={textConfirmationAssignment}
+                            setText={setTextConfirmationAssignment}
+                            open={openDialogDeleteAssignment}
+                            setOpen={setOpenDialogDeleteAssignment}
+                            onDelete={confirmDeleteAssignment}
                         />
                     </div>
                 </TableCell>
@@ -75,16 +93,11 @@ export const SubjectAssignment = ({
                         <div className="p-4">
                             <h4 className="text-sm font-medium mb-2">Profesores asignados</h4>
                             {professors.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                    No hay profesores asignados a esta materia.
-                                </p>
+                                <p className="text-sm text-muted-foreground">No hay profesores asignados a esta materia.</p>
                             ) : (
                                 <div className="space-y-2">
                                     {professors.map(({ id: assignmentId, user: { id, first_name, last_name } }) => (
-                                        <div
-                                            key={id}
-                                            className="flex items-center justify-between bg-background rounded-md p-2"
-                                        >
+                                        <div key={id} className="flex items-center justify-between bg-background rounded-md p-2">
                                             <div className="flex items-center gap-2">
                                                 <User className="h-4 w-4 text-muted-foreground" />
                                                 <span className="font-medium">
@@ -94,7 +107,7 @@ export const SubjectAssignment = ({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => onDeleteAssignment(assignmentId)}
+                                                onClick={() => handleDeleteAssignment(assignmentId)}
                                                 title="Eliminar asignación"
                                             >
                                                 <UserMinus className="h-4 w-4 text-red-500" />
