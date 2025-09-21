@@ -52,7 +52,6 @@ export const PeerReviewForm = () => {
     }
 
     const handleAddPeerReview = async () => {
-        console.log("Adding peer review with data:", selectedOptions)
         addCoevaluation(selectedOptions, session.data?.user?.id!)
         resetForm()
     }
@@ -62,7 +61,6 @@ export const PeerReviewForm = () => {
             startTransition(async () => {
                 const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
                 setProfessors(professors)
-                console.log("Fetched coevaluations:", coevaluations)
                 setCoevaluations(coevaluations)
             })
         }
