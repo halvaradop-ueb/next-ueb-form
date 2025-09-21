@@ -5,17 +5,15 @@ import routes from "./routes/index.js"
 
 const app = express()
 
-const corsOptions = {
-    origin: [
-        "http://localhost:3000",
-        "*"
-    ].filter(Boolean),
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
-}
-
-app.use(cors(corsOptions))
+app.use(
+    cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+        credentials: true,
+        preflightContinue: false,
+    })
+)
 
 app.use(express.json())
 

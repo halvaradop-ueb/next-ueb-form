@@ -4,12 +4,13 @@ export const API_ENDPOINT =
     isProduction && process.env.NEXT_PUBLIC_API_ENDPOINT ? process.env.NEXT_PUBLIC_API_ENDPOINT : "http://localhost:4000/api/v1"
 */
 
-export const API_ENDPOINT = "https://api-dt4t1o99q-hernans-projects-926e4aeb.vercel.app/api/v1"
+export const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT
 
 export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: string, body?: any) => {
     const data = typeof body === "object" && !(body instanceof FormData) ? JSON.stringify(body) : body
     const request = new Request(`${API_ENDPOINT}/${url}`, {
         method,
+        mode: "cors",
         headers: {
             "Content-Type": "application/json",
         },
