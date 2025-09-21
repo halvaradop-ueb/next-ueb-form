@@ -7,15 +7,17 @@ const app = express()
 
 app.use(
     cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        origin: (origin, callback) => {
+            callback(null, origin ?? true)
+        },
+        methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
         credentials: true,
         preflightContinue: false,
     })
 )
 
-app.options("*", cors())
+app.options("/*", cors())
 app.use(express.json())
 
 app.use("/api/v1", routes)
