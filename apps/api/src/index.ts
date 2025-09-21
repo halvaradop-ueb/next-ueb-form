@@ -5,11 +5,22 @@ import routes from "./routes/index.js"
 
 const app = express()
 
-app.use(cors())
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            callback(null, origin ?? true)
+        },
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+        credentials: true,
+        preflightContinue: false,
+    })
+)
 
 app.use(express.json())
 
 app.use("/api/v1", routes)
+
 app.use("/get", (_, res) => {
     res.json({ message: "GET request received" })
 })

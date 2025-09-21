@@ -1,4 +1,5 @@
 const isProduction = process.env.NODE_ENV === "production"
+
 export const API_ENDPOINT =
     isProduction && process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:4000/api/v1"
 
@@ -6,12 +7,13 @@ export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: st
     const data = typeof body === "object" && !(body instanceof FormData) ? JSON.stringify(body) : body
     const request = new Request(`${API_ENDPOINT}/${url}`, {
         method,
+        mode: "cors",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
         body: data,
     })
-    console.log("Request:", request)
     return request
 }
 
