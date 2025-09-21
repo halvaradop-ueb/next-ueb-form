@@ -11,6 +11,7 @@ import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } 
 import { getProfessors } from "@/services/professors"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import { getFeedback } from "@/services/feedback"
+import { getAutoEvaluationAnswers, type AutoEvaluationAnswer } from "@/services/auto-evaluation"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -24,6 +25,7 @@ const FeedbackPage = () => {
     const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [options, setOptions] = useState<FeedbackState>(initialState)
     const [ratings, setRatings] = useState<ReturnType<typeof ratingFeedback>>([])
+    const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationAnswer[]>([])
 
     const optionsDisabled = !options.professorId || !options.subjectId
     const defaultCardMessage =
@@ -93,6 +95,21 @@ const FeedbackPage = () => {
         fetchFeedback()
     }, [options?.professorId, options?.subjectId])
 
+    useEffect(() => {
+        const fetchAutoEvaluation = async () => {
+            if (!options?.professorId || !options?.subjectId) return
+
+            try {
+                const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
+                setAutoEvaluationAnswers(autoEvaluationData)
+            } catch (error) {
+                console.error("Error in fetchAutoEvaluation:", error)
+                setAutoEvaluationAnswers([])
+            }
+        }
+        fetchAutoEvaluation()
+    }, [options?.professorId, options?.subjectId])
+
     return (
         <section className="space-y-6">
             <div>
@@ -151,7 +168,7 @@ const FeedbackPage = () => {
                 </div>
             </div>
             <Tabs className="w-full" defaultValue="summary">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="summary" disabled={optionsDisabled}>
                         Resumen
                     </TabsTrigger>
@@ -160,6 +177,9 @@ const FeedbackPage = () => {
                     </TabsTrigger>
                     <TabsTrigger value="comments" disabled={optionsDisabled}>
                         Comentarios
+                    </TabsTrigger>
+                    <TabsTrigger value="autoevaluation" disabled={optionsDisabled}>
+                        Autoevaluación
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary" className="space-y-4 pt-4">
@@ -264,6 +284,49 @@ const FeedbackPage = () => {
                                         </div>
                                     </div>
                                     <p className="text-sm">{item.feedback_text}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </TabsContent>
+                <TabsContent value="autoevaluation" className="space-y-4 pt-4">
+                    <div className="flex items-center justify-center w-full h-32">
+                        <div className="text-center">
+                            <p className="text-lg font-medium">🔍 Debug Autoevaluación</p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                                Profesor ID: {options.professorId || "No seleccionado"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">Materia ID: {options.subjectId || "No seleccionado"}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Datos cargados: {autoEvaluationAnswers.length} respuestas
+                            </p>
+                            <div className="mt-4">
+                                <p className="text-xs text-muted-foreground">Datos de ejemplo:</p>
+                                <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
+                                    {JSON.stringify(autoEvaluationAnswers.slice(0, 2), null, 2)}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                    {autoEvaluationAnswers.length === 0 && (
+                        <div className="flex items-center justify-center w-full h-32">
+                            <p className="text-sm text-muted-foreground">No hay respuestas de autoevaluación disponibles</p>
+                        </div>
+                    )}
+                    {autoEvaluationAnswers.map((answer: AutoEvaluationAnswer) => (
+                        <Card key={answer.id}>
+                            <CardContent className="p-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="font-medium">Respuesta de Autoevaluación</p>
+                                            <p className="text-sm text-muted-foreground">ID de respuesta: {answer.answer_id}</p>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Semestre: {answer.semester}</div>
+                                    </div>
+                                    <div className="bg-muted p-3 rounded-md">
+                                        <p className="text-sm">{answer.answer_text}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

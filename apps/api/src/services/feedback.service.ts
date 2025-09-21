@@ -21,7 +21,7 @@ export async function getFeedback(professorId: string, subjectId: string): Promi
         subject:subject_id (
           name
         )
-      `
+      `,
             )
             .eq("subject_id", subjectId)
             .eq("professor_id", professorId)

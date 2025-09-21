@@ -82,7 +82,12 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 export const updateUser = async (user: User): Promise<User | null> => {
     try {
         const { password, ...userWithoutPassword } = user
-        const { data, error } = await supabase.from("User").update(userWithoutPassword).eq("id", user.id).select().single()
+        const { data, error } = await supabase
+            .from("User")
+            .update(userWithoutPassword)
+            .eq("id", user.id)
+            .select()
+            .single()
 
         if (error) {
             throw new Error(`Error updating user: ${error.message}`)
@@ -94,7 +99,7 @@ export const updateUser = async (user: User): Promise<User | null> => {
     }
 }
 
-export const uploadUserPhoto = async (file: Express.Multer.File, userId: string) => {
+export const uploadUserPhoto = async (file: any, userId: string) => {
     const fileExt = file.originalname.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`
 

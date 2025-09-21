@@ -44,6 +44,7 @@ const AdminReportsPage = () => {
     const [savedReports, setSavedReports] = useState<Report[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [report, setReport] = useState<ReportState>(initialReportState)
+    const [error, setError] = useState<string | null>(null)
 
     const handleChange = (key: keyof ReportState, value: any) => {
         setReport((prev) => ({ ...prev, [key]: value }))
@@ -79,7 +80,7 @@ const AdminReportsPage = () => {
                 throw new Error("Error al guardar el reporte")
             }
 
-            setSavedReports((prev) => [newReport, ...prev])
+            setSavedReports((prev) => [newReport, ...(prev || [])])
             alert("Borrador guardado exitosamente!")
             setActiveTab("saved")
             resetForm()
@@ -94,6 +95,7 @@ const AdminReportsPage = () => {
     useEffect(() => {
         const loadInitialData = async () => {
             setIsLoading(true)
+            setError(null)
             try {
                 const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
 
@@ -102,10 +104,10 @@ const AdminReportsPage = () => {
                     { id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService,
                 ])
 
-                setSavedReports(reportsData)
+                setSavedReports(reportsData || [])
             } catch (error) {
                 console.error("Error loading initial data:", error)
-                alert("Error al cargar los datos iniciales")
+                setError("Error al cargar los datos iniciales")
                 setProfessors([{ id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService])
                 setSavedReports([])
             } finally {
@@ -267,10 +269,12 @@ const AdminReportsPage = () => {
                                         <p>Cargando informes...</p>
                                     </div>
                                 )}
-                                {savedReports.length === 0 && (
-                                    <p className="text-center text-muted-foreground py-8">No hay informes guardados aún</p>
+                                {(!savedReports || savedReports.length === 0) && (
+                                    <p className="text-center text-muted-foreground py-8">
+                                        {error ? `Error: ${error}` : "No hay informes guardados aún"}
+                                    </p>
                                 )}
-                                {savedReports.length > 0 && (
+                                {savedReports && savedReports.length > 0 && (
                                     <div className="space-y-4">
                                         {savedReports.map((r) => (
                                             <Card key={r.id}>
@@ -291,7 +295,7 @@ const AdminReportsPage = () => {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                onClick={() => generateSavedReportPDF(savedReports, r.id)}
+                                                                onClick={() => generateSavedReportPDF(savedReports || [], r.id)}
                                                                 title="Descargar PDF"
                                                             >
                                                                 <Download className="h-4 w-4" />

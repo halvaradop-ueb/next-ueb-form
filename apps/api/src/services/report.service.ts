@@ -21,7 +21,7 @@ export const getReports = async (): Promise<Report[]> => {
             *,
             professor:professor_id (id, first_name, last_name, email),
             subject:subject_id (id, name, description)
-        `
+        `,
             )
             .order("created_at", { ascending: false })
         if (error) throw error
@@ -40,7 +40,9 @@ export const getReports = async (): Promise<Report[]> => {
                 comments: item.comments || undefined,
                 recommendations: item.recommendations || undefined,
                 created_at: item.created_at,
-                professor_name: professorObj ? `${professorObj.first_name} ${professorObj.last_name}` : "Profesor desconocido",
+                professor_name: professorObj
+                    ? `${professorObj.first_name} ${professorObj.last_name}`
+                    : "Profesor desconocido",
                 subject_name: subjectObj?.name || "Materia desconocida",
                 professor: professorObj
                     ? {
