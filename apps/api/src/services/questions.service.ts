@@ -34,7 +34,7 @@ export const getQuestions = async (): Promise<any[]> => {
                     ...question,
                     options: null,
                 }
-            })
+            }),
         )
 
         return questionsWithOptions
@@ -47,7 +47,11 @@ export const getQuestions = async (): Promise<any[]> => {
 export const addQuestion = async (question: any): Promise<any | null> => {
     try {
         const { id, options, ...spread } = question
-        const { data: insertedData, error: insertError } = await supabase.from("question").insert(spread).select().single()
+        const { data: insertedData, error: insertError } = await supabase
+            .from("question")
+            .insert(spread)
+            .select()
+            .single()
         if (insertError) {
             throw new Error(`Error adding question: ${insertError.message}`)
         }
@@ -68,7 +72,7 @@ export const addQuestion = async (question: any): Promise<any | null> => {
                     id,
                     name
                 )
-            `
+            `,
             )
             .eq("id", insertedData.id)
             .single()

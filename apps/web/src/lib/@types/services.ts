@@ -111,3 +111,12 @@ export interface StageService {
     target_audience: "student" | "professor"
     questions: Pick<QuestionService, "id" | "title" | "description">[]
 }
+
+export interface AutoEvaluationAnswer {
+    id: string
+    answer_id: string
+    answer_text: string
+    professor_id: string
+    subject_id: string
+    semester: string
+}

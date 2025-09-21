@@ -48,7 +48,7 @@ export const ratingFeedback = (feedback: Feedback[] = []) => {
         groupBy[rating].push(item)
     })
 
-    return Array.from({ length: 10 }).map((_, index) => {
+    return Array.from({ length: 5 }).map((_, index) => {
         const quantity = groupBy[index + 1]?.length || 0
         const percentage = (quantity / n) * 100
         return {
@@ -60,7 +60,11 @@ export const ratingFeedback = (feedback: Feedback[] = []) => {
 
 export const getAverageRatings = (feedback: Feedback[]) => {
     const n = feedback.length
-    return n ? feedback.reduce((previous, now) => previous + now.rating, 0) / n : 0
+    if (n === 0) return 0
+
+    // Convert ratings from 1-10 scale to 1-5 scale for display
+    const convertedRatings = feedback.map((item) => item.rating / 2)
+    return convertedRatings.reduce((previous, now) => previous + now, 0) / n
 }
 
 export const createPeriods = (start: Date) => {

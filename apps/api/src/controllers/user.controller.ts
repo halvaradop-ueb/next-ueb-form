@@ -141,7 +141,7 @@ export const uploadUserPhotoController = async (req: Request, res: Response) => 
         if (!req.params.id) {
             return res.status(400).json(errorResponse("User ID is required"))
         }
-        const file = req.file
+        const file = (req as any).file
         console.log("File received:", file)
         if (!file) {
             return res.status(400).json(errorResponse("No file uploaded"))
