@@ -5,9 +5,9 @@ import { supabase } from "@/lib/supabase/client"
 
 export const getUsers = async (): Promise<User[]> => {
     const request = createRequest("GET", "users")
-    const service = await createService(request)
+    //const service = await createService(request)
     const response = await fetch(request)
-    console.log("Response:", response, "\nService: ", service)
+    //console.log("Response:", response, "\nService: ", service)
     const data = await response.json()
     console.log("Data:", data)
     return []

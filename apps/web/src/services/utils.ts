@@ -11,6 +11,7 @@ export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: st
     const request = new Request(`${API_ENDPOINT}/${url}`, {
         method,
         mode: "cors",
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
         },
