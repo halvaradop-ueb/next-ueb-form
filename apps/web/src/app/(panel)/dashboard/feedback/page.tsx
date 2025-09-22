@@ -104,19 +104,6 @@ const FeedbackPage = () => {
 
             try {
                 const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
-                console.log("🔍 [Frontend] Raw autoEvaluationData:", autoEvaluationData)
-                console.log("🔍 [Frontend] Data type:", typeof autoEvaluationData)
-                console.log("🔍 [Frontend] Is array:", Array.isArray(autoEvaluationData))
-                if (Array.isArray(autoEvaluationData) && autoEvaluationData.length > 0) {
-                    console.log("🔍 [Frontend] First item:", autoEvaluationData[0])
-                    console.log("🔍 [Frontend] First item keys:", Object.keys(autoEvaluationData[0]))
-                    if (autoEvaluationData[0].answers && autoEvaluationData[0].answers.length > 0) {
-                        console.log("🔍 [Frontend] First answer object:", autoEvaluationData[0].answers[0])
-                        console.log("🔍 [Frontend] First answer keys:", Object.keys(autoEvaluationData[0].answers[0]))
-                        console.log("🔍 [Frontend] First answer question_title:", autoEvaluationData[0].answers[0].question_title)
-                        console.log("🔍 [Frontend] First answer answer_id:", autoEvaluationData[0].answers[0].answer_id)
-                    }
-                }
                 setAutoEvaluationAnswers(autoEvaluationData)
             } catch (error) {
                 console.error("Error in fetchAutoEvaluation:", error)
@@ -140,9 +127,9 @@ const FeedbackPage = () => {
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
                         <SelectContent>
-                            {professors.map((professorId) => (
-                                <SelectItem key={professorId.id} value={professorId.id}>
-                                    {professorId.first_name} {professorId.last_name}
+                            {professors.map((professor) => (
+                                <SelectItem key={professor.id} value={professor.id}>
+                                    {professor.first_name} {professor.last_name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -159,9 +146,9 @@ const FeedbackPage = () => {
                             <SelectValue placeholder="Selecciona una materia" />
                         </SelectTrigger>
                         <SelectContent>
-                            {subjects.map((subjectId) => (
-                                <SelectItem key={subjectId.id} value={subjectId.id}>
-                                    {subjectId.name}
+                            {subjects.map((subject) => (
+                                <SelectItem key={subject.id} value={subject.id}>
+                                    {subject.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -313,10 +300,10 @@ const FeedbackPage = () => {
                     )}
 
                     {/* Check if data is already grouped by semester (from API) */}
-                    {autoEvaluationAnswers.length > 0 && autoEvaluationAnswers[0]?.answers
+                    {autoEvaluationAnswers.length > 0 && autoEvaluationAnswers[0] && 'answers' in autoEvaluationAnswers[0]
                         ? // Data is already grouped by semester
-                          autoEvaluationAnswers.map((semesterData, index) =>
-                              semesterData && semesterData.semester ? (
+                          autoEvaluationAnswers.map((semesterData, index) => {
+                              return semesterData && semesterData.semester ? (
                                   <Card key={`${semesterData.semester}-${index}`} className="border-2 border-primary/10">
                                       <CardHeader className="bg-primary/5 border-b">
                                           <CardTitle className="text-xl text-primary flex items-center gap-2">
@@ -340,105 +327,7 @@ const FeedbackPage = () => {
                                                               <div className="flex items-center justify-between">
                                                                   <div>
                                                                       <h4 className="font-semibold text-primary">
-                                                                          {(() => {
-                                                                              const answerId = answer.answer_id
-                                                                              const questionId = answer.question_id
-
-                                                                              // Check if we already have the title cached
-                                                                              if (questionTitles[answerId]) {
-                                                                                  return questionTitles[answerId]
-                                                                              }
-
-                                                                              // If we have a question_title from the API, use it
-                                                                              if (
-                                                                                  answer.question_title &&
-                                                                                  answer.question_title !== `Pregunta ${answerId}`
-                                                                              ) {
-                                                                                  console.log(
-                                                                                      "✅ [Frontend] Using question_title from API:",
-                                                                                      answer.question_title
-                                                                                  )
-                                                                                  return answer.question_title
-                                                                              }
-
-                                                                              // Debug: Log the actual data structure
-                                                                              console.log("🔍 [DEBUG] Answer object:", answer)
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG] Answer keys:",
-                                                                                  Object.keys(answer)
-                                                                              )
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG] question_id value:",
-                                                                                  questionId
-                                                                              )
-                                                                              console.log("🔍 [DEBUG] answer_id value:", answerId)
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG] question_title value:",
-                                                                                  answer.question_title
-                                                                              )
-
-                                                                              // Try to fetch the title asynchronously and update state
-                                                                              if (questionId && questionId !== answerId) {
-                                                                                  getQuestionTitleById(questionId)
-                                                                                      .then((title) => {
-                                                                                          if (title) {
-                                                                                              console.log(
-                                                                                                  "✅ [Frontend] Successfully fetched question title:",
-                                                                                                  title
-                                                                                              )
-                                                                                              setQuestionTitles((prev) => ({
-                                                                                                  ...prev,
-                                                                                                  [answerId]: title,
-                                                                                              }))
-                                                                                          }
-                                                                                      })
-                                                                                      .catch((error) => {
-                                                                                          console.error(
-                                                                                              "❌ [Frontend] Error fetching question title:",
-                                                                                              error
-                                                                                          )
-                                                                                      })
-                                                                                  return `Loading... (${questionId})`
-                                                                              }
-
-                                                                              // Fallback: try with answer_id
-                                                                              if (answerId) {
-                                                                                  console.log(
-                                                                                      "🔍 [Frontend] Using answer_id as fallback:",
-                                                                                      answerId
-                                                                                  )
-                                                                                  // Since the backend already provides question_id, use that instead
-                                                                                  if (questionId && questionId !== answerId) {
-                                                                                      getQuestionTitleById(questionId)
-                                                                                          .then((title) => {
-                                                                                              if (title) {
-                                                                                                  console.log(
-                                                                                                      "✅ [Frontend] Successfully fetched question title:",
-                                                                                                      title
-                                                                                                  )
-                                                                                                  setQuestionTitles((prev) => ({
-                                                                                                      ...prev,
-                                                                                                      [answerId]: title,
-                                                                                                  }))
-                                                                                              }
-                                                                                          })
-                                                                                          .catch((error) => {
-                                                                                              console.error(
-                                                                                                  "❌ [Frontend] Error fetching question title:",
-                                                                                                  error
-                                                                                              )
-                                                                                          })
-                                                                                      return `Loading... (${questionId})`
-                                                                                  } else {
-                                                                                      return `Answer ID: ${answerId}`
-                                                                                  }
-                                                                              }
-
-                                                                              // Final fallback
-                                                                              return (
-                                                                                  answer.question_title || `Pregunta ${answerId}`
-                                                                              )
-                                                                          })()}
+                                                                          {answer.question_title || `Pregunta ${answer.answer_id}`}
                                                                       </h4>
                                                                       <p className="text-sm text-muted-foreground">
                                                                           ID de respuesta: {answer.answer_id}
@@ -470,16 +359,20 @@ const FeedbackPage = () => {
                                       </CardContent>
                                   </Card>
                               ) : null
-                          )
+                          })
                         : // Data is individual answers, need to group by semester
                           (() => {
+                              if (!Array.isArray(autoEvaluationAnswers)) {
+                                  return null
+                              }
+
                               const groupedBySemester = autoEvaluationAnswers.reduce(
                                   (acc, item) => {
                                       if (!acc[item.semester]) acc[item.semester] = []
                                       acc[item.semester].push(item)
                                       return acc
                                   },
-                                  {} as Record<string, typeof autoEvaluationAnswers>
+                                  {} as Record<string, any[]>
                               )
 
                               return Object.entries(groupedBySemester).map(([semester, answers]) => (
@@ -494,8 +387,8 @@ const FeedbackPage = () => {
                                       </CardHeader>
                                       <CardContent className="p-6">
                                           <div className="space-y-4">
-                                              {(answers as unknown as AutoEvaluationAnswer[]).map(
-                                                  (answer: AutoEvaluationAnswer, answerIndex: number) => (
+                                              {answers.map(
+                                                  (answer: any, answerIndex: number) => (
                                                       <div
                                                           key={answer.id || answerIndex}
                                                           className="border-l-4 border-l-primary/30 pl-4 py-3 bg-muted/30 rounded-r-lg"
@@ -504,108 +397,7 @@ const FeedbackPage = () => {
                                                               <div className="flex items-center justify-between">
                                                                   <div>
                                                                       <h4 className="font-semibold text-primary">
-                                                                          {(() => {
-                                                                              const answerId = answer.answer_id
-                                                                              const questionId = answer.question_id
-
-                                                                              // Check if we already have the title cached
-                                                                              if (questionTitles[answerId]) {
-                                                                                  return questionTitles[answerId]
-                                                                              }
-
-                                                                              // If we have a question_title from the API, use it
-                                                                              if (
-                                                                                  answer.question_title &&
-                                                                                  answer.question_title !== `Pregunta ${answerId}`
-                                                                              ) {
-                                                                                  console.log(
-                                                                                      "✅ [Frontend 2] Using question_title from API:",
-                                                                                      answer.question_title
-                                                                                  )
-                                                                                  return answer.question_title
-                                                                              }
-
-                                                                              // Debug: Log the actual data structure
-                                                                              console.log("🔍 [DEBUG 2] Answer object:", answer)
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG 2] Answer keys:",
-                                                                                  Object.keys(answer)
-                                                                              )
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG 2] question_id value:",
-                                                                                  questionId
-                                                                              )
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG 2] answer_id value:",
-                                                                                  answerId
-                                                                              )
-                                                                              console.log(
-                                                                                  "🔍 [DEBUG 2] question_title value:",
-                                                                                  answer.question_title
-                                                                              )
-
-                                                                              // Try to fetch the title asynchronously and update state
-                                                                              if (questionId && questionId !== answerId) {
-                                                                                  getQuestionTitleById(questionId)
-                                                                                      .then((title) => {
-                                                                                          if (title) {
-                                                                                              console.log(
-                                                                                                  "✅ [Frontend 2] Successfully fetched question title:",
-                                                                                                  title
-                                                                                              )
-                                                                                              setQuestionTitles((prev) => ({
-                                                                                                  ...prev,
-                                                                                                  [answerId]: title,
-                                                                                              }))
-                                                                                          }
-                                                                                      })
-                                                                                      .catch((error) => {
-                                                                                          console.error(
-                                                                                              "❌ [Frontend 2] Error fetching question title:",
-                                                                                              error
-                                                                                          )
-                                                                                      })
-                                                                                  return `Loading... (${questionId})`
-                                                                              }
-
-                                                                              // Fallback: try with answer_id
-                                                                              if (answerId) {
-                                                                                  console.log(
-                                                                                      "🔍 [Frontend 2] Using answer_id as fallback:",
-                                                                                      answerId
-                                                                                  )
-                                                                                  // Since the backend already provides question_id, use that instead
-                                                                                  if (questionId && questionId !== answerId) {
-                                                                                      getQuestionTitleById(questionId)
-                                                                                          .then((title) => {
-                                                                                              if (title) {
-                                                                                                  console.log(
-                                                                                                      "✅ [Frontend 2] Successfully fetched question title:",
-                                                                                                      title
-                                                                                                  )
-                                                                                                  setQuestionTitles((prev) => ({
-                                                                                                      ...prev,
-                                                                                                      [answerId]: title,
-                                                                                                  }))
-                                                                                              }
-                                                                                          })
-                                                                                          .catch((error) => {
-                                                                                              console.error(
-                                                                                                  "❌ [Frontend 2] Error fetching question title:",
-                                                                                                  error
-                                                                                              )
-                                                                                          })
-                                                                                      return `Loading... (${questionId})`
-                                                                                  } else {
-                                                                                      return `Answer ID: ${answerId}`
-                                                                                  }
-                                                                              }
-
-                                                                              // Final fallback
-                                                                              return (
-                                                                                  answer.question_title || `Pregunta ${answerId}`
-                                                                              )
-                                                                          })()}
+                                                                          {answer.question_title || `Pregunta ${answer.answer_id}`}
                                                                       </h4>
                                                                       <p className="text-sm text-muted-foreground">
                                                                           ID de respuesta: {answer.answer_id}

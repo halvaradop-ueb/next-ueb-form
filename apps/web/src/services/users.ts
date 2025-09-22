@@ -36,7 +36,7 @@ export const getUserById = async (session: Session): Promise<User | null> => {
     return await createService(request)
 }
 
-export const uploadUserPhoto = async (file: File, userId: string) => {
+export const uploadAvatar = async (file: File, userId: string): Promise<string | null> => {
     const fileExt = file.name.split(".").pop()
     const filePath = `${userId}/${Date.now()}.${fileExt}`
 
@@ -54,3 +54,5 @@ export const uploadUserPhoto = async (file: File, userId: string) => {
 
     return data.publicUrl
 }
+
+export const uploadUserPhoto = uploadAvatar

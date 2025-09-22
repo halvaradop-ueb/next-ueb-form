@@ -15,29 +15,8 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
-    try {
-        const { data: relation, error: checkError } = await supabase
-            .from("subjectassignment")
-            .select("*")
-            .eq("professor_id", professorId)
-            .eq("subject_id", subjectId)
-            .maybeSingle()
-        if (relation) {
-            return relation
-        }
-        const { data, error } = await supabase
-            .from("subjectassignment")
-            .insert({ professor_id: professorId, subject_id: subjectId })
-            .select()
-
-        if (error) {
-            throw new Error(`Error adding assignment: ${error.message}`)
-        }
-        return data
-    } catch (error) {
-        console.error("Error adding assignment:", error)
-        return []
-    }
+    const request = createRequest("POST", "subjects/assignments", { professorId, subjectId })
+    return createService(request)
 }
 
 export const getProfessorsBySubject = async (subjectId: string): Promise<SubjectAssignmentWithProfessorService[]> => {
@@ -77,12 +56,10 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
 }
 
 export const deleteAssignment = async (assignmentId: string): Promise<boolean> => {
+    const request = createRequest("DELETE", `subjects/assignments/${assignmentId}`)
     try {
-        const { error } = await supabase.from("subjectassignment").delete().eq("id", assignmentId)
-        if (error) {
-            throw new Error(`Error deleting assignment: ${error.message}`)
-        }
-        return true
+        const result = await createService(request)
+        return result === true
     } catch (error) {
         console.error("Error deleting assignment:", error)
         return false

@@ -136,6 +136,7 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
         console.log("🔍 [BACKEND] Final grouped result:", result)
         return result
     } catch (error) {
+        console.error("❌ Error in getAutoEvaluationAnswers:", error)
         return []
     }
 }
@@ -367,6 +368,7 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
         console.log("🔍 [BACKEND 2] Final grouped result:", result)
         return result
     } catch (error) {
+        console.error("❌ Error in getAutoEvaluationAnswersByProfessor:", error)
         return []
     }
 }

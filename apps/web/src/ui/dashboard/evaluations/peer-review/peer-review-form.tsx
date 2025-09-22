@@ -7,11 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { getSubjectsByProfessorId } from "@/services/subjects"
-import { addCoevaluation, getAllCoevaluations, getProfessors } from "@/services/professors"
-import { Car, Save } from "lucide-react"
+import {
+    addCoevaluation,
+    getAllCoevaluations,
+    getProfessors,
+    updateCoevaluation,
+    deleteCoevaluation,
+} from "@/services/professors"
+import { Save, Edit, Trash2, X } from "lucide-react"
 import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSession } from "next-auth/react"
+import { ConfirmAction } from "@/ui/common/confirm-action"
 
 export interface PeerReviewState {
     professor: string
@@ -37,6 +44,11 @@ export const PeerReviewForm = () => {
     const [selectedOptions, setSelectedOptions] = useState<PeerReviewState>(initialselectedOptionsState)
     const [isLoading, startTransition] = useTransition()
     const [coevaluations, setCoevaluations] = useState([])
+    const [editingId, setEditingId] = useState<string | null>(null)
+    const [isEditing, setIsEditing] = useState(false)
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [confirmText, setConfirmText] = useState("")
+    const [evaluationToDelete, setEvaluationToDelete] = useState<any>(null)
     const session = useSession()
 
     const handleChange = (key: keyof PeerReviewState, value: any) => {
@@ -49,20 +61,62 @@ export const PeerReviewForm = () => {
     const resetForm = () => {
         setSubjects([])
         setSelectedOptions(initialselectedOptionsState)
+        setEditingId(null)
+        setIsEditing(false)
     }
 
     const handleAddPeerReview = async () => {
-        addCoevaluation(selectedOptions, session.data?.user?.id!)
+        if (isEditing && editingId) {
+            const professorId = selectedOptions.professor
+            await updateCoevaluation(professorId, editingId, selectedOptions)
+        } else {
+            await addCoevaluation(selectedOptions, session.data?.user?.id!)
+        }
+        await loadCoevaluations()
         resetForm()
     }
 
+    const handleEditPeerReview = (evaluation: any) => {
+        setSelectedOptions({
+            professor: evaluation.professor.id,
+            subject: evaluation.subject.id,
+            timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+            comments: evaluation.improvement_plan || "",
+            findings: evaluation.findings || "",
+        })
+        setEditingId(evaluation.id)
+        setIsEditing(true)
+        setActiveTab("new")
+    }
+
+    const handleDeletePeerReview = async (evaluation: any) => {
+        setEvaluationToDelete(evaluation)
+        setConfirmOpen(true)
+    }
+
+    const confirmDeletePeerReview = async () => {
+        if (evaluationToDelete) {
+            await deleteCoevaluation(evaluationToDelete.professor.id, evaluationToDelete.id)
+            await loadCoevaluations()
+            setEvaluationToDelete(null)
+        }
+    }
+
+    const handleCancelEdit = () => {
+        resetForm()
+    }
+
+    const loadCoevaluations = async () => {
+        const coevaluations = await getAllCoevaluations()
+        setCoevaluations(coevaluations)
+    }
+
+
     useEffect(() => {
         const loadInitialData = async () => {
-            startTransition(async () => {
-                const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
-                setProfessors(professors)
-                setCoevaluations(coevaluations)
-            })
+            const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
+            setProfessors(professors)
+            setCoevaluations(coevaluations)
         }
 
         loadInitialData()
@@ -91,8 +145,17 @@ export const PeerReviewForm = () => {
                 <TabsContent value="new">
                     <Card>
                         <CardHeader className="text-left">
-                            <CardTitle className="justify-start">Coevalulación</CardTitle>
-                            <CardDescription className="justify-start">Desarrollo de la coevualuación</CardDescription>
+                            <CardTitle className="justify-start flex items-center gap-2">
+                                {isEditing ? "Editar Coevaluación" : "Coevalulación"}
+                                {isEditing && (
+                                    <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </CardTitle>
+                            <CardDescription className="justify-start">
+                                {isEditing ? "Modifica la coevaluación existente" : "Desarrollo de la coevaluación"}
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid gap-4 md:grid-cols-3">
@@ -101,6 +164,7 @@ export const PeerReviewForm = () => {
                                     <Select
                                         onValueChange={(value) => handleChange("professor", value)}
                                         value={selectedOptions.professor}
+                                        disabled={isEditing}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Selecciona un docente" />
@@ -119,7 +183,7 @@ export const PeerReviewForm = () => {
                                     <Select
                                         onValueChange={(value) => handleChange("subject", value)}
                                         value={selectedOptions.subject}
-                                        disabled={!selectedOptions.professor}
+                                        disabled={!selectedOptions.professor || isEditing}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Selecciona una materia" />
@@ -189,7 +253,7 @@ export const PeerReviewForm = () => {
                                 onClick={handleAddPeerReview}
                             >
                                 <Save className="mr-2 h-4 w-4" />
-                                Guardar Coevaluación
+                                {isEditing ? "Actualizar Coevaluación" : "Guardar Coevaluación"}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -197,36 +261,69 @@ export const PeerReviewForm = () => {
                 <TabsContent value="saved">
                     <Card>
                         <CardHeader className="text-left">
-                            <CardTitle>No hay coevaluaciones guardadas</CardTitle>
+                            <CardTitle>Coevaluaciones Guardadas</CardTitle>
                             <CardDescription>Accede y gestiona las coevaluaciones guardadas</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {coevaluations.map((evaluation: any) => (
-                                <Card className="p-4 items-start text-left" key={evaluation.id}>
-                                    <CardHeader className="w-full px-0">
-                                        <CardTitle>{evaluation.subject.name}</CardTitle>
-                                        <CardDescription>
-                                            {evaluation.professor.first_name} {evaluation.professor.last_name} -{" "}
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="w-full px-0">
-                                        <div>
-                                            <h4 className="font-semibold">Hallazgos</h4>
-                                            <p className="line-clamp-3 text-muted-foreground">{evaluation.findings}</p>
-                                        </div>
-                                        <div className="mt-4">
-                                            <h4 className="font-semibold">Plan de Mejoramiento y Realimentación</h4>
-                                            <p className="line-clamp-3 text-muted-foreground">
-                                                {evaluation.improvement_plan ?? ""}
-                                            </p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                            {coevaluations.length === 0 ? (
+                                <p className="text-muted-foreground text-center py-8">No hay coevaluaciones guardadas</p>
+                            ) : (
+                                coevaluations.map((evaluation: any) => (
+                                    <Card className="p-4 items-start text-left" key={evaluation.id}>
+                                        <CardHeader className="w-full px-0 pb-2">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <CardTitle>{evaluation.subject.name}</CardTitle>
+                                                    <CardDescription>
+                                                        {evaluation.professor.first_name} {evaluation.professor.last_name}
+                                                    </CardDescription>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleEditPeerReview(evaluation)}
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleDeletePeerReview(evaluation)}
+                                                        className="text-red-600 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="w-full px-0">
+                                            <div>
+                                                <h4 className="font-semibold">Hallazgos</h4>
+                                                <p className="line-clamp-3 text-muted-foreground">{evaluation.findings}</p>
+                                            </div>
+                                            <div className="mt-4">
+                                                <h4 className="font-semibold">Plan de Mejoramiento y Realimentación</h4>
+                                                <p className="line-clamp-3 text-muted-foreground">
+                                                    {evaluation.improvement_plan ?? ""}
+                                                </p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
             </Tabs>
+            <ConfirmAction
+                title="coevaluación"
+                text={confirmText}
+                setText={setConfirmText}
+                open={confirmOpen}
+                setOpen={setConfirmOpen}
+                onDelete={confirmDeletePeerReview}
+            />
         </section>
     )
 }

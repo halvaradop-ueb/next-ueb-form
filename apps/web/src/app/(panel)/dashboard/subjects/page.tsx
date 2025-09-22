@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ConfirmAction } from "@/ui/common/confirm-action"
 import {
     addAssignment,
     addSubject,
@@ -90,6 +91,11 @@ const SubjectsPage = () => {
     const [errores, setErrores] = useState<{ [key: string]: string }>({})
 
     const [expandedSubjects, setExpandedSubjects] = useState<string[]>([])
+
+    // ConfirmAction state for assignment deletion
+    const [confirmDeleteAssignmentOpen, setConfirmDeleteAssignmentOpen] = useState(false)
+    const [confirmDeleteAssignmentText, setConfirmDeleteAssignmentText] = useState("")
+    const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null)
 
     const filteredSubjects = subjects.filter(
         (subjects) =>
@@ -157,10 +163,11 @@ const SubjectsPage = () => {
         if (modoFormulario === "crear" && nombreExiste) {
             nuevosErrores.nombre = "Ya existe una materia con ese nombre"
         }
-        const codigoExistente = false
-        if (codigoExistente) {
-            nuevosErrores.codigo = "Este código ya está en uso por otra materia"
-        }
+        // TODO: Implement code validation logic
+        // const codigoExistente = subjects.some((subject) => subject.code === materiaActual.codigo)
+        // if (codigoExistente) {
+        //     nuevosErrores.codigo = "Este código ya está en uso por otra materia"
+        // }
 
         setErrores(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
@@ -233,6 +240,18 @@ const SubjectsPage = () => {
         setAssignments((previous) => previous.filter((assignment) => assignment.id !== assignmentId))
     }
 
+    const handleDeleteAssignmentRequest = (assignmentId: string) => {
+        setAssignmentToDelete(assignmentId)
+        setConfirmDeleteAssignmentOpen(true)
+    }
+
+    const confirmDeleteAssignment = async () => {
+        if (assignmentToDelete) {
+            await handleDeleteAssignment(assignmentToDelete)
+            setAssignmentToDelete(null)
+        }
+    }
+
     const actualizarCampoMateria = (campo: keyof Materia, valor: any) => {
         setMateriaActual((prev) => ({
             ...prev,
@@ -276,11 +295,8 @@ const SubjectsPage = () => {
             const [subjects, professors] = await Promise.all([getSubjects(), getProfessors()])
             setSubjects(subjects)
             setProfessors(professors)
-            const getAssignments = async () => {
-                const allAssignments = await Promise.all(subjects.map((subject) => getProfessorsBySubject(subject.id)))
-                setAssignments(allAssignments.flat())
-            }
-            getAssignments()
+            const allAssignments = await Promise.all(subjects.map((subject) => getProfessorsBySubject(subject.id)))
+            setAssignments(allAssignments.flat())
         }
         fetchSubjects()
     }, [])
@@ -511,7 +527,7 @@ const SubjectsPage = () => {
                             <DialogDescription>
                                 {assignment.materiaId ? (
                                     <>
-                                        Asigna un profesor a la materia: <strong>__</strong>
+                                        Asigna un profesor a la materia: <strong>{subjects.find(s => s.id === assignment.materiaId)?.name || 'Materia no encontrada'}</strong>
                                     </>
                                 ) : (
                                     <>Crea una nueva asignación de profesor a materia</>
@@ -579,6 +595,14 @@ const SubjectsPage = () => {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <ConfirmAction
+                    title="asignación"
+                    text={confirmDeleteAssignmentText}
+                    setText={setConfirmDeleteAssignmentText}
+                    open={confirmDeleteAssignmentOpen}
+                    setOpen={setConfirmDeleteAssignmentOpen}
+                    onDelete={confirmDeleteAssignment}
+                />
             </div>
         </section>
     )

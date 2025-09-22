@@ -35,3 +35,18 @@ export const getAllCoevaluations = async () => {
     const request = createRequest("GET", `co_evaluations`)
     return await createService(request)
 }
+
+export const updateCoevaluation = async (professorId: string, reviewId: string, peerReview: Partial<PeerReview>) => {
+    const request = createRequest("POST", `professors/${professorId}/co_evaluation/${reviewId}`, peerReview)
+    return await createService(request)
+}
+
+export const deleteCoevaluation = async (professorId: string, reviewId: string) => {
+    const request = createRequest("DELETE", `professors/${professorId}/co_evaluation/${reviewId}`)
+    return await createService(request)
+}
+
+export const getCoevaluationById = async (professorId: string, reviewId: string) => {
+    const request = createRequest("GET", `professors/${professorId}/co_evaluation/${reviewId}`)
+    return await createService(request)
+}

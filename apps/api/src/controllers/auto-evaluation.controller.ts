@@ -19,10 +19,7 @@ export const getAutoEvaluationByProfessorAndSubject = async (req: Request, res: 
 
         const answers = await getAutoEvaluationAnswers(professorId as string, subjectId as string)
 
-        res.json({
-            success: true,
-            data: answers,
-        })
+        res.json(answers)
     } catch (error) {
         console.error("Error in getAutoEvaluationByProfessorAndSubject:", error)
         res.status(500).json({
@@ -43,10 +40,7 @@ export const getAutoEvaluationByProfessor = async (req: Request, res: Response) 
 
         const answers = await getAutoEvaluationAnswersByProfessor(professorId)
 
-        res.json({
-            success: true,
-            data: answers,
-        })
+        res.json(answers)
     } catch (error) {
         console.error("Error in getAutoEvaluationByProfessor:", error)
         res.status(500).json({
