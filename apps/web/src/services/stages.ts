@@ -3,8 +3,8 @@ import { createRequest, createService } from "./utils"
 
 export const getStages = async (): Promise<StageService[]> => {
     const request = createRequest("GET", "stages")
-    const result = await createService(request)
-    return result || []
+    const response = await createService(request)
+    return response?.data || []
 }
 
 export const addStage = async (stage: StageService): Promise<StageService | null> => {

@@ -19,7 +19,7 @@ export const getSubjectsController = async (_: Request, res: Response<APIRespons
 
 export const getSubjectsByProfessorIdController = async (req: Request, res: Response<APIResponse>) => {
     try {
-        const professorId = req.params.id
+        const professorId = req.params.professorId
         if (!professorId) {
             return res.status(400).json(errorResponse("Professor ID is required"))
         }

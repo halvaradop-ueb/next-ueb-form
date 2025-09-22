@@ -54,13 +54,15 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
                     name,
                     description
                 )
-            `,
+            `
             )
             .eq("professor_id", professorId)
         if (error) {
             throw new Error(`Error fetching subjects by professor ID: ${error.message}`)
         }
-        return data.map((relation) => relation.subject) as unknown as SubjectService[]
+        return data
+            .map((relation) => relation.subject)
+            .filter((subject) => subject !== null && subject !== undefined) as unknown as SubjectService[]
     } catch (error) {
         console.error("Error fetching subjects by professor ID:", error)
         return []
@@ -114,7 +116,7 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
                     last_name,
                     email
                 )
-            `,
+            `
             )
             .eq("subject_id", subjectId)
         if (error) {

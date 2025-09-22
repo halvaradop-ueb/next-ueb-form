@@ -5,12 +5,13 @@ import { createRequest, createService } from "./utils"
 export const getSubjects = async (): Promise<SubjectService[]> => {
     const request = createRequest("GET", "subjects")
     const result = await createService(request)
-    return result || []
+    return result?.data || []
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     const request = createRequest("GET", `subjects/${professorId}/professors`)
-    return createService(request)
+    const result = await createService(request)
+    return result?.data || []
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
@@ -90,10 +91,12 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
     const request = createRequest("POST", "subjects", subject)
-    return createService(request)
+    const result = await createService(request)
+    return result?.data || result
 }
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     const request = createRequest("DELETE", `subjects/${subjectId}`)
-    return createService(request)
+    const result = await createService(request)
+    return result?.data || result || false
 }

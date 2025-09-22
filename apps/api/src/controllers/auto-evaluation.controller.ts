@@ -1,5 +1,11 @@
 import { Request, Response } from "express"
-import { getAutoEvaluationAnswers, getAutoEvaluationAnswersByProfessor } from "../services/auto-evaluation.service.js"
+import {
+    getAutoEvaluationAnswers,
+    getAutoEvaluationAnswersByProfessor,
+    saveAutoEvaluationAnswers,
+} from "../services/auto-evaluation.service.js"
+import { APIResponse } from "../lib/types.js"
+import { errorResponse } from "../lib/utils.js"
 
 export const getAutoEvaluationByProfessorAndSubject = async (req: Request, res: Response) => {
     try {
@@ -46,5 +52,38 @@ export const getAutoEvaluationByProfessor = async (req: Request, res: Response) 
         res.status(500).json({
             error: "Internal server error",
         })
+    }
+}
+
+export const addAutoEvaluationAnswer = async (req: Request, res: Response<APIResponse>) => {
+    try {
+        const { subject, professorId, semester, answers } = req.body
+
+        if (!subject || !professorId || !semester || !answers) {
+            return res.status(400).json(errorResponse("Subject, professor ID, semester, and answers are required"))
+        }
+
+        console.log("Auto-evaluation submission received:", {
+            subject,
+            professorId,
+            semester,
+            answers,
+        })
+
+        // Save the auto-evaluation answers to the database
+        const saveSuccess = await saveAutoEvaluationAnswers(subject, professorId, semester, answers)
+
+        if (saveSuccess) {
+            res.status(201).json({
+                data: null,
+                errors: null,
+                message: "Auto-evaluation answer submitted successfully",
+            })
+        } else {
+            res.status(500).json(errorResponse("Failed to save auto-evaluation answers to database"))
+        }
+    } catch (error) {
+        console.error("Error in addAutoEvaluationAnswer:", error)
+        res.status(500).json(errorResponse("Failed to submit auto-evaluation answer"))
     }
 }

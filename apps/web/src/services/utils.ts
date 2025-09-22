@@ -21,10 +21,16 @@ export const createService = async (request: Request, error?: string) => {
     try {
         const response = await fetch(request)
         if (!response.ok) {
+            const responseText = await response.text()
+            console.error("API Response Error:", {
+                status: response.status,
+                statusText: response.statusText,
+                body: responseText,
+            })
             throw new Error(`Failed to fetch: ${error ?? response.statusText}`)
         }
         const json = await response.json()
-        return json?.data ?? null
+        return json // Return the full response object, not just json.data
     } catch (error) {
         console.error("Error fetching data:", error)
         throw error // Re-throw to let the calling function handle it

@@ -106,3 +106,33 @@ export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<
         return [[], {}]
     }
 }
+
+// Helper function to get question title by ID
+export const getQuestionTitleById = async (questionId: string): Promise<string | null> => {
+    try {
+        const response = await fetch(`${API_ENDPOINT}/questions?id=${questionId}`)
+        if (!response.ok) {
+            throw new Error(`Error fetching question title: ${response.statusText}`)
+        }
+        const data = await response.json()
+        const question = Array.isArray(data.questions) ? data.questions[0] : data
+        return question?.title || null
+    } catch (error) {
+        console.error("Error fetching question title by ID:", error)
+        return null
+    }
+}
+
+export const getQuestionTitleByAnswerId = async (answerValueId: string): Promise<string | null> => {
+    try {
+        console.log("🔍 [DEBUG] Fetching question title for answer value ID:", answerValueId)
+
+        console.log("❌ [DEBUG] This function is deprecated. The backend should already provide question_id.")
+        console.log("❌ [DEBUG] Answer value ID:", answerValueId)
+
+        return null
+    } catch (error) {
+        console.error("❌ [DEBUG] Error in deprecated getQuestionTitleByAnswerId:", error)
+        return null
+    }
+}

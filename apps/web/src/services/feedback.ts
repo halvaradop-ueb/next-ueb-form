@@ -5,8 +5,8 @@ import { createService, createRequest } from "./utils"
 export const getFeedback = async (professorId: string, subjectId: string): Promise<Feedback[]> => {
     try {
         const request = createRequest("GET", `feedback?professorId=${professorId}&subjectId=${subjectId}`)
-        const result = await createService(request)
-        return result || []
+        const response = await createService(request)
+        return response?.data || []
     } catch (error) {
         console.error("Error fetching feedback:", error)
         return []

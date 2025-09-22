@@ -12,6 +12,6 @@ router.get("/", getSubjectsController)
 router.post("/", createSubjectController)
 
 router.delete("/:id", deleteSubjectController)
-router.get("/:id/professors", getSubjectsByProfessorIdController)
+router.get("/:professorId/professors", getSubjectsByProfessorIdController)
 
 export default router

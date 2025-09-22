@@ -34,7 +34,7 @@ export const getPeerReviews = async (professorId: string): Promise<PeerReview[]>
             findings,
             improvement_plan,
             created_at
-        `,
+        `
             )
             .eq("professor_id", professorId)
         if (error) {
@@ -57,7 +57,7 @@ export const getPeerReviewById = async (professorId: string, reviewId: string): 
                 findings,
                 improvement_plan,
                 created_at
-            `,
+            `
             )
             .eq("professor_id", professorId)
             .eq("id", reviewId)

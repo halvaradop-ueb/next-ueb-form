@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase/client"
 
 export const getUsers = async (): Promise<User[]> => {
     const request = createRequest("GET", "users")
-    return await createService(request)
+    const response = await createService(request)
+    return response?.data || []
 }
 
 export const addUser = async (user: Omit<User, "created_at" | "id">): Promise<User | null> => {

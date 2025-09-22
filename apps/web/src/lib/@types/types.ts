@@ -33,6 +33,8 @@ export interface StudentFormState {
 
 export interface ProfessorFormState {
     subject: string
+    professorId: string
+    semester: string
     answers: Record<string, string | string[]>
 }
 

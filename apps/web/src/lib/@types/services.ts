@@ -119,4 +119,11 @@ export interface AutoEvaluationAnswer {
     professor_id: string
     subject_id: string
     semester: string
+    question_title: string
+    question_id: string
+}
+
+export interface AutoEvaluationBySemester {
+    semester: string
+    answers: AutoEvaluationAnswer[]
 }
