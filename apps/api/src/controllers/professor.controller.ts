@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
 import { errorResponse } from "../lib/utils.js"
-import { APIResponse } from "../lib/types.js"
 import {
     getPeerReviews,
     addPeerReview,

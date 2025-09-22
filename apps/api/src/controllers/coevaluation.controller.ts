@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
 import { errorResponse } from "../lib/utils.js"
-import { APIResponse } from "../lib/types.js"
 import { getAllCoEvaluations } from "../services/coevaluation.service.js"
 
 export const getAllCoEvaluationsController = async (_req: Request, res: Response) => {

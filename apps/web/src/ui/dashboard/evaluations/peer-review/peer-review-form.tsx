@@ -111,7 +111,6 @@ export const PeerReviewForm = () => {
         setCoevaluations(coevaluations)
     }
 
-
     useEffect(() => {
         const loadInitialData = async () => {
             const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])

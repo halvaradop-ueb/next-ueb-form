@@ -527,7 +527,10 @@ const SubjectsPage = () => {
                             <DialogDescription>
                                 {assignment.materiaId ? (
                                     <>
-                                        Asigna un profesor a la materia: <strong>{subjects.find(s => s.id === assignment.materiaId)?.name || 'Materia no encontrada'}</strong>
+                                        Asigna un profesor a la materia:{" "}
+                                        <strong>
+                                            {subjects.find((s) => s.id === assignment.materiaId)?.name || "Materia no encontrada"}
+                                        </strong>
                                     </>
                                 ) : (
                                     <>Crea una nueva asignación de profesor a materia</>

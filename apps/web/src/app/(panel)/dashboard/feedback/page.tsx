@@ -300,7 +300,7 @@ const FeedbackPage = () => {
                     )}
 
                     {/* Check if data is already grouped by semester (from API) */}
-                    {autoEvaluationAnswers.length > 0 && autoEvaluationAnswers[0] && 'answers' in autoEvaluationAnswers[0]
+                    {autoEvaluationAnswers.length > 0 && autoEvaluationAnswers[0] && "answers" in autoEvaluationAnswers[0]
                         ? // Data is already grouped by semester
                           autoEvaluationAnswers.map((semesterData, index) => {
                               return semesterData && semesterData.semester ? (
@@ -327,7 +327,8 @@ const FeedbackPage = () => {
                                                               <div className="flex items-center justify-between">
                                                                   <div>
                                                                       <h4 className="font-semibold text-primary">
-                                                                          {answer.question_title || `Pregunta ${answer.answer_id}`}
+                                                                          {answer.question_title ||
+                                                                              `Pregunta ${answer.answer_id}`}
                                                                       </h4>
                                                                       <p className="text-sm text-muted-foreground">
                                                                           ID de respuesta: {answer.answer_id}
@@ -387,38 +388,36 @@ const FeedbackPage = () => {
                                       </CardHeader>
                                       <CardContent className="p-6">
                                           <div className="space-y-4">
-                                              {answers.map(
-                                                  (answer: any, answerIndex: number) => (
-                                                      <div
-                                                          key={answer.id || answerIndex}
-                                                          className="border-l-4 border-l-primary/30 pl-4 py-3 bg-muted/30 rounded-r-lg"
-                                                      >
-                                                          <div className="space-y-3">
-                                                              <div className="flex items-center justify-between">
-                                                                  <div>
-                                                                      <h4 className="font-semibold text-primary">
-                                                                          {answer.question_title || `Pregunta ${answer.answer_id}`}
-                                                                      </h4>
-                                                                      <p className="text-sm text-muted-foreground">
-                                                                          ID de respuesta: {answer.answer_id}
-                                                                      </p>
-                                                                  </div>
-                                                                  <div className="text-right">
-                                                                      <p className="text-xs text-muted-foreground">Profesor</p>
-                                                                      <p className="text-xs font-mono">
-                                                                          {answer.professor_id?.slice(0, 8) || "N/A"}...
-                                                                      </p>
-                                                                  </div>
+                                              {answers.map((answer: any, answerIndex: number) => (
+                                                  <div
+                                                      key={answer.id || answerIndex}
+                                                      className="border-l-4 border-l-primary/30 pl-4 py-3 bg-muted/30 rounded-r-lg"
+                                                  >
+                                                      <div className="space-y-3">
+                                                          <div className="flex items-center justify-between">
+                                                              <div>
+                                                                  <h4 className="font-semibold text-primary">
+                                                                      {answer.question_title || `Pregunta ${answer.answer_id}`}
+                                                                  </h4>
+                                                                  <p className="text-sm text-muted-foreground">
+                                                                      ID de respuesta: {answer.answer_id}
+                                                                  </p>
                                                               </div>
-                                                              <div className="bg-background p-4 rounded border">
-                                                                  <p className="text-sm leading-relaxed">
-                                                                      {answer.answer_text || "Sin respuesta"}
+                                                              <div className="text-right">
+                                                                  <p className="text-xs text-muted-foreground">Profesor</p>
+                                                                  <p className="text-xs font-mono">
+                                                                      {answer.professor_id?.slice(0, 8) || "N/A"}...
                                                                   </p>
                                                               </div>
                                                           </div>
+                                                          <div className="bg-background p-4 rounded border">
+                                                              <p className="text-sm leading-relaxed">
+                                                                  {answer.answer_text || "Sin respuesta"}
+                                                              </p>
+                                                          </div>
                                                       </div>
-                                                  )
-                                              )}
+                                                  </div>
+                                              ))}
                                           </div>
                                       </CardContent>
                                   </Card>
