@@ -1,15 +1,17 @@
+import { supabase } from "@/lib/supabase/client"
 import type { SubjectAssignmentService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { createRequest, createService } from "./utils"
 
 export const getSubjects = async (): Promise<SubjectService[]> => {
     const request = createRequest("GET", "subjects")
     const result = await createService(request)
-    return result || []
+    return result?.data || []
 }
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     const request = createRequest("GET", `subjects/${professorId}/professors`)
-    return createService(request)
+    const result = await createService(request)
+    return result?.data || []
 }
 
 export const addAssignment = async (professorId: string, subjectId: string): Promise<SubjectAssignmentService[]> => {
@@ -18,8 +20,39 @@ export const addAssignment = async (professorId: string, subjectId: string): Pro
 }
 
 export const getProfessorsBySubject = async (subjectId: string): Promise<SubjectAssignmentWithProfessorService[]> => {
-    const request = createRequest("GET", `subjects/${subjectId}/assignments`)
-    return createService(request)
+    try {
+        const { data, error } = await supabase
+            .from("subjectassignment")
+            .select(
+                `
+                id,
+                subject_id,
+                Subject: subject_id (
+                    id,
+                    name
+                ),
+                User: professor_id (
+                    id,
+                    first_name,
+                    last_name,
+                    email
+                )
+            `
+            )
+            .eq("subject_id", subjectId)
+        if (error) {
+            throw new Error(`Error fetching professors by subject ID: ${error.message}`)
+        }
+        return data.map((relation) => ({
+            id: relation.id,
+            subject_id: relation.subject_id,
+            user: relation.User,
+            subject: relation.Subject,
+        })) as unknown as SubjectAssignmentWithProfessorService[]
+    } catch (error) {
+        console.error("Error fetching professors by subject ID:", error)
+        return []
+    }
 }
 
 export const deleteAssignment = async (assignmentId: string): Promise<boolean> => {
@@ -35,16 +68,12 @@ export const deleteAssignment = async (assignmentId: string): Promise<boolean> =
 
 export const addSubject = async (subject: Omit<SubjectService, "id" | "professor_id">): Promise<SubjectService> => {
     const request = createRequest("POST", "subjects", subject)
-    return createService(request)
+    const result = await createService(request)
+    return result?.data || result
 }
 
 export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     const request = createRequest("DELETE", `subjects/${subjectId}`)
-    try {
-        const result = await createService(request)
-        return result === true
-    } catch (error) {
-        console.error("Error deleting subject:", error)
-        return false
-    }
+    const result = await createService(request)
+    return result?.data || result || false
 }

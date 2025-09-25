@@ -14,7 +14,7 @@ import {
     updateCoevaluation,
     deleteCoevaluation,
 } from "@/services/professors"
-import { Car, Save, Edit, Trash2, X } from "lucide-react"
+import { Save, Edit, Trash2, X } from "lucide-react"
 import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSession } from "next-auth/react"
@@ -113,11 +113,9 @@ export const PeerReviewForm = () => {
 
     useEffect(() => {
         const loadInitialData = async () => {
-            startTransition(async () => {
-                const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
-                setProfessors(professors)
-                setCoevaluations(coevaluations)
-            })
+            const [professors, coevaluations] = await Promise.all([getProfessors(), getAllCoevaluations()])
+            setProfessors(professors)
+            setCoevaluations(coevaluations)
         }
 
         loadInitialData()
@@ -155,7 +153,7 @@ export const PeerReviewForm = () => {
                                 )}
                             </CardTitle>
                             <CardDescription className="justify-start">
-                                {isEditing ? "Modifica la coevaluación existente" : "Desarrollo de la coevualuación"}
+                                {isEditing ? "Modifica la coevaluación existente" : "Desarrollo de la coevaluación"}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">

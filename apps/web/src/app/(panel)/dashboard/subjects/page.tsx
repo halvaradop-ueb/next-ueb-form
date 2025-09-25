@@ -16,6 +16,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmAction } from "@/ui/common/confirm-action"
@@ -152,10 +163,11 @@ const SubjectsPage = () => {
         if (modoFormulario === "crear" && nombreExiste) {
             nuevosErrores.nombre = "Ya existe una materia con ese nombre"
         }
-        const codigoExistente = false
-        if (codigoExistente) {
-            nuevosErrores.codigo = "Este código ya está en uso por otra materia"
-        }
+        // TODO: Implement code validation logic
+        // const codigoExistente = subjects.some((subject) => subject.code === materiaActual.codigo)
+        // if (codigoExistente) {
+        //     nuevosErrores.codigo = "Este código ya está en uso por otra materia"
+        // }
 
         setErrores(nuevosErrores)
         return Object.keys(nuevosErrores).length === 0
@@ -283,11 +295,8 @@ const SubjectsPage = () => {
             const [subjects, professors] = await Promise.all([getSubjects(), getProfessors()])
             setSubjects(subjects)
             setProfessors(professors)
-            const getAssignments = async () => {
-                const allAssignments = await Promise.all(subjects.map((subject) => getProfessorsBySubject(subject.id)))
-                setAssignments(allAssignments.flat())
-            }
-            getAssignments()
+            const allAssignments = await Promise.all(subjects.map((subject) => getProfessorsBySubject(subject.id)))
+            setAssignments(allAssignments.flat())
         }
         fetchSubjects()
     }, [])
@@ -472,15 +481,34 @@ const SubjectsPage = () => {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleDeleteAssignmentRequest(assignment.id)}
-                                                            title="Eliminar asignación"
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                            <span className="sr-only">Eliminar</span>
-                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="ghost" size="icon" title="Eliminar asignación">
+                                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                                    <span className="sr-only">Eliminar</span>
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>
+                                                                        ¿Está seguro de eliminar esta asignación?
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Esta acción no se puede deshacer. La asignación se
+                                                                        eliminará permanentemente.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => handleDeleteAssignment(assignment.id)}
+                                                                        className="bg-red-600 hover:bg-red-700"
+                                                                    >
+                                                                        Eliminar
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -499,7 +527,10 @@ const SubjectsPage = () => {
                             <DialogDescription>
                                 {assignment.materiaId ? (
                                     <>
-                                        Asigna un profesor a la materia: <strong>__</strong>
+                                        Asigna un profesor a la materia:{" "}
+                                        <strong>
+                                            {subjects.find((s) => s.id === assignment.materiaId)?.name || "Materia no encontrada"}
+                                        </strong>
                                     </>
                                 ) : (
                                     <>Crea una nueva asignación de profesor a materia</>

@@ -152,3 +152,19 @@ export const getQuestionsForProfessors = async (): Promise<[any[], Partial<Recor
     }, {})
     return [filteredQuestions, grouped]
 }
+
+export const getQuestionTitle = async (questionId: string): Promise<string | null> => {
+    try {
+        const { data: question, error } = await supabase.from("question").select("title").eq("id", questionId).single()
+
+        if (error) {
+            console.error("Error fetching question title:", error)
+            return null
+        }
+
+        return question?.title || null
+    } catch (error) {
+        console.error("Error in getQuestionTitle:", error)
+        return null
+    }
+}

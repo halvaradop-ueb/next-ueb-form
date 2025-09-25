@@ -1,4 +1,5 @@
 import { createService, createRequest } from "./utils"
+import type { AutoEvaluationBySemester } from "@/lib/@types/services"
 
 export interface AutoEvaluationAnswer {
     id: string
@@ -9,7 +10,7 @@ export interface AutoEvaluationAnswer {
     semester: string
 }
 
-export const getAutoEvaluationAnswers = async (professorId: string, subjectId: string): Promise<AutoEvaluationAnswer[]> => {
+export const getAutoEvaluationAnswers = async (professorId: string, subjectId: string): Promise<AutoEvaluationBySemester[]> => {
     try {
         const request = createRequest("GET", `auto-evaluation?professorId=${professorId}&subjectId=${subjectId}`)
         const result = await createService(request)
@@ -20,7 +21,7 @@ export const getAutoEvaluationAnswers = async (professorId: string, subjectId: s
     }
 }
 
-export const getAutoEvaluationAnswersByProfessor = async (professorId: string): Promise<AutoEvaluationAnswer[]> => {
+export const getAutoEvaluationAnswersByProfessor = async (professorId: string): Promise<AutoEvaluationBySemester[]> => {
     try {
         const request = createRequest("GET", `auto-evaluation/professor/${professorId}`)
         const result = await createService(request)

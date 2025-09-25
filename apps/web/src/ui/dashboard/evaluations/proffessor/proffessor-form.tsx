@@ -8,7 +8,7 @@ import { FooterSteps } from "../footer-steps"
 import { Confirmation } from "../confirmation"
 import { SelectSubject } from "./select-subject-step"
 import { EvaluationStep } from "../students/evaluation-step"
-import { addAnswer } from "@/services/answer"
+import { addAutoEvaluationAnswer } from "@/services/answer"
 import { Question } from "@/lib/@types/services"
 import { AssignedProfessorSchema } from "@/lib/schema"
 import { defaultAnswer, generateSchema } from "@/lib/utils"
@@ -51,6 +51,20 @@ const getSteps = (
             schema: z.object({}),
         },
     ]
+}
+
+const calculateSemester = (): string => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // getMonth() returns 0-11
+
+    // If it's after June, it's the second semester of the current year
+    // If it's January to June, it's the first semester of the current year
+    if (currentMonth > 6) {
+        return `${currentYear} - 2`
+    } else {
+        return `${currentYear} - 1`
+    }
 }
 
 const initialState = (questions: Question[]) => {
@@ -105,9 +119,58 @@ export const ProffessorForm = () => {
 
     const handleSend = async () => {
         if (!session || !session.user || !session.user.id) return
-        await addAnswer(formData, session.user.id)
-        setIndexStep(0)
-        setFormData(() => initialState(questions))
+
+        // Add professor ID and semester to form data
+        const currentSemester = calculateSemester()
+        const formDataWithMeta = {
+            ...formData,
+            professorId: session.user.id,
+            semester: currentSemester,
+        }
+
+        console.log("🚀 [PROFESSOR FORM] Starting auto-evaluation submission...")
+        console.log("📋 [PROFESSOR FORM] Form data being sent:", formDataWithMeta)
+
+        try {
+            const result = await addAutoEvaluationAnswer(formDataWithMeta, session.user.id)
+
+            if (result.success) {
+                console.log("✅ [PROFESSOR FORM] Auto-evaluation submitted successfully!")
+                console.log("📊 [PROFESSOR FORM] Submission summary:", result.data?.summary)
+
+                // Show success message to user
+                alert(
+                    `✅ Auto-evaluación enviada exitosamente!\n\n` +
+                        `📚 Asignatura: ${formData.subject}\n` +
+                        `👤 Profesor ID: ${session.user.id}\n` +
+                        `📅 Semestre: ${currentSemester}\n` +
+                        `📝 Respuestas: ${result.data?.summary?.answersCount || 0}\n` +
+                        `💾 Registros guardados: ${result.data?.summary?.recordsFound || 0}\n\n` +
+                        `🔍 Puedes verificar los datos guardados en la consola del navegador.`
+                )
+
+                // Reset form
+                setIndexStep(0)
+                setFormData(() => initialState(questions))
+            } else {
+                console.error("❌ [PROFESSOR FORM] Failed to submit auto-evaluation:", result.error)
+                console.error("❌ [PROFESSOR FORM] Error details:", result.details)
+
+                // Show detailed error message to user
+                let errorMessage = `❌ Error al enviar la auto-evaluación:\n\n${result.error}`
+
+                if (result.details?.errors && Array.isArray(result.details.errors)) {
+                    errorMessage += `\n\n🔧 Detalles del error:\n${result.details.errors.map((error: string) => `• ${error}`).join("\n")}`
+                }
+
+                errorMessage += `\n\n💡 Solución: Asegúrate de que los IDs de las preguntas existan en la base de datos antes de enviar la evaluación.`
+
+                alert(errorMessage)
+            }
+        } catch (error) {
+            console.error("❌ [PROFESSOR FORM] Unexpected error:", error)
+            alert("❌ Error inesperado al enviar la auto-evaluación")
+        }
     }
 
     const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages)

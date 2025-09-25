@@ -44,17 +44,13 @@ export const updateUserController = async (req: Request, res: Response) => {
         if (!updatedUser) {
             return res.status(404).json(errorResponse("User not found"))
         }
-        res.status(200).json({
-            data: updatedUser,
-            errors: null,
-            message: "User updated successfully",
-        })
+        res.status(200).json(updatedUser)
     } catch {
         res.status(500).json(errorResponse("Failed to update user"))
     }
 }
 
-export const getUserByIdController = async (req: Request, res: Response<APIResponse<{}>>) => {
+export const getUserByIdController = async (req: Request, res: Response) => {
     try {
         const id = req.params.id
         if (!id) {
@@ -68,11 +64,7 @@ export const getUserByIdController = async (req: Request, res: Response<APIRespo
         if (!user) {
             return res.status(404).json(errorResponse("User not found"))
         }
-        res.status(200).json({
-            data: user,
-            errors: null,
-            message: "User retrieved successfully",
-        })
+        res.status(200).json(user)
     } catch {
         res.status(500).json(errorResponse("Failed to retrieve user"))
     }
@@ -81,11 +73,7 @@ export const getUserByIdController = async (req: Request, res: Response<APIRespo
 export const createUserController = async (req: Request, res: Response) => {
     try {
         const user = await createUser(req.body)
-        res.status(201).json({
-            data: user,
-            errors: null,
-            message: "User created successfully",
-        })
+        res.status(201).json(user)
     } catch {
         res.status(500).json(errorResponse("Failed to create user"))
     }
@@ -106,17 +94,13 @@ export const updatePasswordController = async (req: Request, res: Response) => {
         if (!updatedUser) {
             return res.status(404).json(errorResponse("User not found"))
         }
-        res.status(200).json({
-            data: updatedUser,
-            errors: null,
-            message: "Password updated successfully",
-        })
+        res.status(200).json(updatedUser)
     } catch {
         res.status(500).json(errorResponse("Failed to update password"))
     }
 }
 
-export const deleteUserController = async (req: Request, res: Response<APIResponse<{}>>) => {
+export const deleteUserController = async (req: Request, res: Response) => {
     try {
         const userId = req.params.id
         if (!userId) {
@@ -126,11 +110,7 @@ export const deleteUserController = async (req: Request, res: Response<APIRespon
         if (!deletedUser) {
             return res.status(404).json(errorResponse("User not found"))
         }
-        res.status(200).json({
-            data: deletedUser,
-            errors: null,
-            message: "User deleted successfully",
-        })
+        res.status(200).json(deletedUser)
     } catch {
         res.status(500).json(errorResponse("Failed to delete user"))
     }
@@ -150,11 +130,7 @@ export const uploadUserPhotoController = async (req: Request, res: Response) => 
         if (!photoUrl) {
             return res.status(500).json(errorResponse("Failed to upload user photo"))
         }
-        res.status(200).json({
-            data: { photoUrl },
-            errors: null,
-            message: "User photo uploaded successfully",
-        })
+        res.status(200).json({ photoUrl })
     } catch {
         res.status(500).json(errorResponse("Failed to upload user photo"))
     }

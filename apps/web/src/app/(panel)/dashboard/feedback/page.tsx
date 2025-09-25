@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { FeedbackState } from "@/lib/@types/types"
-import type { Feedback, ProfessorService, SubjectService } from "@/lib/@types/services"
+import type { Feedback, ProfessorService, SubjectService, AutoEvaluationAnswer } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
 import { getProfessors } from "@/services/professors"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import { getFeedback } from "@/services/feedback"
-import { getAutoEvaluationAnswers, type AutoEvaluationAnswer } from "@/services/auto-evaluation"
+import { getAutoEvaluationAnswers } from "@/services/auto-evaluation"
+import { getQuestionTitleById, getQuestionTitleByAnswerId } from "@/services/questions"
+import type { AutoEvaluationBySemester } from "@/lib/@types/services"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -25,7 +27,8 @@ const FeedbackPage = () => {
     const [professors, setProfessors] = useState<ProfessorService[]>([])
     const [options, setOptions] = useState<FeedbackState>(initialState)
     const [ratings, setRatings] = useState<ReturnType<typeof ratingFeedback>>([])
-    const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationAnswer[]>([])
+    const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationBySemester[]>([])
+    const [questionTitles, setQuestionTitles] = useState<Record<string, string>>({})
 
     const optionsDisabled = !options.professorId || !options.subjectId
     const defaultCardMessage =
@@ -119,14 +122,14 @@ const FeedbackPage = () => {
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select value={options.professorId} onValueChange={(value) => handleSelectChange("professorId", value)}>
+                    <Select value={options.professorId ?? ""} onValueChange={(value) => handleSelectChange("professorId", value)}>
                         <SelectTrigger id="selectedProfessor">
                             <SelectValue placeholder="Selecciona un profesor" />
                         </SelectTrigger>
                         <SelectContent>
-                            {professors.map((professorId) => (
-                                <SelectItem key={professorId.id} value={professorId.id}>
-                                    {professorId.first_name} {professorId.last_name}
+                            {professors.map((professor) => (
+                                <SelectItem key={professor.id} value={professor.id}>
+                                    {professor.first_name} {professor.last_name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -135,7 +138,7 @@ const FeedbackPage = () => {
                 <div className="space-y-2">
                     <Label htmlFor="selectedSubject">Materia</Label>
                     <Select
-                        value={options.subjectId}
+                        value={options.subjectId ?? ""}
                         disabled={!options?.professorId || subjects.length === 0}
                         onValueChange={(value) => handleSelectChange("subjectId", value)}
                     >
@@ -143,9 +146,9 @@ const FeedbackPage = () => {
                             <SelectValue placeholder="Selecciona una materia" />
                         </SelectTrigger>
                         <SelectContent>
-                            {subjects.map((subjectId) => (
-                                <SelectItem key={subjectId.id} value={subjectId.id}>
-                                    {subjectId.name}
+                            {subjects.map((subject) => (
+                                <SelectItem key={subject.id} value={subject.id}>
+                                    {subject.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -153,7 +156,7 @@ const FeedbackPage = () => {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="timeframe">Periodo de Tiempo</Label>
-                    <Select value={options.timeframe} onValueChange={(value) => handleSelectChange("timeframe", value)}>
+                    <Select value={options.timeframe ?? ""} onValueChange={(value) => handleSelectChange("timeframe", value)}>
                         <SelectTrigger id="timeframe">
                             <SelectValue placeholder="Selecciona un periodo de tiempo" />
                         </SelectTrigger>
@@ -290,47 +293,136 @@ const FeedbackPage = () => {
                     ))}
                 </TabsContent>
                 <TabsContent value="autoevaluation" className="space-y-4 pt-4">
-                    <div className="flex items-center justify-center w-full h-32">
-                        <div className="text-center">
-                            <p className="text-lg font-medium">🔍 Debug Autoevaluación</p>
-                            <p className="text-sm text-muted-foreground mt-2">
-                                Profesor ID: {options.professorId || "No seleccionado"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">Materia ID: {options.subjectId || "No seleccionado"}</p>
-                            <p className="text-sm text-muted-foreground">
-                                Datos cargados: {autoEvaluationAnswers.length} respuestas
-                            </p>
-                            <div className="mt-4">
-                                <p className="text-xs text-muted-foreground">Datos de ejemplo:</p>
-                                <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
-                                    {JSON.stringify(autoEvaluationAnswers.slice(0, 2), null, 2)}
-                                </pre>
-                            </div>
-                        </div>
-                    </div>
                     {autoEvaluationAnswers.length === 0 && (
                         <div className="flex items-center justify-center w-full h-32">
                             <p className="text-sm text-muted-foreground">No hay respuestas de autoevaluación disponibles</p>
                         </div>
                     )}
-                    {autoEvaluationAnswers.map((answer: AutoEvaluationAnswer) => (
-                        <Card key={answer.id}>
-                            <CardContent className="p-4">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium">Respuesta de Autoevaluación</p>
-                                            <p className="text-sm text-muted-foreground">ID de respuesta: {answer.answer_id}</p>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Semestre: {answer.semester}</div>
-                                    </div>
-                                    <div className="bg-muted p-3 rounded-md">
-                                        <p className="text-sm">{answer.answer_text}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+
+                    {/* Check if data is already grouped by semester (from API) */}
+                    {autoEvaluationAnswers.length > 0 && autoEvaluationAnswers[0] && "answers" in autoEvaluationAnswers[0]
+                        ? // Data is already grouped by semester
+                          autoEvaluationAnswers.map((semesterData, index) => {
+                              return semesterData && semesterData.semester ? (
+                                  <Card key={`${semesterData.semester}-${index}`} className="border-2 border-primary/10">
+                                      <CardHeader className="bg-primary/5 border-b">
+                                          <CardTitle className="text-xl text-primary flex items-center gap-2">
+                                              📅 Semestre {semesterData.semester}
+                                              <span className="text-sm font-normal text-muted-foreground ml-auto">
+                                                  {semesterData.answers?.length || 0} respuestas
+                                              </span>
+                                          </CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="p-6">
+                                          {semesterData.answers &&
+                                          Array.isArray(semesterData.answers) &&
+                                          semesterData.answers.length > 0 ? (
+                                              <div className="space-y-4">
+                                                  {semesterData.answers.map((answer, answerIndex) => (
+                                                      <div
+                                                          key={answer.id || answerIndex}
+                                                          className="border-l-4 border-l-primary/30 pl-4 py-3 bg-muted/30 rounded-r-lg"
+                                                      >
+                                                          <div className="space-y-3">
+                                                              <div className="flex items-center justify-between">
+                                                                  <div>
+                                                                      <h4 className="font-semibold text-primary">
+                                                                          {answer.question_title ||
+                                                                              `Pregunta ${answer.answer_id}`}
+                                                                      </h4>
+                                                                      <p className="text-sm text-muted-foreground">
+                                                                          ID de respuesta: {answer.answer_id}
+                                                                      </p>
+                                                                  </div>
+                                                                  <div className="text-right">
+                                                                      <p className="text-xs text-muted-foreground">Profesor</p>
+                                                                      <p className="text-xs font-mono">
+                                                                          {answer.professor_id?.slice(0, 8) || "N/A"}...
+                                                                      </p>
+                                                                  </div>
+                                                              </div>
+                                                              <div className="bg-background p-4 rounded border">
+                                                                  <p className="text-sm leading-relaxed">
+                                                                      {answer.answer_text || "Sin respuesta"}
+                                                                  </p>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          ) : (
+                                              <div className="text-center py-8">
+                                                  <p className="text-muted-foreground">
+                                                      No hay respuestas disponibles para este semestre
+                                                  </p>
+                                              </div>
+                                          )}
+                                      </CardContent>
+                                  </Card>
+                              ) : null
+                          })
+                        : // Data is individual answers, need to group by semester
+                          (() => {
+                              if (!Array.isArray(autoEvaluationAnswers)) {
+                                  return null
+                              }
+
+                              const groupedBySemester = autoEvaluationAnswers.reduce(
+                                  (acc, item) => {
+                                      if (!acc[item.semester]) acc[item.semester] = []
+                                      acc[item.semester].push(item)
+                                      return acc
+                                  },
+                                  {} as Record<string, any[]>
+                              )
+
+                              return Object.entries(groupedBySemester).map(([semester, answers]) => (
+                                  <Card key={semester} className="border-2 border-primary/10">
+                                      <CardHeader className="bg-primary/5 border-b">
+                                          <CardTitle className="text-xl text-primary flex items-center gap-2">
+                                              📅 Semestre {semester}
+                                              <span className="text-sm font-normal text-muted-foreground ml-auto">
+                                                  {answers.length} respuestas
+                                              </span>
+                                          </CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="p-6">
+                                          <div className="space-y-4">
+                                              {answers.map((answer: any, answerIndex: number) => (
+                                                  <div
+                                                      key={answer.id || answerIndex}
+                                                      className="border-l-4 border-l-primary/30 pl-4 py-3 bg-muted/30 rounded-r-lg"
+                                                  >
+                                                      <div className="space-y-3">
+                                                          <div className="flex items-center justify-between">
+                                                              <div>
+                                                                  <h4 className="font-semibold text-primary">
+                                                                      {answer.question_title || `Pregunta ${answer.answer_id}`}
+                                                                  </h4>
+                                                                  <p className="text-sm text-muted-foreground">
+                                                                      ID de respuesta: {answer.answer_id}
+                                                                  </p>
+                                                              </div>
+                                                              <div className="text-right">
+                                                                  <p className="text-xs text-muted-foreground">Profesor</p>
+                                                                  <p className="text-xs font-mono">
+                                                                      {answer.professor_id?.slice(0, 8) || "N/A"}...
+                                                                  </p>
+                                                              </div>
+                                                          </div>
+                                                          <div className="bg-background p-4 rounded border">
+                                                              <p className="text-sm leading-relaxed">
+                                                                  {answer.answer_text || "Sin respuesta"}
+                                                              </p>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      </CardContent>
+                                  </Card>
+                              ))
+                          })()}
                 </TabsContent>
             </Tabs>
         </section>

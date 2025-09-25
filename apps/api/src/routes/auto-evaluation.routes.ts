@@ -2,6 +2,7 @@ import { Router } from "express"
 import {
     getAutoEvaluationByProfessorAndSubject,
     getAutoEvaluationByProfessor,
+    addAutoEvaluationAnswer,
 } from "../controllers/auto-evaluation.controller.js"
 
 const router = Router()
@@ -19,5 +20,12 @@ router.get("/", getAutoEvaluationByProfessorAndSubject)
  * @access Public
  */
 router.get("/professor/:professorId", getAutoEvaluationByProfessor)
+
+/**
+ * @route POST /api/auto-evaluation
+ * @desc Submit autoevaluation answers
+ * @access Public
+ */
+router.post("/", addAutoEvaluationAnswer)
 
 export default router
