@@ -6,6 +6,7 @@ import {
     deleteQuestion,
     getQuestionsForStudents,
     getQuestionsForProfessors,
+    getQuestionsBySubject,
 } from "../services/questions.service.js"
 
 const router = Router()
@@ -13,6 +14,12 @@ const router = Router()
 router.get("/", async (req, res) => {
     try {
         const audience = req.query.audience as string
+        const subject = req.query.subject as string
+
+        if (subject) {
+            const questions = await getQuestionsBySubject(subject)
+            return res.json({ questions })
+        }
 
         if (audience === "student") {
             const [questions, grouped] = await getQuestionsForStudents()

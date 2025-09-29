@@ -1,7 +1,15 @@
 import { Request, Response } from "express"
 import { APIResponse } from "../lib/types.js"
 import { errorResponse } from "../lib/utils.js"
-import { getAnswers, getAnswerById, getAnswersByUser, getAnswersByQuestion, addAnswer } from "../services/answer.service.js"
+import {
+    getAnswers,
+    getAnswerById,
+    getAnswersByUser,
+    getAnswersByQuestion,
+    addAnswer,
+    saveStudentEvaluation,
+} from "../services/answer.service.js"
+import { supabase } from "../lib/supabase.js"
 
 export const getAnswersController = async (_: Request, res: Response<APIResponse>) => {
     try {
@@ -94,5 +102,90 @@ export const addAnswerController = async (req: Request, res: Response<APIRespons
     } catch (error) {
         console.error("Error adding answer:", error)
         res.status(500).json(errorResponse("Failed to add answer"))
+    }
+}
+
+export const addStudentEvaluationController = async (req: Request, res: Response<APIResponse>) => {
+    try {
+        const { professorId, subjectId, semester, answers } = req.body
+        if (!professorId || !subjectId || !semester || !answers) {
+            return res.status(400).json(errorResponse("Professor ID, subject ID, semester, and answers are required"))
+        }
+        const success = await saveStudentEvaluation(professorId, subjectId, semester, answers)
+        if (success) {
+            res.status(201).json({
+                data: null,
+                errors: null,
+                message: "Student evaluation added successfully",
+            })
+        } else {
+            res.status(500).json(errorResponse("Failed to add student evaluation"))
+        }
+    } catch (error) {
+        console.error("Error adding student evaluation:", error)
+        res.status(500).json(errorResponse("Failed to add student evaluation"))
+    }
+}
+
+export const getStudentEvaluationsController = async (req: Request, res: Response<APIResponse>) => {
+    try {
+        const subjectId = req.query.subjectId as string
+        const semester = req.query.semester as string
+
+        console.log("🔍 [BACKEND] getStudentEvaluationsController called:", { subjectId, semester })
+        console.log("🔍 [BACKEND] Request query:", req.query)
+
+        if (!subjectId) {
+            return res.status(400).json(errorResponse("Subject ID is required"))
+        }
+
+        // First, let's see all data without filters to debug
+        const { data: allData, error: allError } = await supabase.from("studenevalua").select(`
+                id,
+                question_id,
+                response,
+                id_professor,
+                id_subject,
+                semester
+            `)
+
+        console.log("🔍 [BACKEND] All studenevalua data:", { data: allData, error: allError, count: allData?.length })
+
+        // Get all data for the subject (ignore semester filter for now to show all responses)
+        const { data, error } = await supabase
+            .from("studenevalua")
+            .select(
+                `
+                id,
+                question_id,
+                response,
+                id_professor,
+                semester
+            `
+            )
+            .eq("id_subject", subjectId)
+
+        console.log("🔍 [BACKEND] Final query result:", {
+            data,
+            error,
+            dataLength: data?.length,
+            subjectId,
+            semester,
+            recordsFound: data?.length || 0,
+        })
+
+        if (error) {
+            console.error("❌ [BACKEND] Error fetching student evaluations:", error)
+            return res.status(500).json(errorResponse("Failed to fetch student evaluations"))
+        }
+
+        res.status(200).json({
+            data: data || [],
+            errors: null,
+            message: "Student evaluations retrieved successfully",
+        })
+    } catch (error) {
+        console.error("❌ [BACKEND] Error in getStudentEvaluationsController:", error)
+        res.status(500).json(errorResponse("Failed to fetch student evaluations"))
     }
 }

@@ -9,9 +9,9 @@ import { FeedbackStep } from "./feedback-step"
 import { Confirmation } from "../confirmation"
 import { EvaluationStep } from "./evaluation-step"
 import { SelectSubjectStep } from "./select-subject-step"
-import { addAnswer } from "@/services/answer"
 import { Question } from "@/lib/@types/services"
 import { addFeedback } from "@/services/feedback"
+import { addStudentEvaluation } from "@/services/answer"
 import { defaultAnswer, generateSchema } from "@/lib/utils"
 import { getQuestionsForStudents } from "@/services/questions"
 import type { Step, StudentFormState } from "@/lib/@types/types"
@@ -59,6 +59,20 @@ const getSteps = (
             schema: z.object({}),
         },
     ]
+}
+
+const calculateSemester = (): string => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // getMonth() returns 0-11
+
+    // If it's after June, it's the second semester of the current year
+    // If it's January to June, it's the first semester of the current year
+    if (currentMonth > 6) {
+        return `${currentYear} - 2`
+    } else {
+        return `${currentYear} - 1`
+    }
 }
 
 const initialState = (questions: Question[]) => {
@@ -132,8 +146,20 @@ export const StudentForm = () => {
 
     const handleSend = async () => {
         if (!session || !session.user || !session.user.id) return
-        await addAnswer(formData, session.user.id)
+        // Only send feedback data to the feedback table, not to answervalue table
+        // Send feedback data to the feedback table
         await addFeedback(formData, session.user.id)
+
+        // Send student evaluation data to the studenevalua table
+        if (formData.subject && formData.answers) {
+            const currentSemester = calculateSemester()
+            await addStudentEvaluation(
+                session.user.id, // professorId (student is evaluating as a professor in this context)
+                formData.subject,
+                currentSemester,
+                formData.answers
+            )
+        }
         setIndexStep(0)
         setFormData(() => initialState(questions))
     }
