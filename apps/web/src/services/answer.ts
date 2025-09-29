@@ -107,3 +107,61 @@ export const verifyAutoEvaluationData = async (
         return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
     }
 }
+
+export const addStudentEvaluation = async (
+    professorId: string,
+    subjectId: string,
+    semester: string,
+    answers: Record<string, any>
+): Promise<boolean> => {
+    try {
+        console.log("📤 [FRONTEND] Sending student evaluation data:", {
+            professorId,
+            subjectId,
+            semester,
+            answers,
+        })
+
+        const request = createRequest("POST", "answers/student-evaluation", {
+            professorId,
+            subjectId,
+            semester,
+            answers,
+        })
+        const result = await createService(request)
+
+        console.log("📥 [FRONTEND] Student evaluation response:", result)
+
+        return !!result
+    } catch (error) {
+        console.error("❌ [FRONTEND] Error in addStudentEvaluation:", error)
+        return false
+    }
+}
+
+export const getStudentEvaluationsBySubject = async (
+    subjectId: string,
+    semester?: string
+): Promise<Array<{ question_id: string; response: string; id_professor: string; semester?: string }>> => {
+    try {
+        console.log("🔍 [FRONTEND] Fetching student evaluations:", { subjectId, semester })
+
+        const params = new URLSearchParams({ subjectId })
+        if (semester) {
+            params.append("semester", semester)
+            console.log("🔍 [FRONTEND] Appended semester to params:", semester)
+        }
+
+        const request = createRequest("GET", `answers/student-evaluations?${params}`)
+        console.log("🔍 [FRONTEND] Request URL:", request.url)
+
+        const result = await createService(request)
+
+        console.log("📥 [FRONTEND] Student evaluations response:", result)
+
+        return result?.data || []
+    } catch (error) {
+        console.error("❌ [FRONTEND] Error fetching student evaluations:", error)
+        return []
+    }
+}

@@ -31,8 +31,13 @@ export const getPeerReviewsByProfessorId = async (professorId: string) => {
     return await createService(request)
 }
 
-export const getAllCoevaluations = async () => {
-    const request = createRequest("GET", `co_evaluations`)
+export const getAllCoevaluations = async (professorId?: string, subjectId?: string) => {
+    const params = new URLSearchParams()
+    if (professorId) params.append("professorId", professorId)
+    if (subjectId) params.append("subjectId", subjectId)
+
+    const url = `co_evaluations${params.toString() ? `?${params.toString()}` : ""}`
+    const request = createRequest("GET", url)
     return await createService(request)
 }
 

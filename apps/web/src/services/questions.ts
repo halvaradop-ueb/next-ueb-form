@@ -136,3 +136,20 @@ export const getQuestionTitleByAnswerId = async (answerValueId: string): Promise
         return null
     }
 }
+
+export const getQuestionsBySubject = async (subjectId: string): Promise<Question[]> => {
+    try {
+        console.log("🔍 [FRONTEND] getQuestionsBySubject called with:", subjectId)
+        const response = await fetch(`${API_ENDPOINT}/questions?subject=${subjectId}`)
+        console.log("🔍 [FRONTEND] Response status:", response.status)
+        if (!response.ok) {
+            throw new Error(`Error fetching questions for subject: ${response.statusText}`)
+        }
+        const data = await response.json()
+        console.log("🔍 [FRONTEND] Questions data:", data)
+        return Array.isArray(data.questions) ? data.questions : []
+    } catch (error) {
+        console.error("❌ [FRONTEND] Error en getQuestionsBySubject:", error)
+        return []
+    }
+}
