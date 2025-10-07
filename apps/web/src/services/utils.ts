@@ -20,7 +20,7 @@ export const createRequest = (method: "GET" | "POST" | "PUT" | "DELETE", url: st
 export const createService = async (request: Request, error?: string) => {
     try {
         const response = await fetch(request)
-        if (!response.ok) {
+        if (response.status >= 400) {
             const responseText = await response.text()
             console.error("API Response Error:", {
                 status: response.status,
@@ -30,9 +30,9 @@ export const createService = async (request: Request, error?: string) => {
             throw new Error(`Failed to fetch: ${error ?? response.statusText}`)
         }
         const json = await response.json()
-        return json // Return the full response object, not just json.data
+        return json
     } catch (error) {
         console.error("Error fetching data:", error)
-        throw error // Re-throw to let the calling function handle it
+        throw error
     }
 }
