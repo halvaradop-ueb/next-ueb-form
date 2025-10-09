@@ -129,7 +129,7 @@ const QuizzesPage = () => {
         if (!isValidForm()) {
             return false
         }
-        const finalQuestion = { ...newQuestion }
+        const finalQuestion = { ...newQuestion, id: crypto.randomUUID() }
         if (finalQuestion.question_type === "single_choice" || finalQuestion.question_type === "multiple_choice") {
             const options = textOptions
                 .split("\n")
@@ -323,7 +323,6 @@ const QuizzesPage = () => {
                                                 <SelectValue placeholder="Seleccionar etapa" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {/* TODO: FIX */}
                                                 {stages
                                                     .filter((stage) => stage.target_audience === newQuestion.target_audience)
                                                     .map((stage) => (
@@ -404,7 +403,7 @@ const QuizzesPage = () => {
                                 <Button variant="outline" onClick={() => setIsOpenDialog(false)}>
                                     Cancelar
                                 </Button>
-                                <Button onClick={handleAddNewQuestion}>
+                                <Button onClick={handleAddNewQuestion} disabled={!newQuestion.stage_id}>
                                     {idleForm === "create" ? "Crear Pregunta" : "Guardar Cambios"}
                                 </Button>
                             </DialogFooter>

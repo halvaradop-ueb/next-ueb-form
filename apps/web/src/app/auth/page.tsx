@@ -17,19 +17,19 @@ const AuthPage = () => {
         <section className="min-h-dvh flex items-center justify-center">
             <Card className="w-11/12 max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>Enter your email below to login to your account</CardDescription>
+                    <CardTitle className="text-2xl">Iniciar sesión</CardTitle>
+                    <CardDescription>Ingresa tu correo electrónico para acceder a tu cuenta</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form action={action}>
+                    <form action={action} id="credentials-form">
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input type="email" id="email" name="email" placeholder="m@example.com" required />
+                                <Label htmlFor="email">Correo electrónico</Label>
+                                <Input type="email" id="email" name="email" placeholder="m@ejemplo.com" required />
                             </div>
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">Contraseña</Label>
                                 </div>
                                 <Input type="password" id="password" name="password" placeholder="******" required />
                             </div>
@@ -39,13 +39,13 @@ const AuthPage = () => {
                                 </span>
                             )}
                             <Button type="submit" className="w-full hover:cursor-pointer" disabled={isPending}>
-                                Login
+                                Iniciar sesión
                             </Button>
                         </div>
                     </form>
                     <form action={signInWithGoogle}>
                         <Button className="w-full mt-6 hover:cursor-pointer" variant="outline" disabled={isPending}>
-                            Login with Google
+                            Iniciar sesión con Google
                         </Button>
                     </form>
                 </CardContent>

@@ -10,13 +10,15 @@ export const getStages = async (): Promise<StageService[]> => {
 export const addStage = async (stage: StageService): Promise<StageService | null> => {
     const { name, description, target_audience } = stage
     const request = createRequest("POST", "stages", { name, description, target_audience })
-    return createService(request)
+    const service = await createService(request)
+    return service.data
 }
 
 export const updateStage = async (stage: StageService): Promise<StageService | null> => {
     const { id, name, description, target_audience } = stage
     const request = createRequest("PUT", `stages/${id}`, { name, description, target_audience })
-    return createService(request)
+    const service = await createService(request)
+    return service.data
 }
 
 export const deleteStage = async (stageId: string): Promise<boolean> => {

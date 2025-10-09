@@ -17,14 +17,12 @@ export const getQuestions = async (): Promise<Question[]> => {
 
 export const addQuestion = async (question: Question): Promise<Question | null> => {
     try {
-        // Remove the id field when creating a new question
-        const { id, ...questionWithoutId } = question
         const response = await fetch(`${API_ENDPOINT}/questions`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(questionWithoutId),
+            body: JSON.stringify(question),
         })
 
         if (!response.ok) {

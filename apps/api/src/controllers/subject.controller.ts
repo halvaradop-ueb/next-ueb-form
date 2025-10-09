@@ -58,7 +58,7 @@ export const createSubjectController = async (req: Request, res: Response<APIRes
     }
 }
 
-export const deleteSubjectController = async (req: Request, res: Response<APIResponse>) => {
+export const deleteSubjectController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const subjectId = req.params.id
         if (!subjectId) {
@@ -66,7 +66,11 @@ export const deleteSubjectController = async (req: Request, res: Response<APIRes
         }
         const success = await deleteSubject(subjectId)
         if (success) {
-            res.status(204).send()
+            res.json({
+                data: {},
+                errors: null,
+                message: "Subject deleted successfully",
+            })
         } else {
             res.status(404).json(errorResponse("Subject not found"))
         }
@@ -112,7 +116,7 @@ export const getProfessorsBySubjectController = async (req: Request, res: Respon
     }
 }
 
-export const deleteAssignmentController = async (req: Request, res: Response<APIResponse>) => {
+export const deleteAssignmentController = async (req: Request, res: Response<APIResponse<{}>>) => {
     try {
         const assignmentId = req.params.assignmentId
         if (!assignmentId) {
@@ -120,7 +124,11 @@ export const deleteAssignmentController = async (req: Request, res: Response<API
         }
         const success = await deleteAssignment(assignmentId)
         if (success) {
-            res.status(204).send()
+            res.json({
+                data: {},
+                errors: null,
+                message: "Assignment deleted successfully",
+            })
         } else {
             res.status(404).json(errorResponse("Assignment not found"))
         }

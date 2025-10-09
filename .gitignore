@@ -49,3 +49,7 @@ package-lock.json
 .env*.local
 dist
 **/dist/
+
+# Playwright test files
+test-results
+playwright-report

@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
 /**
  * @deprecated
  */
-export const createClient = () => {
+export const createClient = async () => {
     return createBrowserClient(supabaseUrl, supabaseAnonKey, {
         db: {
             schema: "public",
@@ -14,4 +14,4 @@ export const createClient = () => {
     })
 }
 
-export const supabase = createClient()
+export const supabase = await createClient()

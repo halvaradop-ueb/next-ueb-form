@@ -117,7 +117,7 @@ const UserManagementPage = () => {
                         <TabsTrigger value="admin">Administradores</TabsTrigger>
                     </TabsList>
                     <TabsContent value={activeTab} className="space-y-6 pt-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between" id="user-actions">
                             <div className="relative w-full max-w-sm">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -366,7 +366,9 @@ const UserManagementPage = () => {
                                 </form>
                             </CardContent>
                             <CardFooter className="flex items-center gap-x-2">
-                                <Button onClick={handleSubmit}>Agregar Usuario</Button>
+                                <Button onClick={handleSubmit}>
+                                    {idleForm === "edit" ? "Actualizar Usuario" : "Agregar Usuario"}
+                                </Button>
                                 {idleForm === "edit" && (
                                     <Button variant="destructive" onClick={handleCancelEdit}>
                                         Cancelar
