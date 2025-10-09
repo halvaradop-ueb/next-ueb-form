@@ -1,16 +1,14 @@
+import Image from "next/image"
 import { SessionProvider } from "next-auth/react"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/dashboard/sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { ChildrenProps } from "@/lib/@types/props"
-import { auth } from "@/lib/auth"
 import logoUEB from "@/assets/ueb.png"
-import Image from "next/image"
 
 const PanelLayout = async ({ children }: ChildrenProps) => {
-    const session = await auth()
     return (
-        <SessionProvider session={session}>
+        <SessionProvider>
             <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>

@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
             {
                 hostname: "hkmtwxvkqwfpaugzcxox.supabase.co",
             },
+            {
+                hostname: "mbocjtlrknnqzntguchj.supabase.co",
+            },
         ],
     },
     async rewrites() {

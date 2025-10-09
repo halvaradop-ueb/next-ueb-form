@@ -461,7 +461,7 @@ const SubjectsPage = () => {
                                 <CardTitle>Asignaciones de Profesores a Materias</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-4">
+                                <div className="grid gap-4 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
                                     {assignments.length === 0 ? (
                                         <p className="text-center text-muted-foreground">No hay asignaciones registradas.</p>
                                     ) : (

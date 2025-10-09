@@ -5,6 +5,7 @@ import { hash, genSalt, compare } from "bcryptjs"
 
 export const authenticate = async (email: string, password: string): Promise<UserService | null> => {
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
+    if (!data) return null
     const isAuthenticated = await compare(password, data.password)
     if (error) {
         console.error("Error fetching user:", error)
