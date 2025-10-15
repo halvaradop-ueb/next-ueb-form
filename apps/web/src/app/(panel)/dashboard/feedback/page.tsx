@@ -8,21 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import jsPDF from "jspdf"
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
-    LineChart,
-    Line,
-    CartesianGrid,
-    Legend,
-} from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationAnswer } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
@@ -1019,55 +1005,60 @@ const FeedbackPage = () => {
                     Generar PDF
                 </Button>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                    <Label htmlFor="selectedProfessor">Profesor</Label>
-                    <Select value={options.professorId ?? ""} onValueChange={(value) => handleSelectChange("professorId", value)}>
-                        <SelectTrigger id="selectedProfessor">
-                            <SelectValue placeholder="Selecciona un profesor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {professors.map((professor) => (
-                                <SelectItem key={professor.id} value={professor.id}>
-                                    {professor.first_name} {professor.last_name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="selectedSubject">Materia</Label>
-                    <Select
-                        value={options.subjectId ?? ""}
-                        disabled={!options?.professorId || subjects.length === 0}
-                        onValueChange={(value) => handleSelectChange("subjectId", value)}
-                    >
-                        <SelectTrigger id="selectedSubject">
-                            <SelectValue placeholder="Selecciona una materia" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {subjects.map((subject) => (
-                                <SelectItem key={subject.id} value={subject.id}>
-                                    {subject.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="timeframe">Periodo de Tiempo</Label>
-                    <Select value={options.timeframe ?? ""} onValueChange={(value) => handleSelectChange("timeframe", value)}>
-                        <SelectTrigger id="timeframe">
-                            <SelectValue placeholder="Selecciona un periodo de tiempo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {timeframes.map(({ name, start, end }, index) => (
-                                <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
-                                    {name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+            <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                        <Label htmlFor="selectedProfessor">Profesor</Label>
+                        <Select
+                            value={options.professorId ?? ""}
+                            onValueChange={(value) => handleSelectChange("professorId", value)}
+                        >
+                            <SelectTrigger id="selectedProfessor">
+                                <SelectValue placeholder="Selecciona un profesor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {professors.map((professor) => (
+                                    <SelectItem key={professor.id} value={professor.id}>
+                                        {professor.first_name} {professor.last_name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="selectedSubject">Materia</Label>
+                        <Select
+                            value={options.subjectId ?? ""}
+                            disabled={!options?.professorId || subjects.length === 0}
+                            onValueChange={(value) => handleSelectChange("subjectId", value)}
+                        >
+                            <SelectTrigger id="selectedSubject">
+                                <SelectValue placeholder="Selecciona una materia" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {subjects.map((subject) => (
+                                    <SelectItem key={subject.id} value={subject.id}>
+                                        {subject.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="timeframe">Periodo de Tiempo</Label>
+                        <Select value={options.timeframe ?? ""} onValueChange={(value) => handleSelectChange("timeframe", value)}>
+                            <SelectTrigger id="timeframe">
+                                <SelectValue placeholder="Selecciona un periodo de tiempo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {timeframes.map(({ name, start, end }, index) => (
+                                    <SelectItem key={`timeframe-${name}`} value={`${start.toISOString()} - ${end.toISOString()}`}>
+                                        {name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
             <Tabs className="w-full" defaultValue="summary">
@@ -1106,277 +1097,208 @@ const FeedbackPage = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* Summary Cards */}
-                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-blue-800">
-                                                    Calificación General
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-center">
-                                                    <span className="text-3xl font-bold text-blue-600">{avgRating}</span>
-                                                    <span className="text-lg text-blue-500">/5</span>
-                                                    <p className="text-xs text-blue-600 mt-1">Basado en evaluaciones</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-green-800">
-                                                    Total Evaluaciones
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-center">
-                                                    <span className="text-3xl font-bold text-green-600">
-                                                        {filteredFeedback.length ?? 0}
-                                                    </span>
-                                                    <p className="text-xs text-green-600 mt-1">Comentarios recibidos</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-purple-800">
-                                                    Promedio Detallado
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-center">
-                                                    <span className="text-3xl font-bold text-purple-600">
-                                                        {filteredFeedback.length > 0
-                                                            ? (
-                                                                  filteredFeedback.reduce((acc, item) => acc + item.rating, 0) /
-                                                                  filteredFeedback.length
-                                                              ).toFixed(1)
-                                                            : "0.0"}
-                                                    </span>
-                                                    <span className="text-lg text-purple-500">/10</span>
-                                                    <p className="text-xs text-purple-600 mt-1">Calificación promedio</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-sm font-medium text-orange-800">Tendencia</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-center">
-                                                    <span className="text-3xl font-bold text-orange-600">
-                                                        {filteredFeedback.length > 1 ? "↗" : "→"}
-                                                    </span>
-                                                    <p className="text-xs text-orange-600 mt-1">
-                                                        {filteredFeedback.length > 1 ? "Mejorando" : "Estable"}
-                                                    </p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-
-                                    {/* Grade History Chart */}
-                                    <Card className="mt-6">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                📈 Historial de Calificaciones por Semestre
-                                            </CardTitle>
-                                            <CardDescription>
-                                                Evolución de las calificaciones por semestre académico
-                                            </CardDescription>
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle>Calificación General</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="h-64 w-full">
-                                                {(() => {
-                                                    // Generate semester data based on actual filtered feedback
-                                                    const semesterData = new Map()
-
-                                                    // Process filtered feedback to create semester data
-                                                    filteredFeedback.forEach((feedback) => {
-                                                        const date = new Date(feedback.feedback_date)
-                                                        const year = date.getFullYear()
-                                                        const month = date.getMonth() + 1
-                                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
-
-                                                        if (!semesterData.has(semester)) {
-                                                            semesterData.set(semester, {
-                                                                name: semester,
-                                                                calificacion: [],
-                                                                promedio: 0,
-                                                            })
-                                                        }
-
-                                                        semesterData.get(semester).calificacion.push(feedback.rating)
-                                                    })
-
-                                                    // Calculate averages for each semester
-                                                    const chartData = Array.from(semesterData.values())
-                                                        .map((semester) => {
-                                                            const avgCalificacion =
-                                                                semester.calificacion.reduce((a, b) => a + b, 0) /
-                                                                semester.calificacion.length
-                                                            return {
-                                                                name: semester.name,
-                                                                calificacion: Number(avgCalificacion.toFixed(1)),
-                                                                promedio: Number(avgCalificacion.toFixed(1)),
-                                                            }
-                                                        })
-                                                        .sort((a, b) => a.name.localeCompare(b.name))
-
-                                                    // If no data, show empty state
-                                                    if (chartData.length === 0) {
-                                                        return (
-                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
-                                                                <div className="text-center">
-                                                                    <p>No hay datos de evaluaciones</p>
-                                                                    <p className="text-sm">para el período seleccionado</p>
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    }
-
-                                                    return (
-                                                        <ResponsiveContainer width="100%" height="100%">
-                                                            <LineChart
-                                                                data={chartData}
-                                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                                                            >
-                                                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                                                                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                                                                <YAxis domain={[0, 10]} stroke="#6b7280" fontSize={12} />
-                                                                <Tooltip
-                                                                    contentStyle={{
-                                                                        backgroundColor: "#f8fafc",
-                                                                        border: "1px solid #e2e8f0",
-                                                                        borderRadius: "8px",
-                                                                    }}
-                                                                    formatter={(value: any, name: string) => [
-                                                                        `${value}/10`,
-                                                                        name === "calificacion"
-                                                                            ? "Calificación Actual"
-                                                                            : "Promedio General",
-                                                                    ]}
-                                                                />
-                                                                <Legend />
-                                                                <Line
-                                                                    type="monotone"
-                                                                    dataKey="calificacion"
-                                                                    stroke="#3b82f6"
-                                                                    strokeWidth={3}
-                                                                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                                                                    activeDot={{ r: 6, stroke: "#3b82f6", strokeWidth: 2 }}
-                                                                />
-                                                                <Line
-                                                                    type="monotone"
-                                                                    dataKey="promedio"
-                                                                    stroke="#10b981"
-                                                                    strokeWidth={2}
-                                                                    strokeDasharray="5 5"
-                                                                    dot={{ fill: "#10b981", strokeWidth: 2, r: 3 }}
-                                                                />
-                                                            </LineChart>
-                                                        </ResponsiveContainer>
-                                                    )
-                                                })()}
-                                            </div>
-                                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                                                    <span>Calificación del período</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                                                    <span>Promedio histórico</span>
+                                            <div className="flex items-center justify-center">
+                                                <div className="text-center">
+                                                    <span className="text-5xl font-bold">{avgRating}</span>
+                                                    <span className="text-2xl text-muted-foreground">/5</span>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Basado en evaluaciones de estudiantes
+                                                    </p>
                                                 </div>
                                             </div>
                                         </CardContent>
                                     </Card>
-
-                                    {/* Additional Summary Info */}
-                                    <div className="grid gap-4 md:grid-cols-2">
+                                    <div>
                                         <Card>
                                             <CardHeader className="pb-2">
-                                                <CardTitle className="text-lg">📊 Distribución de Calificaciones</CardTitle>
+                                                <CardTitle>Participación</CardTitle>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="space-y-3">
-                                                    {[5, 4, 3, 2, 1].map((rating) => {
-                                                        const count = filteredFeedback.filter(
-                                                            (item) => Math.floor(item.rating / 2) === rating
-                                                        ).length
-                                                        const percentage =
-                                                            filteredFeedback.length > 0
-                                                                ? (count / filteredFeedback.length) * 100
-                                                                : 0
-                                                        return (
-                                                            <div key={rating} className="space-y-1">
-                                                                <div className="flex justify-between text-sm">
-                                                                    <span>
-                                                                        {rating} estrella{rating !== 1 ? "s" : ""}
-                                                                    </span>
-                                                                    <span>
-                                                                        {count} ({percentage.toFixed(1)}%)
-                                                                    </span>
-                                                                </div>
-                                                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                                                    <div
-                                                                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
-                                                                        style={{ width: `${percentage}%` }}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-lg">📋 Información del Período</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-3">
-                                                    <div className="flex justify-between">
-                                                        <span className="text-sm text-muted-foreground">
-                                                            Período seleccionado:
-                                                        </span>
-                                                        <span className="text-sm font-medium">
-                                                            {options.timeframe
-                                                                ? new Date(options.timeframe.split(" - ")[0]).toLocaleDateString(
-                                                                      "es-ES",
-                                                                      {
-                                                                          month: "short",
-                                                                          year: "numeric",
-                                                                      }
-                                                                  )
-                                                                : "Todo el tiempo"}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-sm text-muted-foreground">Materia:</span>
-                                                        <span className="text-sm font-medium">
-                                                            {subjects.find((s) => s.id === options.subjectId)?.name || "Todas"}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-sm text-muted-foreground">Última evaluación:</span>
-                                                        <span className="text-sm font-medium">
-                                                            {filteredFeedback.length > 0
-                                                                ? new Date(
-                                                                      Math.max(
-                                                                          ...filteredFeedback.map((f) =>
-                                                                              new Date(f.feedback_date).getTime()
-                                                                          )
-                                                                      )
-                                                                  ).toLocaleDateString("es-ES")
-                                                                : "N/A"}
-                                                        </span>
-                                                    </div>
+                                                <div className="text-center">
+                                                    <span className="text-3xl font-bold">{filteredFeedback.length ?? 0}</span>
+                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
                                     </div>
+                                    {/* Semester Grade History - University Scale (1-5) */}
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="flex items-center gap-2">
+                                                📈 Historia de Notas por Semestre
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Evolución del promedio de calificaciones en escala universitaria (1-5)
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {(() => {
+                                                // Group feedback by semester
+                                                const feedbackBySemester = filteredFeedback.reduce(
+                                                    (acc, item) => {
+                                                        // Extract semester from feedback_date
+                                                        const date = new Date(item.feedback_date)
+                                                        const year = date.getFullYear()
+                                                        const month = date.getMonth() + 1
+                                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
+
+                                                        if (!acc[semester]) {
+                                                            acc[semester] = []
+                                                        }
+                                                        acc[semester].push(item)
+                                                        return acc
+                                                    },
+                                                    {} as Record<string, typeof filteredFeedback>
+                                                )
+
+                                                const semesterAverages = Object.entries(feedbackBySemester)
+                                                    .map(([semester, semesterFeedback]) => {
+                                                        const avg =
+                                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) /
+                                                            semesterFeedback.length
+                                                        // Convert from 1-10 scale to 1-5 university scale
+                                                        const universityAvg = avg / 2
+                                                        return {
+                                                            semester,
+                                                            average: avg,
+                                                            universityAverage: universityAvg,
+                                                            count: semesterFeedback.length,
+                                                            semesterName: `Semestre ${semester.replace("-", " - ")}`,
+                                                        }
+                                                    })
+                                                    .sort((a, b) => a.semester.localeCompare(b.semester))
+
+                                                if (semesterAverages.length === 0) {
+                                                    return (
+                                                        <div className="text-center py-8">
+                                                            <p className="text-muted-foreground">
+                                                                No hay datos de evaluaciones por semestre
+                                                            </p>
+                                                        </div>
+                                                    )
+                                                }
+
+                                                // Prepare data for the chart
+                                                const chartData = semesterAverages.map(
+                                                    ({ semesterName, universityAverage, count }) => ({
+                                                        semester: semesterName,
+                                                        promedio: Number(universityAverage.toFixed(2)),
+                                                        evaluaciones: count,
+                                                        promedioOriginal: Number((universityAverage * 2).toFixed(1)),
+                                                    })
+                                                )
+
+                                                return (
+                                                    <div className="space-y-6">
+                                                        {/* Grade Trend Chart */}
+                                                        <div className="h-64 w-full">
+                                                            <ResponsiveContainer width="100%" height="100%">
+                                                                <LineChart
+                                                                    data={chartData}
+                                                                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                                                >
+                                                                    <XAxis
+                                                                        dataKey="semester"
+                                                                        angle={-45}
+                                                                        textAnchor="end"
+                                                                        height={80}
+                                                                        fontSize={12}
+                                                                    />
+                                                                    <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                                                                    <Tooltip
+                                                                        formatter={(value, name) => [
+                                                                            name === "promedio"
+                                                                                ? [
+                                                                                      `${Number(value).toFixed(2)}/5`,
+                                                                                      "Promedio Universitario",
+                                                                                  ]
+                                                                                : [value, "Evaluaciones"],
+                                                                            name === "promedio" ? "Promedio" : "Total",
+                                                                        ]}
+                                                                        labelFormatter={(label) => `Período: ${label}`}
+                                                                    />
+                                                                    <Line
+                                                                        type="monotone"
+                                                                        dataKey="promedio"
+                                                                        stroke="#3b82f6"
+                                                                        strokeWidth={3}
+                                                                        dot={{ fill: "#3b82f6", strokeWidth: 2, r: 6 }}
+                                                                        activeDot={{ r: 8, stroke: "#3b82f6", strokeWidth: 2 }}
+                                                                    />
+                                                                </LineChart>
+                                                            </ResponsiveContainer>
+                                                        </div>
+
+                                                        {/* Statistics Summary */}
+                                                        <div className="grid gap-4 md:grid-cols-3">
+                                                            <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                                                <div className="text-lg font-bold text-blue-600">
+                                                                    {(
+                                                                        semesterAverages.reduce(
+                                                                            (sum, item) => sum + item.universityAverage,
+                                                                            0
+                                                                        ) / semesterAverages.length
+                                                                    ).toFixed(2)}
+                                                                </div>
+                                                                <div className="text-xs text-blue-700">Promedio General</div>
+                                                            </div>
+                                                            <div className="text-center p-3 bg-green-50 rounded-lg">
+                                                                <div className="text-lg font-bold text-green-600">
+                                                                    {Math.max(
+                                                                        ...semesterAverages.map((item) => item.universityAverage)
+                                                                    ).toFixed(2)}
+                                                                </div>
+                                                                <div className="text-xs text-green-700">Mejor Semestre</div>
+                                                            </div>
+                                                            <div className="text-center p-3 bg-purple-50 rounded-lg">
+                                                                <div className="text-lg font-bold text-purple-600">
+                                                                    {semesterAverages.length}
+                                                                </div>
+                                                                <div className="text-xs text-purple-700">Períodos Evaluados</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Trend Indicator */}
+                                                        {semesterAverages.length > 1 && (
+                                                            <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                                                                <div className="flex items-center justify-between text-sm">
+                                                                    <span className="font-medium text-blue-800">
+                                                                        Tendencia General:
+                                                                    </span>
+                                                                    <span
+                                                                        className={`font-bold ${
+                                                                            semesterAverages[semesterAverages.length - 1]
+                                                                                .universityAverage >
+                                                                            semesterAverages[0].universityAverage
+                                                                                ? "text-green-600"
+                                                                                : "text-red-600"
+                                                                        }`}
+                                                                    >
+                                                                        {semesterAverages[semesterAverages.length - 1]
+                                                                            .universityAverage >
+                                                                        semesterAverages[0].universityAverage
+                                                                            ? "↗"
+                                                                            : "↘"}
+                                                                        {Math.abs(
+                                                                            semesterAverages[semesterAverages.length - 1]
+                                                                                .universityAverage -
+                                                                                semesterAverages[0].universityAverage
+                                                                        ).toFixed(2)}{" "}
+                                                                        puntos
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })()}
+                                        </CardContent>
+                                    </Card>
                                 </>
                             )}
                         </>
@@ -1392,13 +1314,58 @@ const FeedbackPage = () => {
                             {/* Student Evaluation Visualizations with Charts */}
                             {studentEvaluations.numericResponses.length > 0 && (
                                 <div className="space-y-6">
-                                    <div className="text-center">
-                                        <h3 className="text-xl font-semibold text-primary mb-2">
-                                            📊 Análisis Visual de Evaluaciones
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground">
-                                            Visualización clara de los resultados de evaluación
-                                        </p>
+                                    <div className="text-center space-y-4">
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-primary mb-2">
+                                                📊 Análisis Estadístico Completo
+                                            </h3>
+                                            <p className="text-muted-foreground">
+                                                Visualización avanzada de métricas y tendencias de evaluación
+                                            </p>
+                                        </div>
+
+                                        {/* Overall Statistics Banner */}
+                                        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+                                            <div className="grid gap-4 md:grid-cols-4 text-center">
+                                                <div>
+                                                    <div className="text-2xl font-bold text-primary">
+                                                        {studentEvaluations.numericResponses.reduce(
+                                                            (acc, item) => acc + item.responses.length,
+                                                            0
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">Total Respuestas</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-green-600">
+                                                        {(() => {
+                                                            const allResponses = studentEvaluations.numericResponses.flatMap(
+                                                                (item) => item.responses
+                                                            )
+                                                            return allResponses.length > 0
+                                                                ? (
+                                                                      allResponses.reduce((a, b) => a + b, 0) /
+                                                                      allResponses.length
+                                                                  ).toFixed(1)
+                                                                : "0.0"
+                                                        })()}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">Promedio General</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-blue-600">
+                                                        {studentEvaluations.numericResponses.length}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">Preguntas Numéricas</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-purple-600">
+                                                        {studentEvaluations.textResponses.length}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">Preguntas de Texto</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Summary Cards */}
@@ -1444,127 +1411,357 @@ const FeedbackPage = () => {
                                         </Card>
                                     </div>
 
-                                    {/* Charts Section */}
+                                    {/* Enhanced Statistical Charts Section */}
                                     <div className="grid gap-6 lg:grid-cols-2">
-                                        {/* Numeric Questions Charts */}
-                                        <Card>
+                                        {/* Overall Performance Overview */}
+                                        <Card className="lg:col-span-2">
                                             <CardHeader>
                                                 <CardTitle className="flex items-center gap-2">
-                                                    📊 Distribución de Calificaciones
+                                                    📊 Análisis Estadístico General
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    Visualización de respuestas numéricas por pregunta
+                                                    Vista completa del rendimiento de las evaluaciones
                                                 </CardDescription>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="space-y-4">
-                                                    {studentEvaluations.numericResponses.map(({ question, responses }) => {
-                                                        const avg = responses.reduce((a, b) => a + b, 0) / responses.length
-                                                        const distribution = Array.from({ length: 10 }, (_, i) => {
-                                                            const rating = i + 1
-                                                            const count = responses.filter((r) => Math.floor(r) === rating).length
-                                                            return { name: `${rating}`, value: count }
-                                                        }).filter((item) => item.value > 0)
+                                                <div className="grid gap-6 md:grid-cols-2">
+                                                    {/* Score Distribution */}
+                                                    <div className="space-y-2">
+                                                        <h4 className="font-semibold text-sm">Distribución de Calificaciones</h4>
+                                                        <div className="h-48">
+                                                            <ResponsiveContainer width="100%" height="100%">
+                                                                <PieChart>
+                                                                    <Pie
+                                                                        data={[
+                                                                            {
+                                                                                name: "Excelente (9-10)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter(
+                                                                                            (r) => r >= 9 && r <= 10
+                                                                                        ).length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                            {
+                                                                                name: "Bueno (7-8)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter(
+                                                                                            (r) => r >= 7 && r <= 8
+                                                                                        ).length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                            {
+                                                                                name: "Regular (5-6)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter(
+                                                                                            (r) => r >= 5 && r <= 6
+                                                                                        ).length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                            {
+                                                                                name: "Deficiente (0-4)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter(
+                                                                                            (r) => r >= 0 && r <= 4
+                                                                                        ).length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                        ].filter((item) => item.value > 0)}
+                                                                        cx="50%"
+                                                                        cy="50%"
+                                                                        labelLine={false}
+                                                                        label={({ name, percent }) =>
+                                                                            `${(Number(percent) * 100).toFixed(0)}%`
+                                                                        }
+                                                                        outerRadius={60}
+                                                                        fill="#8884d8"
+                                                                        dataKey="value"
+                                                                    >
+                                                                        {["#22c55e", "#84cc16", "#eab308", "#ef4444"].map(
+                                                                            (color, index) => (
+                                                                                <Cell key={`cell-${index}`} fill={color} />
+                                                                            )
+                                                                        )}
+                                                                    </Pie>
+                                                                    <Tooltip />
+                                                                </PieChart>
+                                                            </ResponsiveContainer>
+                                                        </div>
+                                                    </div>
 
-                                                        return (
-                                                            <div key={question.id} className="space-y-2">
-                                                                <div className="flex justify-between items-center">
-                                                                    <h4 className="font-medium text-sm">{question.title}</h4>
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        Promedio: {avg.toFixed(1)}
-                                                                    </span>
+                                                    {/* Statistical Summary */}
+                                                    <div className="space-y-4">
+                                                        <h4 className="font-semibold text-sm">Resumen Estadístico</h4>
+                                                        {(() => {
+                                                            const allResponses = studentEvaluations.numericResponses.flatMap(
+                                                                (item) => item.responses
+                                                            )
+                                                            if (allResponses.length === 0)
+                                                                return (
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        No hay datos disponibles
+                                                                    </p>
+                                                                )
+
+                                                            const avg =
+                                                                allResponses.reduce((a, b) => a + b, 0) / allResponses.length
+                                                            const min = Math.min(...allResponses)
+                                                            const max = Math.max(...allResponses)
+                                                            const median = allResponses.sort((a, b) => a - b)[
+                                                                Math.floor(allResponses.length / 2)
+                                                            ]
+
+                                                            return (
+                                                                <div className="space-y-3">
+                                                                    <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                                                                        <span className="text-sm font-medium">
+                                                                            Promedio General:
+                                                                        </span>
+                                                                        <span className="text-lg font-bold text-blue-600">
+                                                                            {avg.toFixed(1)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                                                                        <span className="text-sm font-medium">Mediana:</span>
+                                                                        <span className="text-lg font-bold text-green-600">
+                                                                            {median.toFixed(1)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                                                                        <span className="text-sm font-medium">Rango:</span>
+                                                                        <span className="text-lg font-bold text-purple-600">
+                                                                            {min} - {max}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                                                                        <span className="text-sm font-medium">
+                                                                            Total Evaluaciones:
+                                                                        </span>
+                                                                        <span className="text-lg font-bold text-orange-600">
+                                                                            {allResponses.length}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="h-32">
-                                                                    <ResponsiveContainer width="100%" height="100%">
-                                                                        <BarChart data={distribution}>
-                                                                            <XAxis dataKey="name" />
-                                                                            <YAxis />
-                                                                            <Tooltip />
-                                                                            <Bar dataKey="value" fill="#8884d8" />
-                                                                        </BarChart>
-                                                                    </ResponsiveContainer>
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    })}
+                                                            )
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </CardContent>
                                         </Card>
 
-                                        {/* Score Distribution Pie Chart */}
+                                        {/* Performance Trends */}
                                         <Card>
                                             <CardHeader>
                                                 <CardTitle className="flex items-center gap-2">
-                                                    🥧 Distribución General de Puntuaciones
+                                                    📈 Tendencias de Desempeño
                                                 </CardTitle>
-                                                <CardDescription>Distribución global de todas las calificaciones</CardDescription>
+                                                <CardDescription>Evolución del rendimiento promedio por pregunta</CardDescription>
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="h-64">
                                                     <ResponsiveContainer width="100%" height="100%">
-                                                        <PieChart>
-                                                            <Pie
-                                                                data={[
-                                                                    {
-                                                                        name: "0-4",
-                                                                        value: studentEvaluations.numericResponses.reduce(
-                                                                            (acc, item) =>
-                                                                                acc +
-                                                                                item.responses.filter((r) => r >= 0 && r <= 4)
-                                                                                    .length,
-                                                                            0
-                                                                        ),
-                                                                    },
-                                                                    {
-                                                                        name: "5-6",
-                                                                        value: studentEvaluations.numericResponses.reduce(
-                                                                            (acc, item) =>
-                                                                                acc +
-                                                                                item.responses.filter((r) => r >= 5 && r <= 6)
-                                                                                    .length,
-                                                                            0
-                                                                        ),
-                                                                    },
-                                                                    {
-                                                                        name: "7-8",
-                                                                        value: studentEvaluations.numericResponses.reduce(
-                                                                            (acc, item) =>
-                                                                                acc +
-                                                                                item.responses.filter((r) => r >= 7 && r <= 8)
-                                                                                    .length,
-                                                                            0
-                                                                        ),
-                                                                    },
-                                                                    {
-                                                                        name: "9-10",
-                                                                        value: studentEvaluations.numericResponses.reduce(
-                                                                            (acc, item) =>
-                                                                                acc +
-                                                                                item.responses.filter((r) => r >= 9 && r <= 10)
-                                                                                    .length,
-                                                                            0
-                                                                        ),
-                                                                    },
-                                                                ].filter((item) => item.value > 0)}
-                                                                cx="50%"
-                                                                cy="50%"
-                                                                labelLine={false}
-                                                                label={({ name, percent }: { name: string; percent: number }) =>
-                                                                    `${name}: ${(percent * 100).toFixed(0)}%`
-                                                                }
-                                                                outerRadius={80}
-                                                                fill="#8884d8"
-                                                                dataKey="value"
-                                                            >
-                                                                {["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c"].map(
-                                                                    (color, index) => (
-                                                                        <Cell key={`cell-${index}`} fill={color} />
-                                                                    )
-                                                                )}
-                                                            </Pie>
-                                                            <Tooltip />
-                                                        </PieChart>
+                                                        <BarChart
+                                                            data={studentEvaluations.numericResponses.map(
+                                                                ({ question, responses }) => ({
+                                                                    name:
+                                                                        question.title.length > 15
+                                                                            ? question.title.substring(0, 15) + "..."
+                                                                            : question.title,
+                                                                    promedio:
+                                                                        responses.reduce((a, b) => a + b, 0) / responses.length,
+                                                                    total: responses.length,
+                                                                })
+                                                            )}
+                                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                                        >
+                                                            <XAxis
+                                                                dataKey="name"
+                                                                angle={-45}
+                                                                textAnchor="end"
+                                                                height={80}
+                                                                fontSize={10}
+                                                            />
+                                                            <YAxis domain={[0, 10]} />
+                                                            <Tooltip
+                                                                formatter={(value, name) => [
+                                                                    name === "promedio"
+                                                                        ? `${Number(value).toFixed(1)}/10`
+                                                                        : value,
+                                                                    name === "promedio" ? "Promedio" : "Total Respuestas",
+                                                                ]}
+                                                            />
+                                                            <Bar dataKey="promedio" fill="#8884d8" name="Promedio" />
+                                                        </BarChart>
                                                     </ResponsiveContainer>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Score Distribution Histogram */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    📊 Histograma de Calificaciones
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Distribución detallada de todas las calificaciones
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="h-64">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <BarChart
+                                                            data={Array.from({ length: 10 }, (_, i) => {
+                                                                const rating = i + 1
+                                                                const count = studentEvaluations.numericResponses.reduce(
+                                                                    (acc, item) =>
+                                                                        acc +
+                                                                        item.responses.filter((r) => Math.floor(r) === rating)
+                                                                            .length,
+                                                                    0
+                                                                )
+                                                                return {
+                                                                    calificacion: `${rating}`,
+                                                                    cantidad: count,
+                                                                    porcentaje:
+                                                                        studentEvaluations.numericResponses.reduce(
+                                                                            (acc, item) => acc + item.responses.length,
+                                                                            0
+                                                                        ) > 0
+                                                                            ? (count /
+                                                                                  studentEvaluations.numericResponses.reduce(
+                                                                                      (acc, item) => acc + item.responses.length,
+                                                                                      0
+                                                                                  )) *
+                                                                              100
+                                                                            : 0,
+                                                                }
+                                                            }).filter((item) => item.cantidad > 0)}
+                                                        >
+                                                            <XAxis dataKey="calificacion" />
+                                                            <YAxis />
+                                                            <Tooltip
+                                                                formatter={(value, name) => [
+                                                                    name === "cantidad"
+                                                                        ? `${value} respuestas`
+                                                                        : `${Number(value).toFixed(1)}%`,
+                                                                    name === "cantidad" ? "Cantidad" : "Porcentaje",
+                                                                ]}
+                                                            />
+                                                            <Bar dataKey="cantidad" fill="#82ca9d" />
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Performance Categories */}
+                                        <Card className="lg:col-span-2">
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    🏆 Categorías de Desempeño
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Clasificación del rendimiento general por niveles
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid gap-4 md:grid-cols-4">
+                                                    {[
+                                                        {
+                                                            label: "Excelente",
+                                                            range: "9-10",
+                                                            color: "bg-green-500",
+                                                            bgColor: "bg-green-50",
+                                                            textColor: "text-green-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) =>
+                                                                    acc + item.responses.filter((r) => r >= 9 && r <= 10).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: "Bueno",
+                                                            range: "7-8",
+                                                            color: "bg-blue-500",
+                                                            bgColor: "bg-blue-50",
+                                                            textColor: "text-blue-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) =>
+                                                                    acc + item.responses.filter((r) => r >= 7 && r <= 8).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: "Regular",
+                                                            range: "5-6",
+                                                            color: "bg-yellow-500",
+                                                            bgColor: "bg-yellow-50",
+                                                            textColor: "text-yellow-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) =>
+                                                                    acc + item.responses.filter((r) => r >= 5 && r <= 6).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: "Deficiente",
+                                                            range: "0-4",
+                                                            color: "bg-red-500",
+                                                            bgColor: "bg-red-50",
+                                                            textColor: "text-red-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) =>
+                                                                    acc + item.responses.filter((r) => r >= 0 && r <= 4).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                    ].map((category, index) => {
+                                                        const totalResponses = studentEvaluations.numericResponses.reduce(
+                                                            (acc, item) => acc + item.responses.length,
+                                                            0
+                                                        )
+                                                        const percentage =
+                                                            totalResponses > 0 ? (category.count / totalResponses) * 100 : 0
+
+                                                        return (
+                                                            <div
+                                                                key={index}
+                                                                className={`${category.bgColor} p-4 rounded-lg border`}
+                                                            >
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className={`text-sm font-medium ${category.textColor}`}>
+                                                                        {category.label}
+                                                                    </span>
+                                                                    <div className={`w-3 h-3 rounded-full ${category.color}`} />
+                                                                </div>
+                                                                <div className="text-2xl font-bold mb-1">{category.count}</div>
+                                                                <div className="text-xs text-muted-foreground mb-2">
+                                                                    {category.range} puntos
+                                                                </div>
+                                                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                    <div
+                                                                        className={`h-2 rounded-full ${category.color}`}
+                                                                        style={{ width: `${percentage}%` }}
+                                                                    />
+                                                                </div>
+                                                                <div className="text-xs text-muted-foreground mt-1">
+                                                                    {percentage.toFixed(1)}%
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </div>
                                             </CardContent>
                                         </Card>
