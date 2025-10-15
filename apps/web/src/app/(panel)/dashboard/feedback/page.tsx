@@ -2,12 +2,27 @@
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import jsPDF from "jspdf"
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    LineChart,
+    Line,
+    CartesianGrid,
+    Legend,
+} from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationAnswer } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
@@ -1091,31 +1106,273 @@ const FeedbackPage = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <Card>
-                                        <CardHeader className="pb-2">
-                                            <CardTitle>Calificación General</CardTitle>
+                                    {/* Summary Cards */}
+                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-blue-800">
+                                                    Calificación General
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-center">
+                                                    <span className="text-3xl font-bold text-blue-600">{avgRating}</span>
+                                                    <span className="text-lg text-blue-500">/5</span>
+                                                    <p className="text-xs text-blue-600 mt-1">Basado en evaluaciones</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-green-800">
+                                                    Total Evaluaciones
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-center">
+                                                    <span className="text-3xl font-bold text-green-600">
+                                                        {filteredFeedback.length ?? 0}
+                                                    </span>
+                                                    <p className="text-xs text-green-600 mt-1">Comentarios recibidos</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-purple-800">
+                                                    Promedio Detallado
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-center">
+                                                    <span className="text-3xl font-bold text-purple-600">
+                                                        {filteredFeedback.length > 0
+                                                            ? (
+                                                                  filteredFeedback.reduce((acc, item) => acc + item.rating, 0) /
+                                                                  filteredFeedback.length
+                                                              ).toFixed(1)
+                                                            : "0.0"}
+                                                    </span>
+                                                    <span className="text-lg text-purple-500">/10</span>
+                                                    <p className="text-xs text-purple-600 mt-1">Calificación promedio</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-orange-800">Tendencia</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-center">
+                                                    <span className="text-3xl font-bold text-orange-600">
+                                                        {filteredFeedback.length > 1 ? "↗" : "→"}
+                                                    </span>
+                                                    <p className="text-xs text-orange-600 mt-1">
+                                                        {filteredFeedback.length > 1 ? "Mejorando" : "Estable"}
+                                                    </p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+
+                                    {/* Grade History Chart */}
+                                    <Card className="mt-6">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                📈 Historial de Calificaciones por Semestre
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Evolución de las calificaciones por semestre académico
+                                            </CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="flex items-center justify-center">
-                                                <div className="text-center">
-                                                    <span className="text-5xl font-bold">{avgRating}</span>
-                                                    <span className="text-2xl text-muted-foreground">/5</span>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Basado en evaluaciones de estudiantes
-                                                    </p>
+                                            <div className="h-64 w-full">
+                                                {(() => {
+                                                    // Generate semester data based on actual filtered feedback
+                                                    const semesterData = new Map()
+
+                                                    // Process filtered feedback to create semester data
+                                                    filteredFeedback.forEach((feedback) => {
+                                                        const date = new Date(feedback.feedback_date)
+                                                        const year = date.getFullYear()
+                                                        const month = date.getMonth() + 1
+                                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
+
+                                                        if (!semesterData.has(semester)) {
+                                                            semesterData.set(semester, {
+                                                                name: semester,
+                                                                calificacion: [],
+                                                                promedio: 0,
+                                                            })
+                                                        }
+
+                                                        semesterData.get(semester).calificacion.push(feedback.rating)
+                                                    })
+
+                                                    // Calculate averages for each semester
+                                                    const chartData = Array.from(semesterData.values())
+                                                        .map((semester) => {
+                                                            const avgCalificacion =
+                                                                semester.calificacion.reduce((a, b) => a + b, 0) /
+                                                                semester.calificacion.length
+                                                            return {
+                                                                name: semester.name,
+                                                                calificacion: Number(avgCalificacion.toFixed(1)),
+                                                                promedio: Number(avgCalificacion.toFixed(1)),
+                                                            }
+                                                        })
+                                                        .sort((a, b) => a.name.localeCompare(b.name))
+
+                                                    // If no data, show empty state
+                                                    if (chartData.length === 0) {
+                                                        return (
+                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                <div className="text-center">
+                                                                    <p>No hay datos de evaluaciones</p>
+                                                                    <p className="text-sm">para el período seleccionado</p>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    }
+
+                                                    return (
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <LineChart
+                                                                data={chartData}
+                                                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                                            >
+                                                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                                                                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                                                                <YAxis domain={[0, 10]} stroke="#6b7280" fontSize={12} />
+                                                                <Tooltip
+                                                                    contentStyle={{
+                                                                        backgroundColor: "#f8fafc",
+                                                                        border: "1px solid #e2e8f0",
+                                                                        borderRadius: "8px",
+                                                                    }}
+                                                                    formatter={(value: any, name: string) => [
+                                                                        `${value}/10`,
+                                                                        name === "calificacion"
+                                                                            ? "Calificación Actual"
+                                                                            : "Promedio General",
+                                                                    ]}
+                                                                />
+                                                                <Legend />
+                                                                <Line
+                                                                    type="monotone"
+                                                                    dataKey="calificacion"
+                                                                    stroke="#3b82f6"
+                                                                    strokeWidth={3}
+                                                                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
+                                                                    activeDot={{ r: 6, stroke: "#3b82f6", strokeWidth: 2 }}
+                                                                />
+                                                                <Line
+                                                                    type="monotone"
+                                                                    dataKey="promedio"
+                                                                    stroke="#10b981"
+                                                                    strokeWidth={2}
+                                                                    strokeDasharray="5 5"
+                                                                    dot={{ fill: "#10b981", strokeWidth: 2, r: 3 }}
+                                                                />
+                                                            </LineChart>
+                                                        </ResponsiveContainer>
+                                                    )
+                                                })()}
+                                            </div>
+                                            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                                                    <span>Calificación del período</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                                                    <span>Promedio histórico</span>
                                                 </div>
                                             </div>
                                         </CardContent>
                                     </Card>
-                                    <div>
+
+                                    {/* Additional Summary Info */}
+                                    <div className="grid gap-4 md:grid-cols-2">
                                         <Card>
                                             <CardHeader className="pb-2">
-                                                <CardTitle>Participación</CardTitle>
+                                                <CardTitle className="text-lg">📊 Distribución de Calificaciones</CardTitle>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="text-center">
-                                                    <span className="text-3xl font-bold">{filteredFeedback.length ?? 0}</span>
-                                                    <p className="text-sm text-muted-foreground">Total de Evaluaciones</p>
+                                                <div className="space-y-3">
+                                                    {[5, 4, 3, 2, 1].map((rating) => {
+                                                        const count = filteredFeedback.filter(
+                                                            (item) => Math.floor(item.rating / 2) === rating
+                                                        ).length
+                                                        const percentage =
+                                                            filteredFeedback.length > 0
+                                                                ? (count / filteredFeedback.length) * 100
+                                                                : 0
+                                                        return (
+                                                            <div key={rating} className="space-y-1">
+                                                                <div className="flex justify-between text-sm">
+                                                                    <span>
+                                                                        {rating} estrella{rating !== 1 ? "s" : ""}
+                                                                    </span>
+                                                                    <span>
+                                                                        {count} ({percentage.toFixed(1)}%)
+                                                                    </span>
+                                                                </div>
+                                                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                    <div
+                                                                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
+                                                                        style={{ width: `${percentage}%` }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        <Card>
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-lg">📋 Información del Período</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-sm text-muted-foreground">
+                                                            Período seleccionado:
+                                                        </span>
+                                                        <span className="text-sm font-medium">
+                                                            {options.timeframe
+                                                                ? new Date(options.timeframe.split(" - ")[0]).toLocaleDateString(
+                                                                      "es-ES",
+                                                                      {
+                                                                          month: "short",
+                                                                          year: "numeric",
+                                                                      }
+                                                                  )
+                                                                : "Todo el tiempo"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-sm text-muted-foreground">Materia:</span>
+                                                        <span className="text-sm font-medium">
+                                                            {subjects.find((s) => s.id === options.subjectId)?.name || "Todas"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-sm text-muted-foreground">Última evaluación:</span>
+                                                        <span className="text-sm font-medium">
+                                                            {filteredFeedback.length > 0
+                                                                ? new Date(
+                                                                      Math.max(
+                                                                          ...filteredFeedback.map((f) =>
+                                                                              new Date(f.feedback_date).getTime()
+                                                                          )
+                                                                      )
+                                                                  ).toLocaleDateString("es-ES")
+                                                                : "N/A"}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -1132,33 +1389,226 @@ const FeedbackPage = () => {
                         </div>
                     ) : (
                         <>
-                            {/* Student Evaluation Visualizations */}
+                            {/* Student Evaluation Visualizations with Charts */}
                             {studentEvaluations.numericResponses.length > 0 && (
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold text-primary">📊 Preguntas Numéricas</h3>
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        {studentEvaluations.numericResponses.map(({ question, responses }) => (
-                                            <NumericQuestionChart key={question.id} question={question} responses={responses} />
-                                        ))}
+                                <div className="space-y-6">
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-semibold text-primary mb-2">
+                                            📊 Análisis Visual de Evaluaciones
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Visualización clara de los resultados de evaluación
+                                        </p>
                                     </div>
-                                </div>
-                            )}
 
-                            {studentEvaluations.textResponses.length > 0 && (
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold text-primary">📝 Preguntas de Texto</h3>
-                                    <div className="grid gap-4 md:grid-cols-1">
-                                        {studentEvaluations.textResponses.map(({ question, responses }) => (
-                                            <TextQuestionDisplay key={question.id} question={question} responses={responses} />
-                                        ))}
+                                    {/* Summary Cards */}
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-blue-800">
+                                                    Total Respuestas
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-2xl font-bold text-blue-600">
+                                                    {studentEvaluations.numericResponses.reduce(
+                                                        (acc, item) => acc + item.responses.length,
+                                                        0
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-green-800">
+                                                    Preguntas Numéricas
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-2xl font-bold text-green-600">
+                                                    {studentEvaluations.numericResponses.length}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-medium text-purple-800">
+                                                    Preguntas de Texto
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="text-2xl font-bold text-purple-600">
+                                                    {studentEvaluations.textResponses.length}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
                                     </div>
+
+                                    {/* Charts Section */}
+                                    <div className="grid gap-6 lg:grid-cols-2">
+                                        {/* Numeric Questions Charts */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    📊 Distribución de Calificaciones
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Visualización de respuestas numéricas por pregunta
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="space-y-4">
+                                                    {studentEvaluations.numericResponses.map(({ question, responses }) => {
+                                                        const avg = responses.reduce((a, b) => a + b, 0) / responses.length
+                                                        const distribution = Array.from({ length: 10 }, (_, i) => {
+                                                            const rating = i + 1
+                                                            const count = responses.filter((r) => Math.floor(r) === rating).length
+                                                            return { name: `${rating}`, value: count }
+                                                        }).filter((item) => item.value > 0)
+
+                                                        return (
+                                                            <div key={question.id} className="space-y-2">
+                                                                <div className="flex justify-between items-center">
+                                                                    <h4 className="font-medium text-sm">{question.title}</h4>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        Promedio: {avg.toFixed(1)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="h-32">
+                                                                    <ResponsiveContainer width="100%" height="100%">
+                                                                        <BarChart data={distribution}>
+                                                                            <XAxis dataKey="name" />
+                                                                            <YAxis />
+                                                                            <Tooltip />
+                                                                            <Bar dataKey="value" fill="#8884d8" />
+                                                                        </BarChart>
+                                                                    </ResponsiveContainer>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Score Distribution Pie Chart */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    🥧 Distribución General de Puntuaciones
+                                                </CardTitle>
+                                                <CardDescription>Distribución global de todas las calificaciones</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="h-64">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={[
+                                                                    {
+                                                                        name: "0-4",
+                                                                        value: studentEvaluations.numericResponses.reduce(
+                                                                            (acc, item) =>
+                                                                                acc +
+                                                                                item.responses.filter((r) => r >= 0 && r <= 4)
+                                                                                    .length,
+                                                                            0
+                                                                        ),
+                                                                    },
+                                                                    {
+                                                                        name: "5-6",
+                                                                        value: studentEvaluations.numericResponses.reduce(
+                                                                            (acc, item) =>
+                                                                                acc +
+                                                                                item.responses.filter((r) => r >= 5 && r <= 6)
+                                                                                    .length,
+                                                                            0
+                                                                        ),
+                                                                    },
+                                                                    {
+                                                                        name: "7-8",
+                                                                        value: studentEvaluations.numericResponses.reduce(
+                                                                            (acc, item) =>
+                                                                                acc +
+                                                                                item.responses.filter((r) => r >= 7 && r <= 8)
+                                                                                    .length,
+                                                                            0
+                                                                        ),
+                                                                    },
+                                                                    {
+                                                                        name: "9-10",
+                                                                        value: studentEvaluations.numericResponses.reduce(
+                                                                            (acc, item) =>
+                                                                                acc +
+                                                                                item.responses.filter((r) => r >= 9 && r <= 10)
+                                                                                    .length,
+                                                                            0
+                                                                        ),
+                                                                    },
+                                                                ].filter((item) => item.value > 0)}
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                labelLine={false}
+                                                                label={({ name, percent }: { name: string; percent: number }) =>
+                                                                    `${name}: ${(percent * 100).toFixed(0)}%`
+                                                                }
+                                                                outerRadius={80}
+                                                                fill="#8884d8"
+                                                                dataKey="value"
+                                                            >
+                                                                {["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c"].map(
+                                                                    (color, index) => (
+                                                                        <Cell key={`cell-${index}`} fill={color} />
+                                                                    )
+                                                                )}
+                                                            </Pie>
+                                                            <Tooltip />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+
+                                    {/* Text Responses Section */}
+                                    {studentEvaluations.textResponses.length > 0 && (
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    📝 Comentarios y Observaciones
+                                                </CardTitle>
+                                                <CardDescription>Respuestas cualitativas de los estudiantes</CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="grid gap-4 md:grid-cols-1">
+                                                    {studentEvaluations.textResponses.map(({ question, responses }) => (
+                                                        <div key={question.id} className="space-y-3">
+                                                            <h4 className="font-semibold text-primary">{question.title}</h4>
+                                                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                                                {responses.map((response, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className="p-3 bg-muted rounded-lg border-l-4 border-l-primary"
+                                                                    >
+                                                                        <p className="text-sm leading-relaxed">{response}</p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
                                 </div>
                             )}
 
                             {studentEvaluations.numericResponses.length === 0 &&
                                 studentEvaluations.textResponses.length === 0 && (
                                     <div className="flex items-center justify-center w-full h-32">
-                                        <p className="text-sm text-muted-foreground">No hay datos de evaluacion estudiante</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            No hay datos de evaluación disponibles para mostrar gráficos
+                                        </p>
                                     </div>
                                 )}
                         </>
