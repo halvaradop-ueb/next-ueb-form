@@ -142,7 +142,7 @@ export const StudentForm = ({ session }: StudentFormProps) => {
     }
 
     const handleSend = async () => {
-        if (!session || !session.user || !session.user.id) return
+        if (!session?.user?.id) return
         await addFeedback(formData, session.user.id)
 
         if (formData.subject && formData.answers) {

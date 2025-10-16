@@ -9,7 +9,7 @@ export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
     const [sliderValue, setSliderValue] = useState(0)
 
     const handleSliderChange = (value: number[]) => {
-        const newValue = value[0] as number
+        const newValue = value[0]
         setSliderValue(newValue)
         setFormData("rating", newValue)
     }

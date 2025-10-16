@@ -41,7 +41,7 @@ export const RenderQuestion = <T extends FormSchema>({ question, formData, error
                 <div className="space-y-2">
                     <div className={`space-y-2 ${false ? "border border-red-500 rounded-md p-2" : ""}`}>
                         {question.options?.map((option, index) => (
-                            <div key={index} className="flex items-center space-x-2">
+                            <div key={`${option}-${index}`} className="flex items-center space-x-2">
                                 <Checkbox
                                     id={`${question.id}-${option}`}
                                     checked={(formData.answers[question.id] as string[]).includes(option)}

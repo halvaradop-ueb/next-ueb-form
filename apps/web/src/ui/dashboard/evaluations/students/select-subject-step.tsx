@@ -13,7 +13,7 @@ export const SelectSubjectStep = ({ formData, errors, setFormData }: SelectSubje
 
     useEffect(() => {
         const fetchData = async () => {
-            const [professors] = await Promise.all([getProfessors()])
+            const professors = await getProfessors()
             setProfessors(professors)
         }
         fetchData()
