@@ -1,6 +1,7 @@
 import Image from "next/image"
 import logo1 from "@/assets/MGOP_EGDP.png"
 import logo2 from "@/assets/GDPCirclo.png"
+
 const DashboardPage = () => {
     return (
         <section className="flex flex-col items-center justify-center px-4 py-8 text-center">

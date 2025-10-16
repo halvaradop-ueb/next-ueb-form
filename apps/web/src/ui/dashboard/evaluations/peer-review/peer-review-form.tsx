@@ -19,6 +19,7 @@ import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSession } from "next-auth/react"
 import { ConfirmAction } from "@/ui/common/confirm-action"
+import { PeerReviewFormProps } from "@/lib/@types/props"
 
 export interface PeerReviewState {
     professor: string
@@ -37,7 +38,7 @@ const initialselectedOptionsState: PeerReviewState = {
     findings: "",
 }
 
-export const PeerReviewForm = () => {
+export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
     const [activeTab, setActiveTab] = useState("new")
     const [subjects, setSubjects] = useState<SubjectService[]>([])
     const [professors, setProfessors] = useState<ProfessorService[]>([])
@@ -49,7 +50,6 @@ export const PeerReviewForm = () => {
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [confirmText, setConfirmText] = useState("")
     const [evaluationToDelete, setEvaluationToDelete] = useState<any>(null)
-    const session = useSession()
 
     const handleChange = (key: keyof PeerReviewState, value: any) => {
         setSelectedOptions((prev) => ({
@@ -70,7 +70,7 @@ export const PeerReviewForm = () => {
             const professorId = selectedOptions.professor
             await updateCoevaluation(professorId, editingId, selectedOptions)
         } else {
-            await addCoevaluation(selectedOptions, session.data?.user?.id!)
+            await addCoevaluation(selectedOptions, session.user?.id!)
         }
         await loadCoevaluations()
         resetForm()

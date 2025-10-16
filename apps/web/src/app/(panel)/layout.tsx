@@ -1,14 +1,14 @@
 import Image from "next/image"
+import { PropsWithChildren } from "react"
 import { SessionProvider } from "next-auth/react"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/dashboard/sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { ChildrenProps } from "@/lib/@types/props"
 import logoUEB from "@/assets/ueb.png"
 
-const PanelLayout = async ({ children }: ChildrenProps) => {
+const PanelLayout = async ({ children }: PropsWithChildren) => {
     return (
-        <SessionProvider>
+        <section>
             <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>
@@ -27,7 +27,7 @@ const PanelLayout = async ({ children }: ChildrenProps) => {
                     <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
                 </SidebarInset>
             </SidebarProvider>
-        </SessionProvider>
+        </section>
     )
 }
 

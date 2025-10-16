@@ -1,6 +1,7 @@
 import type { Dispatch, MouseEventHandler, SetStateAction } from "react"
 import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
 import type { FormSchema, Step, StudentFormState } from "./types"
+import type { Session } from "next-auth"
 
 export interface ChildrenProps {
     children: React.ReactNode
@@ -69,4 +70,12 @@ export interface ConfirmActionProps {
     open: boolean
     setOpen: Dispatch<SetStateAction<boolean>>
     onDelete: () => void
+}
+
+export interface PeerReviewFormProps {
+    session: Session
+}
+
+export interface ProfileProps {
+    session: Session
 }
