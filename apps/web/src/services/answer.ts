@@ -39,17 +39,10 @@ export const addAutoEvaluationAnswer = async (
             answers: formData.answers,
         }
 
-        console.log("📤 [FRONTEND] Sending auto-evaluation data:", autoEvaluationData)
-
         const request = createRequest("POST", "auto-evaluation", autoEvaluationData)
         const result = await createService(request)
 
-        console.log("📥 [FRONTEND] Response received:", result)
-
         if (result && result.message === "Auto-evaluation answer submitted successfully") {
-            console.log("✅ [FRONTEND] Auto-evaluation submitted successfully")
-            console.log("📊 [FRONTEND] Response:", result)
-
             return {
                 success: true,
                 data: result,
@@ -84,16 +77,11 @@ export const verifyAutoEvaluationData = async (
     semester?: string
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
     try {
-        console.log("🔍 [FRONTEND] Verifying auto-evaluation data:", { professorId, subjectId, semester })
-
         const params = new URLSearchParams({ professorId, subjectId })
         if (semester) params.append("semester", semester)
 
         const request = createRequest("GET", `auto-evaluation/verify?${params}`)
         const result = await createService(request)
-
-        console.log("📥 [FRONTEND] Verification response:", result)
-
         if (result && result.data) {
             return {
                 success: true,
@@ -115,13 +103,6 @@ export const addStudentEvaluation = async (
     answers: Record<string, any>
 ): Promise<boolean> => {
     try {
-        console.log("📤 [FRONTEND] Sending student evaluation data:", {
-            professorId,
-            subjectId,
-            semester,
-            answers,
-        })
-
         const request = createRequest("POST", "answers/student-evaluation", {
             professorId,
             subjectId,
@@ -129,9 +110,6 @@ export const addStudentEvaluation = async (
             answers,
         })
         const result = await createService(request)
-
-        console.log("📥 [FRONTEND] Student evaluation response:", result)
-
         return !!result
     } catch (error) {
         console.error("❌ [FRONTEND] Error in addStudentEvaluation:", error)
@@ -144,21 +122,12 @@ export const getStudentEvaluationsBySubject = async (
     semester?: string
 ): Promise<Array<{ question_id: string; response: string; id_professor: string; semester?: string }>> => {
     try {
-        console.log("🔍 [FRONTEND] Fetching student evaluations:", { subjectId, semester })
-
         const params = new URLSearchParams({ subjectId })
         if (semester) {
             params.append("semester", semester)
-            console.log("🔍 [FRONTEND] Appended semester to params:", semester)
         }
-
         const request = createRequest("GET", `answers/student-evaluations?${params}`)
-        console.log("🔍 [FRONTEND] Request URL:", request.url)
-
         const result = await createService(request)
-
-        console.log("📥 [FRONTEND] Student evaluations response:", result)
-
         return result?.data || []
     } catch (error) {
         console.error("❌ [FRONTEND] Error fetching student evaluations:", error)

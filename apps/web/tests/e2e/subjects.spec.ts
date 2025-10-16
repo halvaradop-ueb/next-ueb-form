@@ -1,11 +1,14 @@
 import { test, expect } from "@playwright/test"
 
+const email = process.env.NEXT_PLAYWRIGHT_USER_EMAIL!
+const password = process.env.NEXT_PLAYWRIGHT_USER_PASSWORD!
+
 test.describe.serial("Gestión de Etapas", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("http://localhost:3000/auth")
 
-        await page.getByLabel("Correo electrónico").fill("carlos@example.com")
-        await page.getByLabel("Contraseña").fill("123")
+        await page.getByLabel("Correo electrónico").fill(email)
+        await page.getByLabel("Contraseña").fill(password)
 
         const form = page.locator("form#credentials-form")
         await form.getByRole("button", { name: "Iniciar sesión" }).click()

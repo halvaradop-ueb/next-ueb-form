@@ -2,8 +2,6 @@ import { supabase } from "../lib/supabase.js"
 
 export const getAllCoEvaluations = async (professorId?: string, subjectId?: string) => {
     try {
-        console.log("🔍 [API] Fetching co-evaluations with filters:", { professorId, subjectId })
-
         let query = supabase.from("co_evaluation").select(`
                 id,
                 professor_id,
@@ -30,7 +28,6 @@ export const getAllCoEvaluations = async (professorId?: string, subjectId?: stri
             throw new Error(`Error fetching co-evaluations: ${error.message}`)
         }
 
-        console.log("📊 [API] Filtered co-evaluations found:", data?.length || 0)
         return data || []
     } catch (error) {
         console.error("Error fetching co-evaluations:", error)

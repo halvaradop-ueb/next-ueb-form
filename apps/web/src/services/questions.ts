@@ -123,11 +123,6 @@ export const getQuestionTitleById = async (questionId: string): Promise<string |
 
 export const getQuestionTitleByAnswerId = async (answerValueId: string): Promise<string | null> => {
     try {
-        console.log("🔍 [DEBUG] Fetching question title for answer value ID:", answerValueId)
-
-        console.log("❌ [DEBUG] This function is deprecated. The backend should already provide question_id.")
-        console.log("❌ [DEBUG] Answer value ID:", answerValueId)
-
         return null
     } catch (error) {
         console.error("❌ [DEBUG] Error in deprecated getQuestionTitleByAnswerId:", error)
@@ -137,14 +132,11 @@ export const getQuestionTitleByAnswerId = async (answerValueId: string): Promise
 
 export const getQuestionsBySubject = async (subjectId: string): Promise<Question[]> => {
     try {
-        console.log("🔍 [FRONTEND] getQuestionsBySubject called with:", subjectId)
         const response = await fetch(`${API_ENDPOINT}/questions?subject=${subjectId}`)
-        console.log("🔍 [FRONTEND] Response status:", response.status)
         if (!response.ok) {
             throw new Error(`Error fetching questions for subject: ${response.statusText}`)
         }
         const data = await response.json()
-        console.log("🔍 [FRONTEND] Questions data:", data)
         return Array.isArray(data.questions) ? data.questions : []
     } catch (error) {
         console.error("❌ [FRONTEND] Error en getQuestionsBySubject:", error)

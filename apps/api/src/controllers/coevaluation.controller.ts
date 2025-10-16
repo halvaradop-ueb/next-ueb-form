@@ -6,15 +6,11 @@ export const getAllCoEvaluationsController = async (req: Request, res: Response)
     try {
         const { professorId, subjectId } = req.query
 
-        console.log("🔍 [API] Coevaluation filters:", { professorId, subjectId })
-
         const coEvaluations = await getAllCoEvaluations(professorId as string, subjectId as string)
 
         if (!coEvaluations) {
             return res.status(404).json(errorResponse("No co-evaluations found"))
         }
-
-        console.log("📊 [API] Found coevaluations:", coEvaluations.length)
         res.json(coEvaluations)
     } catch (error) {
         console.error("❌ [API] Error in getAllCoEvaluationsController:", error)
