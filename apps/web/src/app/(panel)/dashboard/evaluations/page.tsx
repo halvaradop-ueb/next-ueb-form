@@ -1,7 +1,11 @@
 import { Evaluations } from "@/ui/evaluations/evaluations"
+import { Metadata } from "next"
 
-export const EvaluationsPage = () => {
-    return <Evaluations />
+export const metadata: Metadata = {
+    title: "Evaluacion Docente",
+    description: "Evaluacion Docente",
 }
 
-export default EvaluationsPage
+export default function EvaluationPage() {
+    return null
+}

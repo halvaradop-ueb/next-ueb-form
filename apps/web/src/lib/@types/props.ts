@@ -86,3 +86,10 @@ export interface UserFormProps {
     user: User
     setUsers: Dispatch<SetStateAction<User[]>>
 }
+
+export interface FormEvaluationProps {
+    session: Session
+}
+
+export interface StudentFormProps extends FormEvaluationProps {}
+export interface ProfessorFormProps extends FormEvaluationProps {}

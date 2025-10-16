@@ -6,8 +6,6 @@ export const metadata: Metadata = {
     description: "Panel de administración de etapas para estudiantes y docentes de la Universidad El Bosque.",
 }
 
-export const StagesPage = () => {
+export default function StagesPage() {
     return <Stages />
 }
-
-export default StagesPage

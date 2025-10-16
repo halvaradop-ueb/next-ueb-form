@@ -6,8 +6,6 @@ export const metadata: Metadata = {
     description: "Panel de administración de retroalimentación para estudiantes y docentes de la Universidad El Bosque.",
 }
 
-export const FeedbackPage = () => {
+export default function FeedbackPage() {
     return <FeedbackManagement />
 }
-
-export default FeedbackPage

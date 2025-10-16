@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: "Formulario de evaluación entre pares para estudiantes de la Universidad El Bosque.",
 }
 
-const PeerReviewPage = async () => {
+export default async function PeerReviewPage() {
     const session = await auth()
     if (!session?.user) {
         redirect("/auth")
@@ -22,5 +22,3 @@ const PeerReviewPage = async () => {
         </div>
     )
 }
-
-export default PeerReviewPage

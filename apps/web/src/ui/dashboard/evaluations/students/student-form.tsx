@@ -1,6 +1,5 @@
 "use client"
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { z } from "zod"
 import { Card, CardContent } from "@/components/ui/card"
 import { HeaderSteps } from "../header-steps"
@@ -16,6 +15,7 @@ import { defaultAnswer, generateSchema } from "@/lib/utils"
 import { getQuestionsForStudents } from "@/services/questions"
 import type { Step, StudentFormState } from "@/lib/@types/types"
 import { FeedbackFormSchema, AssignedStudentSchema } from "@/lib/schema"
+import { StudentFormProps } from "@/lib/@types/props"
 
 const getSteps = (
     formData: StudentFormState,
@@ -64,10 +64,8 @@ const getSteps = (
 const calculateSemester = (): string => {
     const now = new Date()
     const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() + 1 // getMonth() returns 0-11
+    const currentMonth = now.getMonth() + 1
 
-    // If it's after June, it's the second semester of the current year
-    // If it's January to June, it's the first semester of the current year
     if (currentMonth > 6) {
         return `${currentYear} - 2`
     } else {
@@ -81,8 +79,7 @@ const initialState = (questions: Question[]) => {
     } as StudentFormState
 }
 
-export const StudentForm = () => {
-    const { data: session } = useSession()
+export const StudentForm = ({ session }: StudentFormProps) => {
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
@@ -146,19 +143,11 @@ export const StudentForm = () => {
 
     const handleSend = async () => {
         if (!session || !session.user || !session.user.id) return
-        // Only send feedback data to the feedback table, not to answervalue table
-        // Send feedback data to the feedback table
         await addFeedback(formData, session.user.id)
 
-        // Send student evaluation data to the studenevalua table
         if (formData.subject && formData.answers) {
             const currentSemester = calculateSemester()
-            await addStudentEvaluation(
-                session.user.id, // professorId (student is evaluating as a professor in this context)
-                formData.subject,
-                currentSemester,
-                formData.answers
-            )
+            await addStudentEvaluation(session.user.id, formData.subject, currentSemester, formData.answers)
         }
         setIndexStep(0)
         setFormData(() => initialState(questions))
@@ -184,7 +173,7 @@ export const StudentForm = () => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep] && steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep]?.component}</div>
                     <FooterSteps
                         steps={steps}
                         indexStep={indexStep}

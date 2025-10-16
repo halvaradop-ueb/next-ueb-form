@@ -6,8 +6,6 @@ export const metadata: Metadata = {
     description: "Panel de administración de cuestionarios para estudiantes y docentes de la Universidad El Bosque.",
 }
 
-export const QuizzesPage = () => {
+export default function QuizzesPage() {
     return <Quizzes />
 }
-
-export default QuizzesPage
