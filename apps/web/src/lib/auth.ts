@@ -1,8 +1,7 @@
 import NextAuth, { User } from "next-auth"
-import Google from "next-auth/providers/google"
+import Google, { type GoogleProfile } from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials"
 import { authenticate, checkAndRegisterUser } from "@/services/auth"
-import { GoogleProfile } from "./@types/types"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
     providers: [

@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 import { z } from "zod"
-import { useSession } from "next-auth/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { HeaderSteps } from "../header-steps"
 import { FooterSteps } from "../footer-steps"
@@ -14,6 +13,7 @@ import { AssignedProfessorSchema } from "@/lib/schema"
 import { defaultAnswer, generateSchema } from "@/lib/utils"
 import { getQuestionsForProfessors } from "@/services/questions"
 import type { ProfessorFormState, Step } from "@/lib/@types/types"
+import { ProfessorFormProps } from "@/lib/@types/props"
 
 const getSteps = (
     formData: ProfessorFormState,
@@ -73,8 +73,7 @@ const initialState = (questions: Question[]) => {
     } as ProfessorFormState
 }
 
-export const ProffessorForm = () => {
-    const { data: session } = useSession()
+export const ProffessorForm = ({ session }: ProfessorFormProps) => {
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
     const [formData, setFormData] = useState<ProfessorFormState>({} as ProfessorFormState)
@@ -156,7 +155,6 @@ export const ProffessorForm = () => {
                 console.error("❌ [PROFESSOR FORM] Failed to submit auto-evaluation:", result.error)
                 console.error("❌ [PROFESSOR FORM] Error details:", result.details)
 
-                // Show detailed error message to user
                 let errorMessage = `❌ Error al enviar la auto-evaluación:\n\n${result.error}`
 
                 if (result.details?.errors && Array.isArray(result.details.errors)) {
