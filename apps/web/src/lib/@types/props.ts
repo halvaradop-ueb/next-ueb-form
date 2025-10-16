@@ -1,6 +1,8 @@
 import type { Dispatch, MouseEventHandler, SetStateAction } from "react"
 import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
 import type { FormSchema, Step, StudentFormState } from "./types"
+import type { Session } from "next-auth"
+import type { User } from "@ueb/types"
 
 export interface ChildrenProps {
     children: React.ReactNode
@@ -70,3 +72,24 @@ export interface ConfirmActionProps {
     setOpen: Dispatch<SetStateAction<boolean>>
     onDelete: () => void
 }
+
+export interface PeerReviewFormProps {
+    session: Session
+}
+
+export interface ProfileProps {
+    session: Session
+}
+
+export interface UserFormProps {
+    idle: "create" | "edit"
+    user: User
+    setUsers: Dispatch<SetStateAction<User[]>>
+}
+
+export interface FormEvaluationProps {
+    session: Session
+}
+
+export interface StudentFormProps extends FormEvaluationProps {}
+export interface ProfessorFormProps extends FormEvaluationProps {}

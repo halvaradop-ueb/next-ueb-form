@@ -1,4 +1,5 @@
 import { z } from "zod"
+export type { GoogleProfile } from "next-auth/providers/google"
 
 export interface FormState {
     idle: "idle" | "loading" | "success" | "error"
@@ -36,25 +37,6 @@ export interface ProfessorFormState {
     professorId: string
     semester: string
     answers: Record<string, string | string[]>
-}
-
-/**
- * Google Profile Interface used by NextAuth
- * @see https://next-auth.js.org/providers/google
- */
-export interface GoogleProfile {
-    iss: string
-    azp: string
-    aud: string
-    sub: string
-    email: string
-    email_verified: boolean
-    at_hash: string
-    name: string
-    picture: string
-    given_name: string
-    iat: number
-    exp: number
 }
 
 export type FormSchema = StudentFormState | ProfessorFormState
