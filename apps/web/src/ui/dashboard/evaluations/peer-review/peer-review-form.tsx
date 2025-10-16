@@ -17,7 +17,6 @@ import {
 import { Save, Edit, Trash2, X } from "lucide-react"
 import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useSession } from "next-auth/react"
 import { ConfirmAction } from "@/ui/common/confirm-action"
 import { PeerReviewFormProps } from "@/lib/@types/props"
 
@@ -146,11 +145,6 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
                         <CardHeader className="text-left">
                             <CardTitle className="justify-start flex items-center gap-2">
                                 {isEditing ? "Editar Coevaluación" : "Coevalulación"}
-                                {isEditing && (
-                                    <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                )}
                             </CardTitle>
                             <CardDescription className="justify-start">
                                 {isEditing ? "Modifica la coevaluación existente" : "Desarrollo de la coevaluación"}
@@ -246,7 +240,12 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex justify-end">
+                        <CardFooter className="flex justify-end gap-x-2">
+                            {isEditing && (
+                                <Button variant="destructive" onClick={handleCancelEdit}>
+                                    Cancelar
+                                </Button>
+                            )}
                             <Button
                                 disabled={isLoading || !selectedOptions.professor || !selectedOptions.subject}
                                 onClick={handleAddPeerReview}

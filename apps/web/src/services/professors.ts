@@ -22,7 +22,6 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
 export const addCoevaluation = async (peerReview: PeerReview, admin: string) => {
     if (!admin) return
     const request = createRequest("POST", `professors/${peerReview.professor}/co_evaluation`, { ...peerReview, admin })
-    console.log("Request en addCoevaluation:", request)
     return await createService(request)
 }
 
