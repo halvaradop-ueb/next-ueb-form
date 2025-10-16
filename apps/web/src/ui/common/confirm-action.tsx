@@ -19,7 +19,7 @@ export const ConfirmAction = ({ title, text, setText, open, setOpen, onDelete }:
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={setOpen} modal>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle className="text-red-600">Confirmar eliminación de {title}</DialogTitle>

@@ -2,6 +2,7 @@ import type { Dispatch, MouseEventHandler, SetStateAction } from "react"
 import type { Question, SubjectAssignmentWithProfessorService, SubjectService } from "./services"
 import type { FormSchema, Step, StudentFormState } from "./types"
 import type { Session } from "next-auth"
+import type { User } from "@ueb/types"
 
 export interface ChildrenProps {
     children: React.ReactNode
@@ -78,4 +79,10 @@ export interface PeerReviewFormProps {
 
 export interface ProfileProps {
     session: Session
+}
+
+export interface UserFormProps {
+    idle: "create" | "edit"
+    user: User
+    setUsers: Dispatch<SetStateAction<User[]>>
 }

@@ -1,6 +1,5 @@
 import Image from "next/image"
 import { PropsWithChildren } from "react"
-import { SessionProvider } from "next-auth/react"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/dashboard/sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"

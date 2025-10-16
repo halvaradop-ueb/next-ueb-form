@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 import { redirect } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -11,10 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Save, Edit, UserPlus, FileText, Settings } from "lucide-react"
 import { getUserById, updateUser } from "@/services/users"
-import type { UserService } from "@/lib/@types/services"
 import type { Role } from "@/lib/@types/types"
 import { supabase } from "@/lib/supabase/client"
-import { ProfileProps } from "@/lib/@types/props"
+import type { ProfileProps } from "@/lib/@types/props"
+import type { User } from "@ueb/types/user"
 
 const roles: Record<Role, string> = {
     admin: "Administrador",
@@ -25,7 +24,7 @@ const roles: Record<Role, string> = {
 export const Profile = ({ session }: ProfileProps) => {
     const [activeTab, setActiveTab] = useState("personal")
     const [isEditing, setIsEditing] = useState(false)
-    const [user, setUser] = useState<UserService>({} as UserService)
+    const [user, setUser] = useState<User>({} as User)
 
     const handleChange = (field: string, value: string) => {
         setUser((previous) => ({
@@ -50,7 +49,6 @@ export const Profile = ({ session }: ProfileProps) => {
     }, [])
 
     if (!session) {
-        console.log("No session found, redirecting to /auth", session)
         redirect("/auth")
     }
 
@@ -145,7 +143,7 @@ export const Profile = ({ session }: ProfileProps) => {
 
                 <div className="space-y-6">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full justify-start">
                             <TabsTrigger value="personal">Información Personal</TabsTrigger>
                         </TabsList>
 
@@ -166,7 +164,7 @@ export const Profile = ({ session }: ProfileProps) => {
                                                     onChange={(e) => handleChange("first_name", e.target.value)}
                                                 />
                                             ) : (
-                                                <p className="rounded-md border border-input bg-background px-3 py-2">
+                                                <p className="rounded-md border border-input bg-background px-3 h-9 flex items-center whitespace-nowrap overflow-hidden">
                                                     {user.first_name}
                                                 </p>
                                             )}
@@ -180,7 +178,7 @@ export const Profile = ({ session }: ProfileProps) => {
                                                     onChange={(e) => handleChange("last_name", e.target.value)}
                                                 />
                                             ) : (
-                                                <p className="rounded-md border border-input bg-background px-3 py-2">
+                                                <p className="rounded-md border border-input bg-background px-3 h-9 flex items-center whitespace-nowrap overflow-hidden">
                                                     {user.last_name}
                                                 </p>
                                             )}
@@ -197,7 +195,9 @@ export const Profile = ({ session }: ProfileProps) => {
                                                 onChange={(e) => handleChange("email", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">{user.email}</p>
+                                            <p className="rounded-md border border-input bg-background px-3 h-9 flex items-center whitespace-nowrap overflow-hidden">
+                                                {user.email}
+                                            </p>
                                         )}
                                     </div>
 
@@ -210,7 +210,7 @@ export const Profile = ({ session }: ProfileProps) => {
                                                 onChange={(e) => handleChange("phone", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
+                                            <p className="rounded-md border border-input bg-background px-3 h-9 flex items-center whitespace-nowrap overflow-hidden">
                                                 {user.phone ? user.phone : "+57"}
                                             </p>
                                         )}
@@ -225,7 +225,7 @@ export const Profile = ({ session }: ProfileProps) => {
                                                 onChange={(e) => handleChange("address", e.target.value)}
                                             />
                                         ) : (
-                                            <p className="rounded-md border border-input bg-background px-3 py-2">
+                                            <p className="rounded-md border border-input bg-background px-3 h-9 flex items-center whitespace-nowrap overflow-hidden">
                                                 {user.address}
                                             </p>
                                         )}

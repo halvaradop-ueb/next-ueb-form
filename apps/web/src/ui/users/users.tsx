@@ -12,16 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, UserPlus, MoreHorizontal } from "lucide-react"
-import type { Role } from "@/lib/@types/types"
 import type { User } from "@ueb/types/user"
 import { addUser, deleteUser, getUsers, updateUser, uploadUserPhoto } from "@/services/users"
 import { ConfirmAction } from "@/ui/common/confirm-action"
-
-const roles: Record<Role, string> = {
-    admin: "Administrador",
-    professor: "Docente",
-    student: "Estudiante", // Kept for type compatibility but not used in UI
-}
+import { roles } from "@/lib/roles"
 
 const initialState: User = {
     id: "",
@@ -42,7 +36,7 @@ export const Users = () => {
     const [searchQuery, setSearchQuery] = useState("")
     const [users, setUsers] = useState<User[]>([])
     const [error, setError] = useState<string | null>(null)
-    const [idleForm, setIdleForm] = useState<"create" | "edit">("create")
+    const [idleForm, setIdleForm] = useState<"create" | "edit" | "delete">("create")
     const [newUser, setNewUser] = useState<User>(initialState)
     const [textConfirm, setTextConfirm] = useState("")
     const [isOpenConfirm, setIsOpenConfirm] = useState(false)
@@ -61,6 +55,12 @@ export const Users = () => {
         setIdleForm("edit")
         setNewUser({ ...user, password: "" })
         document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
+    }
+
+    const handleSetDelete = (user: User) => {
+        setIdleForm("delete")
+        setNewUser({ ...initialState, id: user.id } as User)
+        setIsOpenConfirm(true)
     }
 
     const handleSubmit = async () => {
@@ -83,6 +83,9 @@ export const Users = () => {
     const handleDeleteUser = async (userId: string) => {
         deleteUser(userId)
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId))
+        setIsOpenConfirm(false)
+        setIdleForm("create")
+        setNewUser(initialState)
     }
 
     const handleCancelEdit = () => {
@@ -233,19 +236,11 @@ export const Users = () => {
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
                                                                     className="text-red-600 hover:cursor-pointer"
-                                                                    onClick={() => setIsOpenConfirm(true)}
+                                                                    onClick={() => handleSetDelete(user)}
                                                                 >
                                                                     Eliminar
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
-                                                            <ConfirmAction
-                                                                title="usuario"
-                                                                text={textConfirm}
-                                                                setText={setTextConfirm}
-                                                                open={isOpenConfirm}
-                                                                setOpen={setIsOpenConfirm}
-                                                                onDelete={() => handleDeleteUser(user.id)}
-                                                            />
                                                         </DropdownMenu>
                                                     </TableCell>
                                                 </TableRow>
@@ -376,6 +371,14 @@ export const Users = () => {
                                 )}
                             </CardFooter>
                         </Card>
+                        <ConfirmAction
+                            title="usuario"
+                            text={textConfirm}
+                            setText={setTextConfirm}
+                            open={isOpenConfirm}
+                            setOpen={setIsOpenConfirm}
+                            onDelete={() => handleDeleteUser(newUser.id)}
+                        />
                     </TabsContent>
                 </Tabs>
             </div>
