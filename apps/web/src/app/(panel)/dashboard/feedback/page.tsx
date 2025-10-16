@@ -1877,15 +1877,9 @@ const FeedbackPage = () => {
                                                                           {answer.question_title ||
                                                                               `Pregunta ${answer.answer_id}`}
                                                                       </h4>
-                                                                      <p className="text-sm text-muted-foreground">
-                                                                          ID de respuesta: {answer.answer_id}
-                                                                      </p>
                                                                   </div>
                                                                   <div className="text-right">
                                                                       <p className="text-xs text-muted-foreground">Profesor</p>
-                                                                      <p className="text-xs font-mono">
-                                                                          {answer.professor_id?.slice(0, 8) || "N/A"}...
-                                                                      </p>
                                                                   </div>
                                                               </div>
                                                               <div className="bg-background p-4 rounded border">
@@ -1994,9 +1988,6 @@ const FeedbackPage = () => {
                                                     📅 Coevaluación{" "}
                                                     {new Date(coevaluation.created_at).toLocaleDateString("es-ES")}
                                                 </CardTitle>
-                                                <span className="text-xs text-muted-foreground font-mono">
-                                                    ID: {coevaluation.id.slice(0, 8)}...
-                                                </span>
                                             </div>
                                         </CardHeader>
                                         <CardContent className="p-6">
