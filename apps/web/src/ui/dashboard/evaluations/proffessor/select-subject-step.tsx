@@ -14,7 +14,7 @@ export const SelectSubject = ({ formData, setFormData }: SelectSubjectStepProps<
 
     useEffect(() => {
         const fetchSubjects = async () => {
-            if (!session || !session.user) return
+            if (!session?.user) return
             const subjects = await getSubjectsByProfessorId(session.user.id!)
             setSubjects(subjects)
         }

@@ -117,9 +117,8 @@ export const ProffessorForm = ({ session }: ProfessorFormProps) => {
     }
 
     const handleSend = async () => {
-        if (!session || !session.user || !session.user.id) return
+        if (!session?.user?.id) return
 
-        // Add professor ID and semester to form data
         const currentSemester = calculateSemester()
         const formDataWithMeta = {
             ...formData,
@@ -127,28 +126,10 @@ export const ProffessorForm = ({ session }: ProfessorFormProps) => {
             semester: currentSemester,
         }
 
-        console.log("🚀 [PROFESSOR FORM] Starting auto-evaluation submission...")
-        console.log("📋 [PROFESSOR FORM] Form data being sent:", formDataWithMeta)
-
         try {
             const result = await addAutoEvaluationAnswer(formDataWithMeta, session.user.id)
 
             if (result.success) {
-                console.log("✅ [PROFESSOR FORM] Auto-evaluation submitted successfully!")
-                console.log("📊 [PROFESSOR FORM] Submission summary:", result.data?.summary)
-
-                // Show success message to user
-                alert(
-                    `✅ Auto-evaluación enviada exitosamente!\n\n` +
-                        `📚 Asignatura: ${formData.subject}\n` +
-                        `👤 Profesor ID: ${session.user.id}\n` +
-                        `📅 Semestre: ${currentSemester}\n` +
-                        `📝 Respuestas: ${result.data?.summary?.answersCount || 0}\n` +
-                        `💾 Registros guardados: ${result.data?.summary?.recordsFound || 0}\n\n` +
-                        `🔍 Puedes verificar los datos guardados en la consola del navegador.`
-                )
-
-                // Reset form
                 setIndexStep(0)
                 setFormData(() => initialState(questions))
             } else {
@@ -194,7 +175,7 @@ export const ProffessorForm = ({ session }: ProfessorFormProps) => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps[indexStep] && steps[indexStep].component}</div>
+                    <div className="min-h-[300px]">{steps[indexStep]?.component}</div>
                     <FooterSteps
                         indexStep={indexStep}
                         steps={steps}
