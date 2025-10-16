@@ -1,7 +1,7 @@
 import jsPDF from "jspdf"
 import type { Report } from "./@types/reports"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
-import { ReportState } from "@/app/(panel)/dashboard/reports/page"
+import { ReportState } from "@/ui/report/report"
 import logoUEB from "@/assets/ueb.png"
 import logoMGOP from "@/assets/MGOP_EGDP.png"
 import logoGDP from "@/assets/GDPCirclo.png"

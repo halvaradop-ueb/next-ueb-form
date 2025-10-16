@@ -14,7 +14,7 @@ import {
     updateCoevaluation,
     deleteCoevaluation,
 } from "@/services/professors"
-import { Save, Edit, Trash2, X } from "lucide-react"
+import { Save, Edit, Trash2 } from "lucide-react"
 import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmAction } from "@/ui/common/confirm-action"

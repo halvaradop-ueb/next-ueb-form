@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
+import { PropsWithChildren } from "react"
 import { Geist } from "next/font/google"
-import { ChildrenProps } from "@/lib/@types/props"
 import "@/ui/globals.css"
 
 const geistSans = Geist({
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description: "Evaluación Docente",
 }
 
-export default async function RootLayout({ children }: Readonly<ChildrenProps>) {
+export default async function RootLayout({ children }: Readonly<PropsWithChildren>) {
     return (
         <html lang="en">
             <body className={`${geistSans.variable} antialiased`}>{children}</body>

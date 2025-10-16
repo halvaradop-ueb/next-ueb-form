@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -10,19 +9,15 @@ import { Download } from "lucide-react"
 import jsPDF from "jspdf"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
-import type { Feedback, ProfessorService, SubjectService, AutoEvaluationAnswer } from "@/lib/@types/services"
+import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
-import { getProfessors } from "@/services/professors"
+import { getProfessors, getAllCoevaluations } from "@/services/professors"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import { getFeedback } from "@/services/feedback"
 import { getAutoEvaluationAnswers } from "@/services/auto-evaluation"
-import { getQuestionTitleById, getQuestionTitleByAnswerId } from "@/services/questions"
 import { getQuestionsBySubject } from "@/services/questions"
 import { getStudentEvaluationsBySubject } from "@/services/answer"
-import { getAllCoevaluations } from "@/services/professors"
 import { API_ENDPOINT } from "@/services/utils"
-import type { AutoEvaluationBySemester } from "@/lib/@types/services"
-import type { Question } from "@/lib/@types/services"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -30,14 +25,12 @@ const initialState = {
     timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
 } as FeedbackState
 
-// Helper function to separate questions by type
 const getQuestionsByType = (questions: Question[]) => {
     const numericQuestions = questions.filter((q) => q.question_type === "numeric")
     const textQuestions = questions.filter((q) => q.question_type === "text")
     return { numericQuestions, textQuestions }
 }
 
-// Helper function to get student evaluation responses for specific questions
 const getStudentEvaluationsByQuestionType = async (
     questions: Question[],
     subjectId: string,
