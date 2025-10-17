@@ -101,32 +101,6 @@ export const filterByPeriod = (feedback: Feedback[], date: string) => {
         return dateItem >= start && dateItem <= end
     })
 }
-
-export const formatSemester = (semesterString: string): string => {
-    if (!semesterString || !semesterString.includes(" - ")) {
-        return semesterString
-    }
-
-    try {
-        const [startDateString] = semesterString.split(" - ")
-        const startDate = new Date(startDateString)
-
-        if (isNaN(startDate.getTime())) {
-            return semesterString
-        }
-
-        const year = startDate.getFullYear()
-        const month = startDate.getMonth() + 1
-
-        // Determine semester: Jan-Jun = 1, Jul-Dec = 2
-        const semester = month <= 6 ? 1 : 2
-
-        return `${year}-${semester}`
-    } catch (error) {
-        console.error("Error formatting semester:", error)
-        return semesterString
-    }
-}
 export const createQuestionSchema = (type: Pick<Question, "question_type">) => {
     switch (type.question_type) {
         case "text":
