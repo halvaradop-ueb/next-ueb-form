@@ -10,7 +10,7 @@ export const getAllCoEvaluations = async (professorId?: string, subjectId?: stri
                 subject_id,
                 findings,
                 improvement_plan,
-                created_at,
+                semestre,
                 subject:subject_id (id, name, description),
                 professor:professor_id (id, first_name, last_name, email),
                 admin:admin_id (id, first_name, last_name, email)
