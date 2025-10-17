@@ -185,8 +185,574 @@ const TextQuestionDisplay = ({ question, responses }: { question: Question; resp
     )
 }
 
+// Clean and simplified chart drawing function that matches the web page visuals
+const drawChartsInPDF = (
+    doc: jsPDF,
+    marginLeft: number,
+    y: number,
+    studentEvaluations: {
+        numericResponses: Array<{ question: Question; responses: number[] }>
+        textResponses: Array<{ question: Question; responses: string[] }>
+    }
+): number => {
+    let currentY = y
+
+    if (studentEvaluations.numericResponses.length === 0) {
+        doc.setFontSize(10)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos gráficos disponibles", marginLeft, currentY)
+        return currentY + 20
+    }
+
+    // 1. Statistical Overview - matches the "Análisis Estadístico General" section
+    currentY = drawStatisticalOverview(doc, marginLeft, currentY, studentEvaluations)
+    currentY += 2 // Small spacing between charts
+
+    // 2. Score Distribution - matches the pie chart data
+    currentY = drawScoreDistribution(doc, marginLeft, currentY, studentEvaluations)
+    currentY += 2 // Small spacing between charts
+
+    // 3. Performance Trends - matches "Tendencias de Desempeño"
+    currentY = drawPerformanceTrends(doc, marginLeft, currentY, studentEvaluations)
+    currentY += 2 // Small spacing between charts
+
+    // 4. Histogram - matches "Histograma de Calificaciones"
+    currentY = drawHistogram(doc, marginLeft, currentY, studentEvaluations)
+    currentY += 2 // Small spacing between charts
+
+    // 5. Performance Categories - matches "Categorías de Desempeño"
+    currentY = drawPerformanceCategories(doc, marginLeft, currentY, studentEvaluations)
+    currentY += 2 // Small spacing between charts
+
+    // 6. Trend Indicator - matches the "Tendencia General" section from the web page
+    currentY = drawTrendIndicator(doc, marginLeft, currentY, studentEvaluations)
+
+    return currentY
+}
+
+// Clean statistical overview that matches the web page
+const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 200) {
+        doc.addPage()
+        return 20
+    }
+
+    // Main container with proper margins
+    const containerWidth = 170
+    const containerHeight = 90
+    doc.setFillColor(240, 248, 255)
+    doc.rect(marginLeft, y, containerWidth, containerHeight, "F")
+    doc.setDrawColor(30, 144, 255)
+    doc.setLineWidth(0.5)
+    doc.rect(marginLeft, y, containerWidth, containerHeight)
+
+    // Title
+    doc.setFontSize(10)
+    doc.setTextColor(30, 64, 175)
+    doc.setFont("helvetica", "bold")
+    doc.text("ANÁLISIS ESTADÍSTICO GENERAL", marginLeft + 5, y + 8)
+    const currentY = y + 15
+
+    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
+
+    if (allResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos disponibles para mostrar", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    // Calculate statistics
+    const avg = allResponses.reduce((a: number, b: number) => a + b, 0) / allResponses.length
+    const min = Math.min(...allResponses)
+    const max = Math.max(...allResponses)
+    const median = [...allResponses].sort((a, b) => a - b)[Math.floor(allResponses.length / 2)]
+
+    // Left side: Score distribution bars
+    const pieX = marginLeft + 5
+    const pieY = currentY
+
+    const categories = [
+        { name: "Excelente (9-10)", range: [9, 10], color: [34, 197, 94] },
+        { name: "Bueno (7-8)", range: [7, 8], color: [59, 130, 246] },
+        { name: "Regular (5-6)", range: [5, 6], color: [245, 158, 11] },
+        { name: "Deficiente (0-4)", range: [0, 4], color: [239, 68, 68] },
+    ]
+
+    categories.forEach((category, index) => {
+        const count = allResponses.filter((r: number) => r >= category.range[0] && r <= category.range[1]).length
+        if (count > 0) {
+            const barY = pieY + index * 6
+            const percentage = (count / allResponses.length) * 100
+            const barWidth = Math.max((percentage / 100) * 45, 2) // Minimum width for visibility
+
+            // Bar
+            doc.setFillColor(category.color[0], category.color[1], category.color[2])
+            doc.rect(pieX + 15, barY, barWidth, 5, "F")
+
+            // Label
+            doc.setFontSize(6)
+            doc.setTextColor(51, 65, 85)
+            doc.setFont("helvetica", "normal")
+            doc.text(`${category.name}: ${count}`, pieX + 65, barY + 3)
+        }
+    })
+
+    // Right side: Statistics boxes
+    const summaryX = marginLeft + 85
+    const stats = [
+        { label: "Promedio General", value: avg.toFixed(1), color: [59, 130, 246] },
+        { label: "Mediana", value: median.toFixed(1), color: [34, 197, 94] },
+        { label: "Rango", value: `${min} - ${max}`, color: [245, 158, 11] },
+        { label: "Total Evaluaciones", value: allResponses.length.toString(), color: [139, 92, 246] },
+    ]
+
+    stats.forEach((stat, index) => {
+        const statY = currentY + index * 12
+
+        // Background box
+        doc.setFillColor(stat.color[0], stat.color[1], stat.color[2])
+        doc.rect(summaryX, statY, 55, 10, "F")
+
+        // Value (white text)
+        doc.setFontSize(7)
+        doc.setTextColor(255, 255, 255)
+        doc.setFont("helvetica", "bold")
+        doc.text(stat.value, summaryX + 27, statY + 6)
+
+        // Label (gray text below)
+        doc.setFontSize(6)
+        doc.setTextColor(51, 65, 85)
+        doc.setFont("helvetica", "normal")
+        doc.text(stat.label, summaryX, statY + 14)
+    })
+
+    return y + containerHeight + 5
+}
+
+// Clean score distribution chart
+const drawScoreDistribution = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 200) {
+        doc.addPage()
+        return 20
+    }
+
+    // Container with proper spacing
+    const containerWidth = 170
+    const containerHeight = 70
+    doc.setFillColor(248, 250, 252)
+    doc.rect(marginLeft, y, containerWidth, containerHeight, "F")
+    doc.setDrawColor(71, 85, 105)
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft, y, containerWidth, containerHeight)
+
+    // Title
+    doc.setFontSize(9)
+    doc.setTextColor(51, 65, 85)
+    doc.setFont("helvetica", "bold")
+    doc.text("DISTRIBUCIÓN DE CALIFICACIONES", marginLeft + 5, y + 8)
+    const currentY = y + 15
+
+    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
+    if (allResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos disponibles", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    const categories = [
+        { name: "Excelente (9-10)", range: [9, 10], color: [34, 197, 94] },
+        { name: "Bueno (7-8)", range: [7, 8], color: [59, 130, 246] },
+        { name: "Regular (5-6)", range: [5, 6], color: [245, 158, 11] },
+        { name: "Deficiente (0-4)", range: [0, 4], color: [239, 68, 68] },
+    ]
+
+    categories.forEach((category, index) => {
+        const count = allResponses.filter((r: number) => r >= category.range[0] && r <= category.range[1]).length
+        if (count > 0) {
+            const barY = currentY + index * 8
+            const percentage = (count / allResponses.length) * 100
+            const barWidth = Math.max((percentage / 100) * 100, 2)
+
+            // Label
+            doc.setFontSize(7)
+            doc.setTextColor(51, 65, 85)
+            doc.setFont("helvetica", "bold")
+            doc.text(`${category.name}:`, marginLeft + 5, barY + 4)
+
+            // Background bar
+            doc.setFillColor(240, 240, 240)
+            doc.rect(marginLeft + 55, barY, 100, 6, "F")
+
+            // Value bar
+            doc.setFillColor(category.color[0], category.color[1], category.color[2])
+            doc.rect(marginLeft + 55, barY, barWidth, 6, "F")
+
+            // Percentage
+            doc.setFontSize(7)
+            doc.setTextColor(51, 65, 85)
+            doc.setFont("helvetica", "normal")
+            doc.text(`${percentage.toFixed(1)}%`, marginLeft + 160, barY + 4)
+        }
+    })
+
+    return y + containerHeight + 5
+}
+
+// Clean performance trends chart
+const drawPerformanceTrends = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 200) {
+        doc.addPage()
+        return 20
+    }
+
+    // Container with proper height calculation
+    const maxQuestions = Math.min(studentEvaluations.numericResponses.length, 5)
+    const containerHeight = 15 + maxQuestions * 12 + 5
+
+    doc.setFillColor(254, 240, 238)
+    doc.rect(marginLeft, y, 170, containerHeight, "F")
+    doc.setDrawColor(251, 146, 60)
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft, y, 170, containerHeight)
+
+    doc.setFontSize(9)
+    doc.setTextColor(194, 65, 12)
+    doc.setFont("helvetica", "bold")
+    doc.text("TENDENCIAS DE DESEMPEÑO", marginLeft + 5, y + 8)
+    const currentY = y + 15
+
+    if (studentEvaluations.numericResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos disponibles para mostrar", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    // Draw bars for each question (max 5)
+    for (let i = 0; i < maxQuestions; i++) {
+        const item = studentEvaluations.numericResponses[i]
+        const avgScore = item.responses.reduce((a: number, b: number) => a + b, 0) / item.responses.length
+        const barY = currentY + i * 10
+        const barWidth = Math.max((avgScore / 10) * 90, 2)
+        const barHeight = 8
+
+        // Background bar
+        doc.setFillColor(254, 249, 231)
+        doc.rect(marginLeft + 5, barY, 90, barHeight, "F")
+
+        // Value bar
+        doc.setFillColor(251, 146, 60)
+        doc.rect(marginLeft + 5, barY, barWidth, barHeight, "F")
+
+        // Question label (truncated)
+        const questionTitle = item.question.title.length > 20 ? item.question.title.substring(0, 20) + "..." : item.question.title
+
+        doc.setFontSize(6)
+        doc.setTextColor(51, 65, 85)
+        doc.setFont("helvetica", "normal")
+        doc.text(`${questionTitle}: ${avgScore.toFixed(1)}`, marginLeft + 100, barY + 5)
+    }
+
+    return y + containerHeight + 5
+}
+
+// Clean histogram chart
+const drawHistogram = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 200) {
+        doc.addPage()
+        return 20
+    }
+
+    // Container with proper dimensions
+    const containerWidth = 170
+    const chartHeight = 50
+    const containerHeight = 15 + chartHeight + 15
+
+    doc.setFillColor(248, 250, 252)
+    doc.rect(marginLeft, y, containerWidth, containerHeight, "F")
+    doc.setDrawColor(71, 85, 105)
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft, y, containerWidth, containerHeight)
+
+    doc.setFontSize(9)
+    doc.setTextColor(51, 65, 85)
+    doc.setFont("helvetica", "bold")
+    doc.text("HISTOGRAMA DE CALIFICACIONES", marginLeft + 5, y + 8)
+    const currentY = y + 15
+
+    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
+    if (allResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos disponibles para mostrar", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    // Create histogram data (0-10 scale)
+    const histogramData = Array.from({ length: 11 }, (_, i) => {
+        const score = i
+        const count = allResponses.filter((response: number) => Math.floor(response) === score).length
+        return { score, count }
+    }).filter((item) => item.count > 0)
+
+    if (histogramData.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos para mostrar histograma", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    // Draw histogram bars
+    const maxCount = Math.max(...histogramData.map((d) => d.count))
+    const barWidth = 6
+    const availableWidth = 140
+    const spacing = (availableWidth - histogramData.length * barWidth) / (histogramData.length - 1)
+
+    histogramData.forEach((data, index) => {
+        const barX = marginLeft + 15 + index * (barWidth + spacing)
+        const barHeight = Math.max((data.count / maxCount) * chartHeight, 2)
+
+        // Bar
+        doc.setFillColor(107, 114, 128)
+        doc.rect(barX, currentY + chartHeight - barHeight, barWidth, barHeight, "F")
+
+        // Labels
+        doc.setFontSize(6)
+        doc.setTextColor(51, 65, 85)
+        doc.setFont("helvetica", "normal")
+        doc.text(`${data.score}`, barX + 2, currentY + chartHeight + 6)
+        doc.text(`${data.count}`, barX + 2, currentY + chartHeight + 12)
+    })
+
+    return y + containerHeight + 5
+}
+
+// Clean performance categories chart
+const drawPerformanceCategories = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 180) {
+        doc.addPage()
+        return 20
+    }
+
+    // Container with proper dimensions
+    const containerWidth = 170
+    const containerHeight = 65
+
+    doc.setFillColor(248, 250, 252)
+    doc.rect(marginLeft, y, containerWidth, containerHeight, "F")
+    doc.setDrawColor(71, 85, 105)
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft, y, containerWidth, containerHeight)
+
+    // Title
+    doc.setFontSize(9)
+    doc.setTextColor(51, 65, 85)
+    doc.setFont("helvetica", "bold")
+    doc.text("CATEGORÍAS DE DESEMPEÑO", marginLeft + 5, y + 8)
+    const currentY = y + 15
+
+    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
+    if (allResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos disponibles", marginLeft + 5, currentY)
+        return y + containerHeight
+    }
+
+    const categories = [
+        { label: "Excelente", range: "9-10", color: [34, 197, 94], bgColor: [220, 252, 231], textColor: [21, 128, 61] },
+        { label: "Bueno", range: "7-8", color: [59, 130, 246], bgColor: [219, 234, 254], textColor: [29, 78, 216] },
+        { label: "Regular", range: "5-6", color: [245, 158, 11], bgColor: [254, 243, 199], textColor: [154, 52, 18] },
+        { label: "Deficiente", range: "0-4", color: [239, 68, 68], bgColor: [254, 228, 226], textColor: [220, 38, 38] },
+    ]
+
+    categories.forEach((category, index) => {
+        const count = allResponses.filter((r: number) => {
+            const num = Number(r)
+            switch (category.range) {
+                case "9-10":
+                    return num >= 9 && num <= 10
+                case "7-8":
+                    return num >= 7 && num <= 8
+                case "5-6":
+                    return num >= 5 && num <= 6
+                case "0-4":
+                    return num >= 0 && num <= 4
+                default:
+                    return false
+            }
+        }).length
+
+        if (count > 0) {
+            const boxY = currentY + index * 10
+            const percentage = (count / allResponses.length) * 100
+
+            // Category box
+            doc.setFillColor(category.bgColor[0], category.bgColor[1], category.bgColor[2])
+            doc.rect(marginLeft + 5, boxY, 160, 9, "F")
+            doc.setDrawColor(category.color[0], category.color[1], category.color[2])
+            doc.setLineWidth(0.3)
+            doc.rect(marginLeft + 5, boxY, 160, 9)
+
+            // Label and count
+            doc.setFontSize(7)
+            doc.setTextColor(category.textColor[0], category.textColor[1], category.textColor[2])
+            doc.setFont("helvetica", "bold")
+            doc.text(`${category.label} (${category.range})`, marginLeft + 10, boxY + 6)
+
+            // Progress bar background
+            doc.setFillColor(240, 240, 240)
+            doc.rect(marginLeft + 75, boxY + 1, 55, 7, "F")
+
+            // Progress bar value
+            const progressBarWidth = Math.max((percentage / 100) * 55, 2)
+            doc.setFillColor(category.color[0], category.color[1], category.color[2])
+            doc.rect(marginLeft + 75, boxY + 1, progressBarWidth, 7, "F")
+
+            // Percentage
+            doc.setFontSize(6)
+            doc.setTextColor(51, 65, 85)
+            doc.setFont("helvetica", "normal")
+            doc.text(`${percentage.toFixed(1)}%`, marginLeft + 135, boxY + 6)
+        }
+    })
+
+    return y + containerHeight + 5
+}
+
+// Draw trend indicator that matches the "Tendencia General" section from the web page
+const drawTrendIndicator = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    if (y > 200) {
+        doc.addPage()
+        return 20
+    }
+
+    // Container with proper dimensions
+    const containerWidth = 170
+    const containerHeight = 20
+
+    doc.setFillColor(248, 250, 252)
+    doc.rect(marginLeft, y, containerWidth, containerHeight, "F")
+    doc.setDrawColor(59, 130, 246)
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft, y, containerWidth, containerHeight)
+
+    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
+    if (allResponses.length === 0) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("No hay datos para calcular tendencia", marginLeft + 5, y + 12)
+        return y + containerHeight
+    }
+
+    // Calculate if we have enough data for trend analysis (at least 2 questions)
+    if (studentEvaluations.numericResponses.length < 2) {
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text("Se necesitan al menos 2 preguntas para calcular tendencia", marginLeft + 5, y + 12)
+        return y + containerHeight
+    }
+
+    // Calculate trend based on first vs last question performance
+    const firstQuestion = studentEvaluations.numericResponses[0]
+    const lastQuestion = studentEvaluations.numericResponses[studentEvaluations.numericResponses.length - 1]
+
+    const firstAvg = firstQuestion.responses.reduce((a: number, b: number) => a + b, 0) / firstQuestion.responses.length
+    const lastAvg = lastQuestion.responses.reduce((a: number, b: number) => a + b, 0) / lastQuestion.responses.length
+
+    const isImproving = lastAvg > firstAvg
+    const trendDifference = Math.abs(lastAvg - firstAvg)
+
+    // Title
+    doc.setFontSize(8)
+    doc.setTextColor(30, 64, 175)
+    doc.setFont("helvetica", "bold")
+    doc.text("TENDENCIA GENERAL:", marginLeft + 5, y + 12)
+
+    // Trend indicator (arrow and difference)
+    const trendX = marginLeft + 130
+    if (isImproving) {
+        doc.setTextColor(34, 197, 94) // Green for improvement
+        doc.setFont("helvetica", "bold")
+        doc.text("↗", trendX, y + 8)
+        doc.text(`+${trendDifference.toFixed(2)}`, trendX + 8, y + 8)
+    } else {
+        doc.setTextColor(239, 68, 68) // Red for decline
+        doc.setFont("helvetica", "bold")
+        doc.text("↘", trendX, y + 8)
+        doc.text(`-${trendDifference.toFixed(2)}`, trendX + 8, y + 8)
+    }
+
+    // Subtitle
+    doc.setFontSize(7)
+    doc.setTextColor(100, 100, 100)
+    doc.setFont("helvetica", "normal")
+    doc.text("puntos de diferencia", trendX + 25, y + 8)
+
+    // Description
+    doc.setFontSize(7)
+    doc.setTextColor(51, 65, 85)
+    doc.setFont("helvetica", "normal")
+    doc.text(`Primera pregunta (${firstAvg.toFixed(1)}) vs Última pregunta (${lastAvg.toFixed(1)})`, marginLeft + 5, y + 16)
+
+    return y + containerHeight + 5
+}
+
+// Clean chart generation function
+const generateChartsInPDF = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
+    return drawChartsInPDF(doc, marginLeft, y, studentEvaluations)
+}
+
+// Simplified test function to verify basic chart drawing
+const drawTestCharts = (doc: jsPDF, marginLeft: number, y: number): number => {
+    let currentY = y
+
+    // Test container
+    doc.setFillColor(240, 248, 255)
+    doc.rect(marginLeft - 2, currentY - 2, 166, 50, "F")
+    doc.setDrawColor(30, 144, 255)
+    doc.setLineWidth(0.5)
+    doc.rect(marginLeft - 2, currentY - 2, 166, 50)
+
+    // Test title
+    doc.setFontSize(10)
+    doc.setTextColor(30, 64, 175)
+    doc.setFont("helvetica", "bold")
+    doc.text("GRAFICOS DE PRUEBA", marginLeft, currentY + 6)
+    currentY += 15
+
+    // Test bars
+    const testData = [
+        { label: "Categoria A", value: 75, color: [34, 197, 94] },
+        { label: "Categoria B", value: 50, color: [59, 130, 246] },
+        { label: "Categoria C", value: 25, color: [245, 158, 11] },
+    ]
+
+    testData.forEach((item, index) => {
+        const barY = currentY + index * 8
+        const barWidth = (item.value / 100) * 100
+
+        // Label
+        doc.setFontSize(8)
+        doc.setTextColor(51, 65, 85)
+        doc.setFont("helvetica", "normal")
+        doc.text(`${item.label}:`, marginLeft + 5, barY + 4)
+
+        // Bar
+        doc.setFillColor(item.color[0], item.color[1], item.color[2])
+        doc.rect(marginLeft + 50, barY, barWidth, 6, "F")
+
+        // Value
+        doc.text(`${item.value}%`, marginLeft + 155, barY + 4)
+    })
+
+    return currentY + 50
+}
+
 // PDF Generation Function
-const generateFeedbackPDF = (
+const generateFeedbackPDF = async (
     professors: ProfessorService[],
     subjects: SubjectService[],
     options: FeedbackState,
@@ -227,18 +793,22 @@ const generateFeedbackPDF = (
 
     // PDF Header with better styling
     doc.setFillColor(30, 41, 59)
-    doc.rect(0, 0, 210, 35, "F")
+    doc.rect(0, 0, 210, 40, "F")
 
     // Main title
-    doc.setFontSize(18)
+    doc.setFontSize(20)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("REPORTE DE RETROALIMENTACIÓN", 105, 20, { align: "center" })
+    doc.text("REPORTE DE RETROALIMENTACIÓN", 105, 22, { align: "center" })
 
     // Subtitle
-    doc.setFontSize(10)
+    doc.setFontSize(11)
     doc.setFont("helvetica", "normal")
-    doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 28, { align: "center" })
+    doc.text("Sistema de Evaluación Docente", 105, 30, { align: "center" })
+
+    // University name
+    doc.setFontSize(9)
+    doc.text("Universidad El Bosque", 105, 36, { align: "center" })
 
     // Report Info with better spacing
     y = 45
@@ -318,6 +888,13 @@ const generateFeedbackPDF = (
     doc.text(`* Total de comentarios: ${feedback.length}`, marginLeft + 8, indicatorY + 16)
     y += 15
 
+    // Add a note about the charts section
+    doc.setFontSize(7)
+    doc.setTextColor(100, 100, 100)
+    doc.setFont("helvetica", "italic")
+    doc.text("→ Las gráficas detalladas se encuentran en la siguiente sección", marginLeft, y)
+    y += 12
+
     // Comments Section with visual enhancement
     if (filteredFeedback.length > 0) {
         if (y > 200) {
@@ -348,28 +925,86 @@ const generateFeedbackPDF = (
                 y = 20
             }
 
-            // Comment box with better proportions
-            const commentBoxHeight = 22
-            doc.setFillColor(254, 249, 231)
-            doc.rect(marginLeft, y - 3, 165, commentBoxHeight, "F")
-            doc.setDrawColor(255, 193, 7)
+            // Comment header with professor info
+            const headerHeight = 12
+            doc.setFillColor(254, 243, 199)
+            doc.rect(marginLeft, y - 3, 165, headerHeight, "F")
+            doc.setDrawColor(245, 158, 11)
             doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, commentBoxHeight)
+            doc.rect(marginLeft, y - 3, 165, headerHeight)
 
             doc.setFontSize(8)
+            doc.setTextColor(154, 52, 18)
             doc.setFont("helvetica", "bold")
-            doc.text(`${index + 1}. ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
-            y += 6
+            doc.text(`Profesor: ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
+            y += 8
+
+            // Rating and date info
+            doc.setFontSize(7)
+            doc.setTextColor(73, 41, 14)
+            doc.setFont("helvetica", "normal")
+            doc.text(
+                `Calificacion: ${item.rating}/10 | Fecha: ${new Date(item.feedback_date).toLocaleDateString("es-ES")}`,
+                marginLeft + 3,
+                y
+            )
+            y += 8
+
+            // Comment content box
+            const commentLines = doc.splitTextToSize(item.feedback_text, 155)
+            const commentBoxHeight = commentLines.length * 4 + 8
+
+            doc.setFillColor(254, 249, 231)
+            doc.rect(marginLeft, y - 2, 165, commentBoxHeight, "F")
+            doc.setDrawColor(255, 193, 7)
+            doc.setLineWidth(0.3)
+            doc.rect(marginLeft, y - 2, 165, commentBoxHeight)
 
             doc.setFontSize(7)
+            doc.setTextColor(101, 67, 33)
             doc.setFont("helvetica", "normal")
-            doc.text(`   * Calificacion: ${item.rating}/10 | Fecha: ${item.feedback_date}`, marginLeft + 3, y + 1)
-            y += 5
+            doc.text("Comentario:", marginLeft + 3, y + 2)
+            y += 6
 
-            const commentLines = doc.splitTextToSize(`   Comentario: ${item.feedback_text}`, 155)
-            doc.text(commentLines, marginLeft + 3, y + 1)
-            y += commentLines.length * 4 + 10
+            doc.text(commentLines, marginLeft + 3, y)
+            y += commentLines.length * 4 + 12
         })
+    }
+
+    // Charts Section - use the same data and calculations as the feedback page
+    const hasStudentEvaluations = studentEvaluations.numericResponses.length > 0
+    const hasFeedbackData = feedback.length > 0
+
+    if (hasStudentEvaluations || hasFeedbackData) {
+        // Always start charts section on a new page if we're not at the beginning
+        if (y > 50) {
+            doc.addPage()
+            y = 20
+        }
+
+        // Section header - matching the page style
+        doc.setFillColor(59, 130, 246)
+        doc.rect(marginLeft - 5, y - 3, 170, 12, "F")
+        doc.setDrawColor(29, 78, 216)
+        doc.setLineWidth(0.8)
+        doc.rect(marginLeft - 5, y - 3, 170, 12)
+
+        doc.setFontSize(12)
+        doc.setTextColor(255, 255, 255)
+        doc.setFont("helvetica", "bold")
+        doc.text("GRAFICAS Y VISUALIZACIONES", marginLeft, y + 2)
+        y += 10
+
+        // Generate charts using the cleaned up functions
+        if (hasStudentEvaluations) {
+            y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations)
+        } else if (hasFeedbackData) {
+            // For feedback-only data, show a simple message
+            doc.setFontSize(10)
+            doc.setTextColor(100, 100, 100)
+            doc.text("Gráficas basadas en comentarios de estudiantes", marginLeft, y)
+            y += 20
+        }
     }
 
     // Student Evaluations Section with enhanced visuals
@@ -445,7 +1080,7 @@ const generateFeedbackPDF = (
                 doc.setFillColor(30, 144, 255)
                 doc.rect(marginLeft + 7, y - 2, barWidth, 3, "F")
 
-                doc.text(`${rating}⭐ ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
+                doc.text(`${rating} ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
                 y += 6
             })
             y += 8
@@ -692,19 +1327,26 @@ const generateFeedbackPDF = (
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i)
 
-        // Footer line
-        doc.setDrawColor(180, 180, 180)
-        doc.setLineWidth(0.5)
-        doc.line(20, 280, 190, 280)
+        // Footer background
+        doc.setFillColor(248, 250, 252)
+        doc.rect(0, 275, 210, 25, "F")
 
-        // Page number
+        // Footer line
+        doc.setDrawColor(59, 130, 246)
+        doc.setLineWidth(1)
+        doc.line(20, 275, 190, 275)
+
+        // Page number with better styling
+        doc.setFontSize(9)
+        doc.setTextColor(29, 78, 216)
+        doc.setFont("helvetica", "bold")
+        doc.text(`Página ${i} de ${pageCount}`, 105, 285, { align: "center" })
+
+        // Footer text with better styling
         doc.setFontSize(8)
         doc.setTextColor(100, 100, 100)
-        doc.text(`Página ${i} de ${pageCount}`, 105, 288, { align: "center" })
-
-        // Footer text
-        doc.setFontSize(7)
-        doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 295, { align: "center" })
+        doc.setFont("helvetica", "normal")
+        doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 292, { align: "center" })
     }
 
     // Save PDF with proper encoding
@@ -905,21 +1547,80 @@ export const FeedbackManagement = () => {
                     <p className="text-muted-foreground">Revisar la retroalimentación proporcionada por los estudiantes</p>
                 </div>
                 <Button
-                    onClick={() =>
-                        generateFeedbackPDF(
-                            professors,
-                            subjects,
-                            options,
-                            feedback,
-                            ratings,
-                            autoEvaluationAnswers,
-                            coevaluations,
-                            studentEvaluations,
-                            questions
-                        )
-                    }
+                    onClick={async () => {
+                        try {
+                            // Show loading state
+                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
+                            if (button) {
+                                button.innerHTML =
+                                    '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Generando PDF...'
+                                button.disabled = true
+                            }
+
+                            console.log("🚀 Iniciando generación de PDF con gráficas...")
+                            console.log("📊 Datos disponibles:")
+                            console.log("- studentEvaluations.numericResponses:", studentEvaluations.numericResponses.length)
+                            console.log("- studentEvaluations.textResponses:", studentEvaluations.textResponses.length)
+                            console.log("- feedback.length:", feedback.length)
+                            console.log("- questions.length:", questions.length)
+
+                            // Verificar que tenemos datos antes de generar
+                            if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
+                                alert(
+                                    "No hay datos disponibles para generar el PDF. Por favor, asegúrese de que la información se haya cargado completamente."
+                                )
+                                if (button) {
+                                    button.innerHTML =
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                    button.disabled = false
+                                }
+                                return
+                            }
+
+                            // Generate PDF directly with available data
+                            await generateFeedbackPDF(
+                                professors,
+                                subjects,
+                                options,
+                                feedback,
+                                ratings,
+                                autoEvaluationAnswers,
+                                coevaluations,
+                                studentEvaluations,
+                                questions
+                            )
+
+                            console.log("✅ PDF generado exitosamente con gráficas")
+
+                            // Show success feedback
+                            if (button) {
+                                button.innerHTML =
+                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡PDF Generado!'
+                                setTimeout(() => {
+                                    button.innerHTML =
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                    button.disabled = false
+                                }, 2000)
+                            }
+                        } catch (error) {
+                            console.error("❌ Error generando PDF:", error)
+
+                            // Show error message to user
+                            const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+                            alert(`Error generando PDF: ${errorMessage}`)
+
+                            // Restore button state on error
+                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
+                            if (button) {
+                                button.innerHTML =
+                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                button.disabled = false
+                            }
+                        }
+                    }}
                     disabled={optionsDisabled}
                     className="flex items-center gap-2"
+                    data-pdf-button
                 >
                     <Download className="h-4 w-4" />
                     Generar PDF
