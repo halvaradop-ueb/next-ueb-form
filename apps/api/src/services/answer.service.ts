@@ -83,19 +83,10 @@ export async function saveStudentEvaluation(
     answers: Record<string, any>
 ): Promise<boolean> {
     try {
-        console.log("💾 [BACKEND] Saving student evaluation to studenevalua table...")
-        console.log("💾 [BACKEND] Professor ID:", professorId)
-        console.log("💾 [BACKEND] Subject ID:", subjectId)
-        console.log("💾 [BACKEND] Semester:", semester)
-        console.log("💾 [BACKEND] Answers:", answers)
-
-        // Convert answers object to array of records for the studenevalua table
         const studentEvaluationRecords = []
 
         for (const [questionId, answerValue] of Object.entries(answers)) {
-            // Handle both single values and arrays
             const textValues = Array.isArray(answerValue) ? answerValue : [answerValue]
-
             for (const textValue of textValues) {
                 if (textValue !== null && textValue !== undefined && textValue !== "") {
                     studentEvaluationRecords.push({
@@ -109,22 +100,15 @@ export async function saveStudentEvaluation(
             }
         }
 
-        console.log("💾 [BACKEND] Student evaluation records to insert:", studentEvaluationRecords)
-
         if (studentEvaluationRecords.length === 0) {
-            console.log("⚠️ No valid answer values to insert")
             return true // Consider this a success since no data to save
         }
 
-        // Insert into the studenevalua table
         const { data: insertedRecords, error } = await supabase.from("studenevalua").insert(studentEvaluationRecords).select()
 
         if (error) {
-            console.log("❌ Error inserting into studenevalua table:", error)
             return false
         }
-
-        console.log("✅ Successfully saved student evaluation to studenevalua table:", insertedRecords?.length || 0, "records")
         return true
     } catch (error) {
         console.error("❌ Error in saveStudentEvaluation:", error)

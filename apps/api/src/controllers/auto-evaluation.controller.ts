@@ -57,14 +57,6 @@ export const addAutoEvaluationAnswer = async (req: Request, res: Response<APIRes
             return res.status(400).json(errorResponse("Subject, professor ID, semester, and answers are required"))
         }
 
-        console.log("Auto-evaluation submission received:", {
-            subject,
-            professorId,
-            semester,
-            answers,
-        })
-
-        // Save the auto-evaluation answers to the database
         const saveSuccess = await saveAutoEvaluationAnswers(subject, professorId, semester, answers)
 
         if (saveSuccess) {

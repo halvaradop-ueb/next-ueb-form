@@ -132,15 +132,11 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
         const subjectId = req.query.subjectId as string
         const semester = req.query.semester as string
 
-        console.log("🔍 [BACKEND] getStudentEvaluationsController called:", { subjectId, semester })
-        console.log("🔍 [BACKEND] Request query:", req.query)
-
         if (!subjectId) {
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
 
-        // First, let's see all data without filters to debug
-        const { data: allData, error: allError } = await supabase.from("studenevalua").select(`
+        const {} = await supabase.from("studenevalua").select(`
                 id,
                 question_id,
                 response,
@@ -149,9 +145,6 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
                 semester
             `)
 
-        console.log("🔍 [BACKEND] All studenevalua data:", { data: allData, error: allError, count: allData?.length })
-
-        // Get all data for the subject (ignore semester filter for now to show all responses)
         const { data, error } = await supabase
             .from("studenevalua")
             .select(
@@ -164,15 +157,6 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
             `
             )
             .eq("id_subject", subjectId)
-
-        console.log("🔍 [BACKEND] Final query result:", {
-            data,
-            error,
-            dataLength: data?.length,
-            subjectId,
-            semester,
-            recordsFound: data?.length || 0,
-        })
 
         if (error) {
             console.error("❌ [BACKEND] Error fetching student evaluations:", error)

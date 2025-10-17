@@ -4,11 +4,12 @@ const email = process.env.NEXT_PLAYWRIGHT_USER_EMAIL!
 const password = process.env.NEXT_PLAYWRIGHT_USER_PASSWORD!
 
 test.describe("Login flow (email & password)", () => {
+    console.log("User email:", email, "Password:", password ? "********" : "Not set")
     test("should log in successfully with valid credentials", async ({ page }) => {
-        await page.goto("http://localhost:3000/login")
+        await page.goto("http://localhost:3000/auth")
 
-        await page.getByLabel("Correo electrónico").fill("carlos@example.com")
-        await page.getByLabel("Contraseña").fill("123")
+        await page.getByLabel("Correo electrónico").fill(email)
+        await page.getByLabel("Contraseña").fill(password)
 
         const form = page.locator("form#credentials-form")
         await form.getByRole("button", { name: "Iniciar sesión" }).click()

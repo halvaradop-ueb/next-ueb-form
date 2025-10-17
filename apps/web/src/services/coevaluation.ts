@@ -29,8 +29,6 @@ export interface CoevaluationData {
 
 export const getAllCoevaluations = async (professorId?: string, subjectId?: string): Promise<CoevaluationData[]> => {
     try {
-        console.log("🔍 [FRONTEND] Fetching coevaluations with filters:", { professorId, subjectId })
-
         const params = new URLSearchParams()
         if (professorId) params.append("professorId", professorId)
         if (subjectId) params.append("subjectId", subjectId)
@@ -38,8 +36,6 @@ export const getAllCoevaluations = async (professorId?: string, subjectId?: stri
         const url = `co_evaluations${params.toString() ? `?${params.toString()}` : ""}`
         const request = createRequest("GET", url)
         const result = await createService(request)
-
-        console.log("📥 [FRONTEND] Coevaluations response:", result)
         return result || []
     } catch (error) {
         console.error("❌ [FRONTEND] Error fetching coevaluations:", error)
@@ -49,11 +45,9 @@ export const getAllCoevaluations = async (professorId?: string, subjectId?: stri
 
 export const getCoevaluationsByProfessor = async (professorId: string): Promise<CoevaluationData[]> => {
     try {
-        console.log("🔍 [FRONTEND] Fetching coevaluations for professor:", professorId)
         const request = createRequest("GET", `co_evaluations?professorId=${professorId}`)
         const result = await createService(request)
 
-        console.log("📥 [FRONTEND] Coevaluations by professor response:", result)
         return result || []
     } catch (error) {
         console.error("❌ [FRONTEND] Error fetching coevaluations by professor:", error)
@@ -63,11 +57,9 @@ export const getCoevaluationsByProfessor = async (professorId: string): Promise<
 
 export const getCoevaluationsBySubject = async (subjectId: string): Promise<CoevaluationData[]> => {
     try {
-        console.log("🔍 [FRONTEND] Fetching coevaluations for subject:", subjectId)
         const request = createRequest("GET", `co_evaluations?subjectId=${subjectId}`)
         const result = await createService(request)
 
-        console.log("📥 [FRONTEND] Coevaluations by subject response:", result)
         return result || []
     } catch (error) {
         console.error("❌ [FRONTEND] Error fetching coevaluations by subject:", error)

@@ -1,12 +1,11 @@
 import { defineConfig, devices } from "@playwright/test"
-/**
- * 
-import * as dotenv from "dotenv"
-import * as path from "path"
 
-// Load test environment variables
-dotenv.config({ path: path.resolve(__dirname, ".env.test.local") })
- */
+/*
+import * as dotenv from "dotenv"
+import * as path from "node:path"
+
+dotenv.config({ path: path.resolve(__dirname, ".env.test") })
+*/
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -46,7 +45,7 @@ export default defineConfig({
     ],
 
     webServer: {
-        command: "npm run dev:test",
+        command: "npm run dev",
         url: "http://localhost:3000",
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,

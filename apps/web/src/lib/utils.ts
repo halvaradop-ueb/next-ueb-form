@@ -32,7 +32,6 @@ export const updateDatabase = async (role: string, value: string) => {
     if (error) {
         console.error("Error updating admin password:", error)
     } else {
-        console.log("Admin password updated successfully:", data)
     }
 }
 
