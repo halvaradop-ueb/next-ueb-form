@@ -19,7 +19,7 @@ export type UserService = User
 export interface PeerReview {
     professor: string
     subject: string
-    semestre?: string
+    timeframe?: string
     comments?: string
     findings?: string
 }

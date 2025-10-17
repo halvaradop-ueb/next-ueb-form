@@ -15,7 +15,7 @@ import {
     deleteCoevaluation,
 } from "@/services/professors"
 import { Save, Edit, Trash2 } from "lucide-react"
-import { createPeriods, formatSemester } from "@/lib/utils"
+import { createPeriods } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ConfirmAction } from "@/ui/common/confirm-action"
 import { PeerReviewFormProps } from "@/lib/@types/props"
@@ -23,7 +23,7 @@ import { PeerReviewFormProps } from "@/lib/@types/props"
 export interface PeerReviewState {
     professor: string
     subject: string
-    semestre?: string
+    timeframe?: string
     comments?: string
     findings?: string
 }
@@ -32,7 +32,7 @@ const timeframes = createPeriods(new Date("2024-01-01"))
 const initialselectedOptionsState: PeerReviewState = {
     professor: "",
     subject: "",
-    semestre: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
     comments: "",
     findings: "",
 }
@@ -79,7 +79,7 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
         setSelectedOptions({
             professor: evaluation.professor.id,
             subject: evaluation.subject.id,
-            semestre: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+            timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
             comments: evaluation.improvement_plan || "",
             findings: evaluation.findings || "",
         })
@@ -197,18 +197,18 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="semestre">Semestre</Label>
+                                    <Label htmlFor="timeframe">Periodo de Tiempo</Label>
                                     <Select
-                                        value={selectedOptions.semestre}
-                                        onValueChange={(value) => handleChange("semestre", value)}
+                                        value={selectedOptions.timeframe}
+                                        onValueChange={(value) => handleChange("timeframe", value)}
                                     >
-                                        <SelectTrigger id="semestre">
-                                            <SelectValue placeholder="Selecciona un semestre" />
+                                        <SelectTrigger id="timeframe">
+                                            <SelectValue placeholder="Selecciona un periodo" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {timeframes.map(({ name, start, end }) => (
                                                 <SelectItem
-                                                    key={`semestre-${name}`}
+                                                    key={`timeframe-${name}`}
                                                     value={`${start.toISOString()} - ${end.toISOString()}`}
                                                 >
                                                     {name}
@@ -274,12 +274,6 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
                                                     <CardTitle>{evaluation.subject.name}</CardTitle>
                                                     <CardDescription>
                                                         {evaluation.professor.first_name} {evaluation.professor.last_name}
-                                                    </CardDescription>
-                                                    <CardDescription className="text-xs text-muted-foreground mt-1">
-                                                        Semestre:{" "}
-                                                        {evaluation.semestre
-                                                            ? formatSemester(evaluation.semestre)
-                                                            : "No especificado"}
                                                     </CardDescription>
                                                 </div>
                                                 <div className="flex gap-2">

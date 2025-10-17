@@ -10,7 +10,7 @@ import jsPDF from "jspdf"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
-import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback, formatSemester } from "@/lib/utils"
+import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
 import { getProfessors, getAllCoevaluations } from "@/services/professors"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import { getFeedback } from "@/services/feedback"
@@ -149,70 +149,6 @@ const NumericQuestionChart = ({ question, responses }: { question: Question; res
     )
 }
 
-// PDF Layout Constants and Helper Functions
-const PDF_CONSTANTS = {
-    MARGIN: 20,
-    LINE_SPACING: 6,
-    SECTION_SPACING: 12,
-    HEADER_HEIGHT: 10,
-    DATA_BAR_HEIGHT: 6,
-    CONTAINER_HEIGHT: 18,
-    FOOTER_HEIGHT: 15,
-    COLORS: {
-        primary: [59, 130, 246],
-        success: [34, 197, 94],
-        warning: [245, 158, 11],
-        danger: [239, 68, 68],
-        background: [240, 244, 255],
-        text: [30, 41, 59],
-        textLight: [100, 100, 100],
-        border: [220, 220, 220],
-        white: [255, 255, 255],
-    },
-    TYPOGRAPHY: {
-        mainTitle: { size: 16, font: "bold" },
-        sectionTitle: { size: 11, font: "bold" },
-        regular: { size: 9, font: "normal" },
-        small: { size: 7, font: "normal" },
-    },
-}
-
-// Helper function to get dynamic content width
-const getContentWidth = (doc: jsPDF): number => {
-    return doc.internal.pageSize.getWidth() - PDF_CONSTANTS.MARGIN * 2
-}
-
-// Helper function to check and handle page breaks
-const checkPageBreak = (doc: jsPDF, y: number, minHeight: number = 50): number => {
-    if (y > 260 - minHeight) {
-        doc.addPage()
-        return 20
-    }
-    return y
-}
-
-// Helper function to draw section headers
-const drawSectionHeader = (doc: jsPDF, title: string, y: number, marginLeft: number): number => {
-    const contentWidth = getContentWidth(doc)
-
-    doc.setFillColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-    doc.rect(marginLeft, y, contentWidth, PDF_CONSTANTS.HEADER_HEIGHT, "F")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.white[0], PDF_CONSTANTS.COLORS.white[1], PDF_CONSTANTS.COLORS.white[2])
-    doc.setFontSize(PDF_CONSTANTS.TYPOGRAPHY.sectionTitle.size)
-    doc.setFont("helvetica", PDF_CONSTANTS.TYPOGRAPHY.sectionTitle.font)
-    doc.text(title, marginLeft + 4, y + 7)
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-
-    return y + PDF_CONSTANTS.HEADER_HEIGHT + PDF_CONSTANTS.LINE_SPACING
-}
-
-// Helper function to set typography
-const setTypography = (doc: jsPDF, type: keyof typeof PDF_CONSTANTS.TYPOGRAPHY) => {
-    const config = PDF_CONSTANTS.TYPOGRAPHY[type]
-    doc.setFontSize(config.size)
-    doc.setFont("helvetica", config.font)
-}
-
 // Component for text question responses
 const TextQuestionDisplay = ({ question, responses }: { question: Question; responses: string[] }) => {
     if (responses.length === 0) {
@@ -249,749 +185,8 @@ const TextQuestionDisplay = ({ question, responses }: { question: Question; resp
     )
 }
 
-// Clean and simplified chart drawing function that matches the web page visuals
-const drawChartsInPDF = (
-    doc: jsPDF,
-    marginLeft: number,
-    y: number,
-    studentEvaluations: {
-        numericResponses: Array<{ question: Question; responses: number[] }>
-        textResponses: Array<{ question: Question; responses: string[] }>
-    },
-    semesterAverages?: Array<{
-        semester: string
-        average: number
-        universityAverage: number
-        count: number
-        semesterName: string
-    }>
-): number => {
-    let currentY = y
-
-    console.log("🎨 Starting chart generation with data:", studentEvaluations)
-
-    try {
-        // 1. Statistical Overview - matches the "Análisis Estadístico General" section
-        console.log("📊 Drawing statistical overview...")
-        currentY = drawStatisticalOverview(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Statistical overview completed at Y:", currentY)
-
-        // 2. Score Distribution - matches the pie chart data
-        console.log("📈 Drawing score distribution...")
-        currentY = drawScoreDistribution(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Score distribution completed at Y:", currentY)
-
-        // 3. Performance Trends - matches "Tendencias de Desempeño"
-        console.log("📉 Drawing performance trends...")
-        currentY = drawPerformanceTrends(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Performance trends completed at Y:", currentY)
-
-        // 4. Histogram - matches "Histograma de Calificaciones"
-        console.log("📊 Drawing histogram...")
-        currentY = drawHistogram(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Histogram completed at Y:", currentY)
-
-        // 5. Performance Categories - matches "Categorías de Desempeño"
-        console.log("🏆 Drawing performance categories...")
-        currentY = drawPerformanceCategories(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Performance categories completed at Y:", currentY)
-
-        // 6. Trend Indicator - matches the "Tendencia General" section from the web page
-        console.log("📈 Drawing trend indicator...")
-        currentY = drawTrendIndicator(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Trend indicator completed at Y:", currentY)
-
-        // 7. Grade Timeline - shows teacher performance evolution over semesters
-        console.log("📅 Drawing grade timeline...")
-        const timelineY = drawGradeTimeline(doc, marginLeft, currentY, semesterAverages || [])
-        currentY = timelineY
-        console.log("✅ Grade timeline completed at Y:", currentY)
-
-        console.log("🎉 All charts completed successfully!")
-        return currentY
-    } catch (error) {
-        console.error("❌ Error drawing charts:", error)
-
-        // Draw a simple test chart as fallback
-        console.log("🔧 Drawing fallback test chart...")
-        currentY = drawTestCharts(doc, marginLeft, currentY)
-
-        return currentY
-    }
-}
-
-// Clean statistical overview that matches the web page
-const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    y = checkPageBreak(doc, y, 100)
-    const contentWidth = getContentWidth(doc)
-
-    // Main container with dynamic width and proper height
-    const containerHeight = 100
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-    doc.setLineWidth(0.5)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "ANÁLISIS ESTADÍSTICO GENERAL", y, marginLeft)
-    const currentY = y
-
-    // Get responses - use real data when available
-    const allResponses = studentEvaluations.numericResponses?.flatMap((item: any) => item.responses) || []
-
-    console.log("📊 Statistical overview data:", {
-        originalLength: allResponses.length,
-        data: allResponses,
-    })
-
-    // Use real data if available, otherwise show message
-    if (allResponses.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos disponibles para mostrar", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    const dataToUse = allResponses
-
-    // Calculate statistics
-    const avg = dataToUse.reduce((a: number, b: number) => a + b, 0) / dataToUse.length
-    const min = Math.min(...dataToUse)
-    const max = Math.max(...dataToUse)
-    const median = [...dataToUse].sort((a, b) => a - b)[Math.floor(dataToUse.length / 2)]
-
-    // Left side: Score distribution bars - improved layout
-    const leftSectionWidth = contentWidth * 0.45
-    const barX = marginLeft + 5
-    const barY = currentY
-
-    const categories = [
-        { name: "Excelente (9-10)", range: [9, 10], color: PDF_CONSTANTS.COLORS.success },
-        { name: "Bueno (7-8)", range: [7, 8], color: PDF_CONSTANTS.COLORS.primary },
-        { name: "Regular (5-6)", range: [5, 6], color: PDF_CONSTANTS.COLORS.warning },
-        { name: "Deficiente (0-4)", range: [0, 4], color: PDF_CONSTANTS.COLORS.danger },
-    ]
-
-    categories.forEach((category, index) => {
-        const count = allResponses.filter((r: number) => r >= category.range[0] && r <= category.range[1]).length
-        if (count > 0) {
-            const currentBarY = barY + index * (PDF_CONSTANTS.LINE_SPACING + 6)
-            const percentage = (count / allResponses.length) * 100
-            const barWidth = Math.max((count / allResponses.length) * (leftSectionWidth - 60), 5)
-
-            // Label first
-            setTypography(doc, "small")
-            doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-            doc.text(`${category.name}:`, barX, currentBarY + 5)
-            doc.text(`${count}`, barX + leftSectionWidth - 25, currentBarY + 5, { align: "right" })
-
-            // Bar below the label
-            doc.setFillColor(category.color[0], category.color[1], category.color[2])
-            doc.rect(barX + 2, currentBarY + 8, barWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT, "F")
-        }
-    })
-
-    // Right side: Statistics boxes - improved layout and alignment
-    const rightSectionX = marginLeft + contentWidth * 0.52
-    const boxWidth = contentWidth * 0.43
-    const boxHeight = 14
-    const stats = [
-        { label: "Promedio General", value: avg.toFixed(1), color: PDF_CONSTANTS.COLORS.primary },
-        { label: "Mediana", value: median.toFixed(1), color: PDF_CONSTANTS.COLORS.success },
-        { label: "Rango", value: `${min} - ${max}`, color: PDF_CONSTANTS.COLORS.warning },
-        { label: "Total Evaluaciones", value: allResponses.length.toString(), color: [139, 92, 246] },
-    ]
-
-    stats.forEach((stat, index) => {
-        const statY = currentY + index * (boxHeight + 4)
-
-        // Background box - better proportions
-        doc.setFillColor(stat.color[0], stat.color[1], stat.color[2])
-        doc.rect(rightSectionX, statY, boxWidth, boxHeight, "F")
-
-        // Value (white text) - positioned in upper half
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.white[0], PDF_CONSTANTS.COLORS.white[1], PDF_CONSTANTS.COLORS.white[2])
-        doc.text(stat.value, rightSectionX + boxWidth / 2, statY + 6, { align: "center" })
-
-        // Label (darker text below the box)
-        setTypography(doc, "small")
-        doc.setTextColor(60, 60, 60)
-        doc.text(stat.label, rightSectionX + boxWidth / 2, statY + boxHeight + 3, { align: "center" })
-    })
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Clean score distribution chart
-const drawScoreDistribution = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    y = checkPageBreak(doc, y, 80)
-    const contentWidth = getContentWidth(doc)
-
-    // Container with proper spacing
-    const containerHeight = 80
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(71, 85, 105)
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "DISTRIBUCIÓN DE CALIFICACIONES", y, marginLeft)
-    const currentY = y
-
-    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
-    if (allResponses.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos disponibles", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    const categories = [
-        { name: "Excelente (9-10)", range: [9, 10], color: PDF_CONSTANTS.COLORS.success },
-        { name: "Bueno (7-8)", range: [7, 8], color: PDF_CONSTANTS.COLORS.primary },
-        { name: "Regular (5-6)", range: [5, 6], color: PDF_CONSTANTS.COLORS.warning },
-        { name: "Deficiente (0-4)", range: [0, 4], color: PDF_CONSTANTS.COLORS.danger },
-    ]
-
-    categories.forEach((category, index) => {
-        const count = allResponses.filter((r: number) => r >= category.range[0] && r <= category.range[1]).length
-        if (count > 0) {
-            const barY = currentY + index * (PDF_CONSTANTS.LINE_SPACING + 6)
-            const percentage = (count / allResponses.length) * 100
-            const barWidth = Math.max((percentage / 100) * (contentWidth * 0.6), 3)
-
-            // Label
-            setTypography(doc, "regular")
-            doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-            doc.text(`${category.name}:`, marginLeft + 5, barY + 5)
-
-            // Background bar
-            doc.setFillColor(240, 240, 240)
-            doc.rect(marginLeft + contentWidth * 0.35, barY, contentWidth * 0.6, PDF_CONSTANTS.DATA_BAR_HEIGHT + 2, "F")
-
-            // Value bar
-            doc.setFillColor(category.color[0], category.color[1], category.color[2])
-            doc.rect(marginLeft + contentWidth * 0.35, barY, barWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT + 2, "F")
-
-            // Percentage
-            setTypography(doc, "regular")
-            doc.text(`${percentage.toFixed(1)}%`, marginLeft + contentWidth * 0.95, barY + 5, { align: "right" })
-        }
-    })
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Clean performance trends chart
-const drawPerformanceTrends = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    if (y > 180) {
-        doc.addPage()
-        return 20
-    }
-
-    // Container with proper height calculation - increased width and better spacing
-    const maxQuestions = Math.min(studentEvaluations.numericResponses.length, 5)
-    const containerHeight = 20 + maxQuestions * 15 + 10
-
-    doc.setFillColor(254, 240, 238)
-    doc.rect(marginLeft, y, getContentWidth(doc), containerHeight, "F")
-    doc.setDrawColor(251, 146, 60)
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, getContentWidth(doc), containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "TENDENCIAS DE DESEMPEÑO", y, marginLeft)
-    const currentY = y
-
-    if (studentEvaluations.numericResponses.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos disponibles para mostrar", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    // Draw bars for each question (max 5)
-    for (let i = 0; i < maxQuestions; i++) {
-        const item = studentEvaluations.numericResponses[i]
-        const avgScore = item.responses.reduce((a: number, b: number) => a + b, 0) / item.responses.length
-        const barY = currentY + i * (PDF_CONSTANTS.LINE_SPACING + 10)
-        const barWidth = Math.max((avgScore / 10) * (getContentWidth(doc) * 0.5), 3)
-        const barHeight = PDF_CONSTANTS.DATA_BAR_HEIGHT + 4
-
-        // Background bar
-        doc.setFillColor(254, 249, 231)
-        doc.rect(marginLeft + 5, barY, getContentWidth(doc) * 0.5, barHeight, "F")
-
-        // Value bar
-        doc.setFillColor(251, 146, 60)
-        doc.rect(marginLeft + 5, barY, barWidth, barHeight, "F")
-
-        // Question label (truncated)
-        const questionTitle = item.question.title.length > 30 ? item.question.title.substring(0, 30) + "..." : item.question.title
-
-        setTypography(doc, "small")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-        doc.text(`${questionTitle}: ${avgScore.toFixed(1)}`, marginLeft + getContentWidth(doc) * 0.55, barY + 6)
-    }
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Clean histogram chart
-const drawHistogram = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    const contentWidth = getContentWidth(doc)
-    const chartHeight = 70
-    const containerHeight = PDF_CONSTANTS.HEADER_HEIGHT + PDF_CONSTANTS.SECTION_SPACING + chartHeight + 25
-
-    y = checkPageBreak(doc, y, containerHeight)
-
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(71, 85, 105)
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "HISTOGRAMA DE CALIFICACIONES", y, marginLeft)
-    const currentY = y
-
-    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
-
-    // Create histogram data (0-10 scale)
-    const histogramData = Array.from({ length: 11 }, (_, i) => {
-        const score = i
-        const count = allResponses.filter((response: number) => Math.floor(response) === score).length
-        return { score, count }
-    }).filter((item) => item.count > 0)
-
-    if (histogramData.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos para mostrar histograma", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    // Draw histogram bars with dynamic width
-    const maxCount = Math.max(...histogramData.map((d) => d.count))
-    const barWidth = 10
-    const availableWidth = contentWidth * 0.8
-    const spacing = histogramData.length > 1 ? (availableWidth - histogramData.length * barWidth) / (histogramData.length - 1) : 0
-
-    histogramData.forEach((data, index) => {
-        const barX = marginLeft + 15 + index * (barWidth + spacing)
-        const barHeight = Math.max((data.count / maxCount) * chartHeight, 3)
-
-        // Bar
-        doc.setFillColor(107, 114, 128)
-        doc.rect(barX, currentY + chartHeight - barHeight, barWidth, barHeight, "F")
-
-        // Labels
-        setTypography(doc, "small")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-        doc.text(`${data.score}`, barX + 4, currentY + chartHeight + 10)
-        doc.text(`${data.count}`, barX + 4, currentY + chartHeight + 18)
-    })
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Clean performance categories chart
-const drawPerformanceCategories = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    y = checkPageBreak(doc, y, 80)
-    const contentWidth = getContentWidth(doc)
-
-    // Container with proper dimensions
-    const containerHeight = 80
-
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(71, 85, 105)
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "CATEGORÍAS DE DESEMPEÑO", y, marginLeft)
-    const currentY = y
-
-    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
-    if (allResponses.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos disponibles", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    const categories = [
-        {
-            label: "Excelente",
-            range: "9-10",
-            color: PDF_CONSTANTS.COLORS.success,
-            bgColor: [220, 252, 231],
-            textColor: [21, 128, 61],
-        },
-        { label: "Bueno", range: "7-8", color: PDF_CONSTANTS.COLORS.primary, bgColor: [219, 234, 254], textColor: [29, 78, 216] },
-        {
-            label: "Regular",
-            range: "5-6",
-            color: PDF_CONSTANTS.COLORS.warning,
-            bgColor: [254, 243, 199],
-            textColor: [154, 52, 18],
-        },
-        {
-            label: "Deficiente",
-            range: "0-4",
-            color: PDF_CONSTANTS.COLORS.danger,
-            bgColor: [254, 228, 226],
-            textColor: [220, 38, 38],
-        },
-    ]
-
-    categories.forEach((category, index) => {
-        const count = allResponses.filter((r: number) => {
-            const num = Number(r)
-            switch (category.range) {
-                case "9-10":
-                    return num >= 9 && num <= 10
-                case "7-8":
-                    return num >= 7 && num <= 8
-                case "5-6":
-                    return num >= 5 && num <= 6
-                case "0-4":
-                    return num >= 0 && num <= 4
-                default:
-                    return false
-            }
-        }).length
-
-        if (count > 0) {
-            const boxY = currentY + index * (PDF_CONSTANTS.LINE_SPACING + 10)
-            const percentage = (count / allResponses.length) * 100
-
-            // Category box
-            doc.setFillColor(category.bgColor[0], category.bgColor[1], category.bgColor[2])
-            doc.rect(marginLeft + 5, boxY, contentWidth - 10, PDF_CONSTANTS.CONTAINER_HEIGHT - 4, "F")
-            doc.setDrawColor(category.color[0], category.color[1], category.color[2])
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft + 5, boxY, contentWidth - 10, PDF_CONSTANTS.CONTAINER_HEIGHT - 4)
-
-            // Label and count
-            setTypography(doc, "regular")
-            doc.setTextColor(category.textColor[0], category.textColor[1], category.textColor[2])
-            doc.text(`${category.label} (${category.range})`, marginLeft + 10, boxY + 7)
-
-            // Progress bar background
-            const progressBarX = marginLeft + contentWidth * 0.45
-            const progressBarWidth = contentWidth * 0.4
-            doc.setFillColor(240, 240, 240)
-            doc.rect(progressBarX, boxY + 2, progressBarWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT + 2, "F")
-
-            // Progress bar value
-            const progressValueWidth = Math.max((percentage / 100) * progressBarWidth, 3)
-            doc.setFillColor(category.color[0], category.color[1], category.color[2])
-            doc.rect(progressBarX, boxY + 2, progressValueWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT + 2, "F")
-
-            // Percentage
-            setTypography(doc, "small")
-            doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-            doc.text(`${percentage.toFixed(1)}%`, marginLeft + contentWidth - 25, boxY + 7, { align: "right" })
-        }
-    })
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Draw grade timeline that shows teacher performance evolution over semesters
-const drawGradeTimeline = (doc: jsPDF, marginLeft: number, y: number, semesterAverages: any[]): number => {
-    y = checkPageBreak(doc, y, 100)
-    const contentWidth = getContentWidth(doc)
-
-    // Container with proper dimensions
-    const containerHeight = 100
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    // Title using helper function
-    y = drawSectionHeader(doc, "LÍNEA DE TIEMPO DE NOTAS DOCENTES", y, marginLeft)
-    const currentY = y
-
-    if (!semesterAverages || semesterAverages.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos de evaluaciones por semestre disponibles", marginLeft + 5, currentY)
-        return y + containerHeight
-    }
-
-    // Sort semester averages by semester chronologically
-    const sortedSemesters = semesterAverages.sort((a, b) => a.semester.localeCompare(b.semester))
-
-    // Draw timeline header
-    setTypography(doc, "regular")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-    doc.text("Evolución del promedio de calificaciones por semestre (escala 1-5)", marginLeft + 5, currentY)
-
-    // Draw timeline points and connections
-    const timelineStartY = currentY + 15
-    const timelineHeight = 60
-    const maxScore = 5
-    const minScore = 0
-
-    sortedSemesters.forEach((semesterData, index) => {
-        const x = marginLeft + 10 + (index * (contentWidth - 20)) / Math.max(sortedSemesters.length - 1, 1)
-        const score = semesterData.universityAverage || 0
-        const yPos = timelineStartY + timelineHeight - ((score - minScore) / (maxScore - minScore)) * timelineHeight
-
-        // Draw semester label (rotated for better fit)
-        setTypography(doc, "small")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-
-        // Save current transformation matrix
-        doc.saveGraphicsState()
-
-        // Translate and rotate for vertical text
-        const semesterName = semesterData.semesterName || `Semestre ${semesterData.semester}`
-        const labelX = x
-        const labelY = timelineStartY + timelineHeight + 15
-
-        // Draw semester name horizontally (better readability) with background
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-
-        // Draw background for semester label
-        const labelTextWidth = doc.getTextWidth(semesterName)
-        doc.setFillColor(245, 245, 245)
-        doc.rect(labelX - labelTextWidth / 2 - 3, labelY - 3, labelTextWidth + 6, 10, "F")
-        doc.setDrawColor(PDF_CONSTANTS.COLORS.border[0], PDF_CONSTANTS.COLORS.border[1], PDF_CONSTANTS.COLORS.border[2])
-        doc.rect(labelX - labelTextWidth / 2 - 3, labelY - 3, labelTextWidth + 6, 10)
-
-        // Draw semester name
-        doc.text(semesterName, labelX, labelY + 4, { align: "center" })
-
-        // Restore transformation matrix
-        doc.restoreGraphicsState()
-
-        // Draw point on timeline
-        const pointRadius = 3
-        doc.setFillColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-        doc.circle(x, yPos, pointRadius, "F")
-
-        // Draw score value above the point with better visibility
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.white[0], PDF_CONSTANTS.COLORS.white[1], PDF_CONSTANTS.COLORS.white[2])
-
-        // Draw background box for better readability
-        const scoreText = score.toFixed(1)
-        const textWidth = doc.getTextWidth(scoreText)
-        doc.setFillColor(0, 0, 0)
-        doc.rect(x - textWidth / 2 - 2, yPos - 12, textWidth + 4, 8, "F")
-
-        // Draw the score value
-        doc.text(scoreText, x, yPos - 8, { align: "center" })
-
-        // Draw connecting line to next point (if not last)
-        if (index < sortedSemesters.length - 1) {
-            const nextSemester = sortedSemesters[index + 1]
-            const nextScore = nextSemester.universityAverage || 0
-            const nextX = marginLeft + 10 + ((index + 1) * (contentWidth - 20)) / Math.max(sortedSemesters.length - 1, 1)
-            const nextY = timelineStartY + timelineHeight - ((nextScore - minScore) / (maxScore - minScore)) * timelineHeight
-
-            doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-            doc.setLineWidth(1.5)
-            doc.line(x, yPos, nextX, nextY)
-        }
-
-        // Draw evaluation count below the point with background
-        setTypography(doc, "small")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-
-        const evalText = `${semesterData.count} evaluación${semesterData.count !== 1 ? "es" : ""}`
-        const evalTextWidth = doc.getTextWidth(evalText)
-
-        // Draw background for evaluation count
-        doc.setFillColor(250, 250, 250)
-        doc.rect(x - evalTextWidth / 2 - 2, yPos + 8, evalTextWidth + 4, 8, "F")
-        doc.setDrawColor(PDF_CONSTANTS.COLORS.border[0], PDF_CONSTANTS.COLORS.border[1], PDF_CONSTANTS.COLORS.border[2])
-        doc.rect(x - evalTextWidth / 2 - 2, yPos + 8, evalTextWidth + 4, 8)
-
-        // Draw evaluation count
-        doc.text(evalText, x, yPos + 12, { align: "center" })
-    })
-
-    // Draw Y-axis labels (score scale)
-    setTypography(doc, "small")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-
-    // Y-axis title
-    doc.saveGraphicsState()
-    doc.text("Calificación", marginLeft - 15, timelineStartY + timelineHeight / 2, { angle: 90 })
-    doc.restoreGraphicsState()
-
-    // Y-axis scale labels
-    for (let i = 0; i <= 5; i++) {
-        const yLabel = timelineStartY + timelineHeight - (i / 5) * timelineHeight
-        doc.text(i.toString(), marginLeft - 8, yLabel + 3, { align: "right" })
-
-        // Draw horizontal grid line
-        doc.setDrawColor(PDF_CONSTANTS.COLORS.border[0], PDF_CONSTANTS.COLORS.border[1], PDF_CONSTANTS.COLORS.border[2])
-        doc.setLineWidth(0.2)
-        doc.line(marginLeft + 5, yLabel, marginLeft + contentWidth - 5, yLabel)
-    }
-
-    // Draw summary statistics
-    const finalY = timelineStartY + timelineHeight + 35
-    const totalEvaluations = sortedSemesters.reduce((sum, semester) => sum + semester.count, 0)
-    const averageScore =
-        sortedSemesters.reduce((sum, semester) => sum + (semester.universityAverage || 0), 0) / sortedSemesters.length
-
-    setTypography(doc, "small")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-    doc.text(
-        `Total de evaluaciones: ${totalEvaluations} | Promedio general: ${averageScore.toFixed(2)}/5`,
-        marginLeft + 5,
-        finalY
-    )
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Draw trend indicator that matches the "Tendencia General" section from the web page
-const drawTrendIndicator = (doc: jsPDF, marginLeft: number, y: number, studentEvaluations: any): number => {
-    y = checkPageBreak(doc, y, 30)
-    const contentWidth = getContentWidth(doc)
-
-    // Container with proper dimensions
-    const containerHeight = 30
-
-    doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
-    doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
-    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-    doc.setLineWidth(0.3)
-    doc.rect(marginLeft, y, contentWidth, containerHeight)
-
-    const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
-    if (allResponses.length === 0) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("No hay datos para calcular tendencia", marginLeft + 5, y + 15)
-        return y + containerHeight
-    }
-
-    // Calculate if we have enough data for trend analysis (at least 2 questions)
-    if (studentEvaluations.numericResponses.length < 2) {
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text("Se necesitan al menos 2 preguntas para calcular tendencia", marginLeft + 5, y + 15)
-        return y + containerHeight
-    }
-
-    // Calculate trend based on first vs last question performance
-    const firstQuestion = studentEvaluations.numericResponses[0]
-    const lastQuestion = studentEvaluations.numericResponses[studentEvaluations.numericResponses.length - 1]
-
-    const firstAvg = firstQuestion.responses.reduce((a: number, b: number) => a + b, 0) / firstQuestion.responses.length
-    const lastAvg = lastQuestion.responses.reduce((a: number, b: number) => a + b, 0) / lastQuestion.responses.length
-
-    const isImproving = lastAvg > firstAvg
-    const trendDifference = Math.abs(lastAvg - firstAvg)
-
-    // Title
-    setTypography(doc, "regular")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-    doc.text("TENDENCIA GENERAL:", marginLeft + 5, y + 12)
-
-    // Trend indicator (arrow and difference)
-    const trendX = marginLeft + contentWidth * 0.7
-    if (isImproving) {
-        doc.setTextColor(PDF_CONSTANTS.COLORS.success[0], PDF_CONSTANTS.COLORS.success[1], PDF_CONSTANTS.COLORS.success[2])
-        doc.setFont("helvetica", "bold")
-        doc.setFontSize(12)
-        doc.text("↗", trendX, y + 12)
-        doc.text(`+${trendDifference.toFixed(2)}`, trendX + 12, y + 12)
-    } else {
-        doc.setTextColor(PDF_CONSTANTS.COLORS.danger[0], PDF_CONSTANTS.COLORS.danger[1], PDF_CONSTANTS.COLORS.danger[2])
-        doc.setFont("helvetica", "bold")
-        doc.setFontSize(12)
-        doc.text("↘", trendX, y + 12)
-        doc.text(`-${trendDifference.toFixed(2)}`, trendX + 12, y + 12)
-    }
-
-    // Subtitle
-    setTypography(doc, "small")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-    doc.text("puntos de diferencia", trendX + 35, y + 12)
-
-    // Description
-    setTypography(doc, "small")
-    doc.setTextColor(PDF_CONSTANTS.COLORS.text[0], PDF_CONSTANTS.COLORS.text[1], PDF_CONSTANTS.COLORS.text[2])
-    doc.text(`Primera pregunta (${firstAvg.toFixed(1)}) vs Última pregunta (${lastAvg.toFixed(1)})`, marginLeft + 5, y + 22)
-
-    return y + containerHeight + PDF_CONSTANTS.SECTION_SPACING
-}
-
-// Clean chart generation function
-const generateChartsInPDF = (
-    doc: jsPDF,
-    marginLeft: number,
-    y: number,
-    studentEvaluations: any,
-    semesterAverages?: any[]
-): number => {
-    return drawChartsInPDF(doc, marginLeft, y, studentEvaluations, semesterAverages)
-}
-
-// Simplified test function to verify basic chart drawing
-const drawTestCharts = (doc: jsPDF, marginLeft: number, y: number): number => {
-    let currentY = y
-
-    // Test container
-    doc.setFillColor(240, 248, 255)
-    doc.rect(marginLeft - 2, currentY - 2, 166, 50, "F")
-    doc.setDrawColor(30, 144, 255)
-    doc.setLineWidth(0.5)
-    doc.rect(marginLeft - 2, currentY - 2, 166, 50)
-
-    // Test title
-    doc.setFontSize(10)
-    doc.setTextColor(30, 64, 175)
-    doc.setFont("helvetica", "bold")
-    doc.text("GRAFICOS DE PRUEBA", marginLeft, currentY + 6)
-    currentY += 15
-
-    // Test bars
-    const testData = [
-        { label: "Categoria A", value: 75, color: [34, 197, 94] },
-        { label: "Categoria B", value: 50, color: [59, 130, 246] },
-        { label: "Categoria C", value: 25, color: [245, 158, 11] },
-    ]
-
-    testData.forEach((item, index) => {
-        const barY = currentY + index * 8
-        const barWidth = (item.value / 100) * 100
-
-        // Label
-        doc.setFontSize(8)
-        doc.setTextColor(51, 65, 85)
-        doc.setFont("helvetica", "normal")
-        doc.text(`${item.label}:`, marginLeft + 5, barY + 4)
-
-        // Bar
-        doc.setFillColor(item.color[0], item.color[1], item.color[2])
-        doc.rect(marginLeft + 50, barY, barWidth, 6, "F")
-
-        // Value
-        doc.text(`${item.value}%`, marginLeft + 155, barY + 4)
-    })
-
-    return currentY + 50
-}
-
 // PDF Generation Function
-const generateFeedbackPDF = async (
+const generateFeedbackPDF = (
     professors: ProfessorService[],
     subjects: SubjectService[],
     options: FeedbackState,
@@ -1003,14 +198,7 @@ const generateFeedbackPDF = async (
         numericResponses: Array<{ question: Question; responses: number[] }>
         textResponses: Array<{ question: Question; responses: string[] }>
     },
-    questions: Question[],
-    semesterAverages?: Array<{
-        semester: string
-        average: number
-        universityAverage: number
-        count: number
-        semesterName: string
-    }>
+    questions: Question[]
 ) => {
     const doc = new jsPDF()
 
@@ -1037,64 +225,20 @@ const generateFeedbackPDF = async (
     const professor = professors.find((p) => p.id === options.professorId)
     const subject = subjects.find((s) => s.id === options.subjectId)
 
-    // Calculate semester averages for grade timeline
-    const filteredFeedbackByPeriod = filterByPeriod(feedback, options.timeframe)
-    const semesterAveragesData = (() => {
-        // Group feedback by semester
-        const feedbackBySemester = filteredFeedbackByPeriod.reduce(
-            (acc, item) => {
-                // Extract semester from feedback_date
-                const date = new Date(item.feedback_date)
-                const year = date.getFullYear()
-                const month = date.getMonth() + 1
-                const semester = month >= 7 ? `${year}-2` : `${year}-1`
-
-                if (!acc[semester]) {
-                    acc[semester] = []
-                }
-                acc[semester].push(item)
-                return acc
-            },
-            {} as Record<string, typeof filteredFeedbackByPeriod>
-        )
-
-        return Object.entries(feedbackBySemester)
-            .map(([semester, semesterFeedback]) => {
-                const avg = semesterFeedback.reduce((sum, item) => sum + item.rating, 0) / semesterFeedback.length
-                // Convert from 1-10 scale to 1-5 university scale
-                const universityAvg = avg / 2
-                return {
-                    semester,
-                    average: avg,
-                    universityAverage: universityAvg,
-                    count: semesterFeedback.length,
-                    semesterName: `Semestre ${semester.replace("-", " - ")}`,
-                }
-            })
-            .sort((a, b) => a.semester.localeCompare(b.semester))
-    })()
-
-    // Use provided semesterAverages or calculated ones
-    const finalSemesterAverages = semesterAverages || semesterAveragesData
-
     // PDF Header with better styling
     doc.setFillColor(30, 41, 59)
-    doc.rect(0, 0, 210, 40, "F")
+    doc.rect(0, 0, 210, 35, "F")
 
     // Main title
-    doc.setFontSize(20)
+    doc.setFontSize(18)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("REPORTE DE RETROALIMENTACIÓN", 105, 22, { align: "center" })
+    doc.text("REPORTE DE RETROALIMENTACIÓN", 105, 20, { align: "center" })
 
     // Subtitle
-    doc.setFontSize(11)
+    doc.setFontSize(10)
     doc.setFont("helvetica", "normal")
-    doc.text("Sistema de Evaluación Docente", 105, 30, { align: "center" })
-
-    // University name
-    doc.setFontSize(9)
-    doc.text("Universidad El Bosque", 105, 36, { align: "center" })
+    doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 28, { align: "center" })
 
     // Report Info with better spacing
     y = 45
@@ -1127,7 +271,11 @@ const generateFeedbackPDF = async (
     y += 7
     doc.text(`Fecha del reporte: ${currentDate}`, marginLeft, y)
     y += 7
-    doc.text(`Periodo de tiempo: ${options.timeframe ? formatSemester(options.timeframe) : "No seleccionado"}`, marginLeft, y)
+    doc.text(
+        `Periodo de tiempo: ${options.timeframe ? new Date(options.timeframe.split(" - ")[0]).toLocaleDateString("es-ES") : "No seleccionado"}`,
+        marginLeft,
+        y
+    )
     y += 15
 
     // Summary Section with better proportions
@@ -1170,13 +318,6 @@ const generateFeedbackPDF = async (
     doc.text(`* Total de comentarios: ${feedback.length}`, marginLeft + 8, indicatorY + 16)
     y += 15
 
-    // Add a note about the charts section
-    doc.setFontSize(7)
-    doc.setTextColor(100, 100, 100)
-    doc.setFont("helvetica", "italic")
-    doc.text("→ Las gráficas detalladas se encuentran en la siguiente sección", marginLeft, y)
-    y += 12
-
     // Comments Section with visual enhancement
     if (filteredFeedback.length > 0) {
         if (y > 200) {
@@ -1207,95 +348,28 @@ const generateFeedbackPDF = async (
                 y = 20
             }
 
-            // Comment header with professor info
-            const headerHeight = 12
-            doc.setFillColor(254, 243, 199)
-            doc.rect(marginLeft, y - 3, 165, headerHeight, "F")
-            doc.setDrawColor(245, 158, 11)
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, headerHeight)
-
-            doc.setFontSize(8)
-            doc.setTextColor(154, 52, 18)
-            doc.setFont("helvetica", "bold")
-            doc.text(`Profesor: ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
-            y += 8
-
-            // Rating and date info
-            doc.setFontSize(7)
-            doc.setTextColor(73, 41, 14)
-            doc.setFont("helvetica", "normal")
-            doc.text(
-                `Calificacion: ${item.rating}/10 | Fecha: ${item.feedback_date ? new Date(item.feedback_date).toLocaleDateString("es-ES") : "Sin fecha"}`,
-                marginLeft + 3,
-                y
-            )
-            y += 8
-
-            // Comment content box
-            const commentLines = doc.splitTextToSize(item.feedback_text, 155)
-            const commentBoxHeight = commentLines.length * 4 + 8
-
+            // Comment box with better proportions
+            const commentBoxHeight = 22
             doc.setFillColor(254, 249, 231)
-            doc.rect(marginLeft, y - 2, 165, commentBoxHeight, "F")
+            doc.rect(marginLeft, y - 3, 165, commentBoxHeight, "F")
             doc.setDrawColor(255, 193, 7)
             doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 2, 165, commentBoxHeight)
+            doc.rect(marginLeft, y - 3, 165, commentBoxHeight)
 
-            doc.setFontSize(7)
-            doc.setTextColor(101, 67, 33)
-            doc.setFont("helvetica", "normal")
-            doc.text("Comentario:", marginLeft + 3, y + 2)
+            doc.setFontSize(8)
+            doc.setFont("helvetica", "bold")
+            doc.text(`${index + 1}. ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
             y += 6
 
-            doc.text(commentLines, marginLeft + 3, y)
-            y += commentLines.length * 4 + 12
+            doc.setFontSize(7)
+            doc.setFont("helvetica", "normal")
+            doc.text(`   * Calificacion: ${item.rating}/10 | Fecha: ${item.feedback_date}`, marginLeft + 3, y + 1)
+            y += 5
+
+            const commentLines = doc.splitTextToSize(`   Comentario: ${item.feedback_text}`, 155)
+            doc.text(commentLines, marginLeft + 3, y + 1)
+            y += commentLines.length * 4 + 10
         })
-    }
-
-    // Charts Section - use the same data and calculations as the feedback page
-    const hasStudentEvaluations = studentEvaluations.numericResponses.length > 0 || studentEvaluations.textResponses.length > 0
-    const hasFeedbackData = feedback.length > 0
-
-    console.log("🔍 Checking chart conditions:", {
-        hasStudentEvaluations,
-        hasFeedbackData,
-        numericCount: studentEvaluations.numericResponses.length,
-        textCount: studentEvaluations.textResponses.length,
-        feedbackCount: feedback.length,
-        studentEvaluationsData: studentEvaluations,
-    })
-
-    // Show charts section if we have any data OR force for testing
-    if (hasStudentEvaluations || hasFeedbackData) {
-        // Always start charts section on a new page if we're not at the beginning
-        if (y > 50) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header - using new standards
-        y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
-
-        // Generate charts with REAL data
-        console.log("📊 Generating charts with real data:", {
-            numericResponses: studentEvaluations.numericResponses.length,
-            textResponses: studentEvaluations.textResponses.length,
-            sampleNumericData: studentEvaluations.numericResponses.slice(0, 2),
-            sampleTextData: studentEvaluations.textResponses.slice(0, 2),
-        })
-
-        // Use the actual student evaluations data
-        y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations, finalSemesterAverages)
-    } else {
-        console.log("⚠️ No chart data available, but still trying to generate charts for debugging")
-        // Force chart generation even without data to see what happens
-        if (y > 50) {
-            doc.addPage()
-            y = 20
-        }
-        y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
-        y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations)
     }
 
     // Student Evaluations Section with enhanced visuals
@@ -1371,7 +445,7 @@ const generateFeedbackPDF = async (
                 doc.setFillColor(30, 144, 255)
                 doc.rect(marginLeft + 7, y - 2, barWidth, 3, "F")
 
-                doc.text(`${rating} ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
+                doc.text(`${rating}⭐ ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
                 y += 6
             })
             y += 8
@@ -1549,7 +623,7 @@ const generateFeedbackPDF = async (
             doc.setFontSize(8)
             doc.setFont("helvetica", "bold")
             doc.text(
-                `${index + 1}. Semestre: ${coevaluation.semestre ? formatSemester(coevaluation.semestre) : "Sin semestre"}`,
+                `${index + 1}. Fecha: ${new Date(coevaluation.created_at).toLocaleDateString("es-ES")}`,
                 marginLeft + 3,
                 y + 1
             )
@@ -1565,12 +639,6 @@ const generateFeedbackPDF = async (
             )
             y += 5
             doc.text(`Materia: ${coevaluation.subject ? coevaluation.subject.name : "N/A"}`, marginLeft + 3, y)
-            y += 5
-            doc.text(
-                `Semestre: ${coevaluation.semestre ? formatSemester(coevaluation.semestre) : "Sin semestre"}`,
-                marginLeft + 3,
-                y
-            )
             y += 5
             doc.text(
                 `Admin: ${coevaluation.admin ? `${coevaluation.admin.first_name} ${coevaluation.admin.last_name}` : "N/A"}`,
@@ -1619,54 +687,24 @@ const generateFeedbackPDF = async (
         })
     }
 
-    // Footer with enhanced styling using new standards
+    // Footer with enhanced styling
     const pageCount = doc.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i)
 
-        // Footer background
-        doc.setFillColor(
-            PDF_CONSTANTS.COLORS.background[0],
-            PDF_CONSTANTS.COLORS.background[1],
-            PDF_CONSTANTS.COLORS.background[2]
-        )
-        doc.rect(
-            0,
-            doc.internal.pageSize.getHeight() - PDF_CONSTANTS.FOOTER_HEIGHT,
-            doc.internal.pageSize.getWidth(),
-            PDF_CONSTANTS.FOOTER_HEIGHT,
-            "F"
-        )
-
         // Footer line
-        doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-        doc.setLineWidth(1)
-        doc.line(
-            PDF_CONSTANTS.MARGIN,
-            doc.internal.pageSize.getHeight() - PDF_CONSTANTS.FOOTER_HEIGHT,
-            doc.internal.pageSize.getWidth() - PDF_CONSTANTS.MARGIN,
-            doc.internal.pageSize.getHeight() - PDF_CONSTANTS.FOOTER_HEIGHT
-        )
+        doc.setDrawColor(180, 180, 180)
+        doc.setLineWidth(0.5)
+        doc.line(20, 280, 190, 280)
 
-        // Page number with better styling
-        setTypography(doc, "regular")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
-        doc.text(
-            `Página ${i} de ${pageCount}`,
-            doc.internal.pageSize.getWidth() / 2,
-            doc.internal.pageSize.getHeight() - PDF_CONSTANTS.FOOTER_HEIGHT + 8,
-            { align: "center" }
-        )
+        // Page number
+        doc.setFontSize(8)
+        doc.setTextColor(100, 100, 100)
+        doc.text(`Página ${i} de ${pageCount}`, 105, 288, { align: "center" })
 
-        // Footer text with better styling
-        setTypography(doc, "small")
-        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
-        doc.text(
-            "Sistema de Evaluación Docente - Universidad El Bosque",
-            doc.internal.pageSize.getWidth() / 2,
-            doc.internal.pageSize.getHeight() - PDF_CONSTANTS.FOOTER_HEIGHT + 14,
-            { align: "center" }
-        )
+        // Footer text
+        doc.setFontSize(7)
+        doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 295, { align: "center" })
     }
 
     // Save PDF with proper encoding
@@ -1765,49 +803,14 @@ export const FeedbackManagement = () => {
 
             try {
                 const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
-
-                // Apply semester filter if a specific timeframe is selected
-                let filteredAutoEvaluations = autoEvaluationData
-                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
-                    let targetSemester = ""
-                    const parts = options.timeframe.split(" - ")
-                    if (parts.length >= 2) {
-                        const firstPart = parts[0]
-                        if (firstPart.includes("T")) {
-                            // Parse ISO date and determine semester
-                            const date = new Date(firstPart)
-                            const year = date.getFullYear()
-                            const month = date.getMonth() + 1
-                            targetSemester = month >= 7 ? `${year} - 2` : `${year} - 1`
-                        } else {
-                            // Already in semester format
-                            targetSemester = firstPart
-                        }
-                    }
-
-                    // Filter autoevaluations by semester
-                    if (targetSemester) {
-                        filteredAutoEvaluations = autoEvaluationData.filter((autoEvaluation: any) => {
-                            // Filter by semester - check if it's grouped data or individual answers
-                            if (autoEvaluation.semester) {
-                                return autoEvaluation.semester === targetSemester
-                            } else if (autoEvaluation.answers && Array.isArray(autoEvaluation.answers)) {
-                                // If it's grouped data, filter the groups
-                                return autoEvaluation.semester === targetSemester
-                            }
-                            return false
-                        })
-                    }
-                }
-
-                setAutoEvaluationAnswers(filteredAutoEvaluations)
+                setAutoEvaluationAnswers(autoEvaluationData)
             } catch (error) {
                 console.error("Error in fetchAutoEvaluation:", error)
                 setAutoEvaluationAnswers([])
             }
         }
         fetchAutoEvaluation()
-    }, [options?.professorId, options?.subjectId, options?.timeframe])
+    }, [options?.professorId, options?.subjectId])
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -1884,46 +887,7 @@ export const FeedbackManagement = () => {
         const fetchCoevaluations = async () => {
             try {
                 const coevaluationData = await getAllCoevaluations(options.professorId, options.subjectId)
-
-                // Apply semester filter if a specific timeframe is selected
-                let filteredCoevaluations = coevaluationData
-                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
-                    let targetSemester = ""
-                    const parts = options.timeframe.split(" - ")
-                    if (parts.length >= 2) {
-                        const firstPart = parts[0]
-                        if (firstPart.includes("T")) {
-                            // Parse ISO date and determine semester
-                            const date = new Date(firstPart)
-                            const year = date.getFullYear()
-                            const month = date.getMonth() + 1
-                            targetSemester = month >= 7 ? `${year} - 2` : `${year} - 1`
-                        } else {
-                            // Already in semester format
-                            targetSemester = firstPart
-                        }
-                    }
-
-                    // Filter coevaluations by semester
-                    if (targetSemester) {
-                        filteredCoevaluations = coevaluationData.filter((coevaluation: any) => {
-                            // Extract semester from the timeframe field
-                            if (coevaluation.semestre) {
-                                // Convert stored semester format to match target format
-                                const storedSemester = coevaluation.semestre.split(" - ")[0] // Get "2025-07-02T00:00:00.000Z"
-                                const storedDate = new Date(storedSemester)
-                                const storedYear = storedDate.getFullYear()
-                                const storedMonth = storedDate.getMonth() + 1
-                                const storedSemesterPeriod = storedMonth >= 7 ? `${storedYear} - 2` : `${storedYear} - 1`
-
-                                return storedSemesterPeriod === targetSemester
-                            }
-                            return false
-                        })
-                    }
-                }
-
-                setCoevaluations(filteredCoevaluations)
+                setCoevaluations(coevaluationData)
             } catch (error) {
                 console.error("❌ [FRONTEND] Error fetching coevaluations:", error)
                 setCoevaluations([])
@@ -1931,7 +895,7 @@ export const FeedbackManagement = () => {
         }
 
         fetchCoevaluations()
-    }, [options?.professorId, options?.subjectId, options?.timeframe])
+    }, [options?.professorId, options?.subjectId])
 
     return (
         <section className="space-y-6">
@@ -1941,118 +905,21 @@ export const FeedbackManagement = () => {
                     <p className="text-muted-foreground">Revisar la retroalimentación proporcionada por los estudiantes</p>
                 </div>
                 <Button
-                    onClick={async () => {
-                        try {
-                            // Show loading state
-                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
-                            if (button) {
-                                button.innerHTML =
-                                    '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Generando PDF...'
-                                button.disabled = true
-                            }
-
-                            console.log("🚀 Iniciando generación de PDF con gráficas...")
-                            console.log("📊 Datos disponibles:")
-                            console.log("- studentEvaluations.numericResponses:", studentEvaluations.numericResponses.length)
-                            console.log("- studentEvaluations.textResponses:", studentEvaluations.textResponses.length)
-                            console.log("- feedback.length:", feedback.length)
-                            console.log("- questions.length:", questions.length)
-
-                            // Verificar que tenemos datos antes de generar
-                            if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
-                                alert(
-                                    "No hay datos disponibles para generar el PDF. Por favor, asegúrese de que la información se haya cargado completamente."
-                                )
-                                if (button) {
-                                    button.innerHTML =
-                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                    button.disabled = false
-                                }
-                                return
-                            }
-
-                            // Calculate semester averages for the PDF timeline (using ALL feedback, not filtered)
-                            const semesterAveragesData = (() => {
-                                // Group ALL feedback by semester (ignoring time filter)
-                                const feedbackBySemester = feedback.reduce(
-                                    (acc, item) => {
-                                        // Extract semester from feedback_date
-                                        const date = new Date(item.feedback_date)
-                                        const year = date.getFullYear()
-                                        const month = date.getMonth() + 1
-                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
-
-                                        if (!acc[semester]) {
-                                            acc[semester] = []
-                                        }
-                                        acc[semester].push(item)
-                                        return acc
-                                    },
-                                    {} as Record<string, typeof feedback>
-                                )
-
-                                return Object.entries(feedbackBySemester)
-                                    .map(([semester, semesterFeedback]) => {
-                                        const avg =
-                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) / semesterFeedback.length
-                                        // Convert from 1-10 scale to 1-5 university scale
-                                        const universityAvg = avg / 2
-                                        return {
-                                            semester,
-                                            average: avg,
-                                            universityAverage: universityAvg,
-                                            count: semesterFeedback.length,
-                                            semesterName: `Semestre ${semester.replace("-", " - ")}`,
-                                        }
-                                    })
-                                    .sort((a, b) => a.semester.localeCompare(b.semester))
-                            })()
-
-                            // Generate PDF directly with available data
-                            await generateFeedbackPDF(
-                                professors,
-                                subjects,
-                                options,
-                                feedback,
-                                ratings,
-                                autoEvaluationAnswers,
-                                coevaluations,
-                                studentEvaluations,
-                                questions,
-                                semesterAveragesData
-                            )
-
-                            console.log("✅ PDF generado exitosamente con gráficas")
-
-                            // Show success feedback
-                            if (button) {
-                                button.innerHTML =
-                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡PDF Generado!'
-                                setTimeout(() => {
-                                    button.innerHTML =
-                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                    button.disabled = false
-                                }, 2000)
-                            }
-                        } catch (error) {
-                            console.error("❌ Error generando PDF:", error)
-
-                            // Show error message to user
-                            const errorMessage = error instanceof Error ? error.message : "Error desconocido"
-                            alert(`Error generando PDF: ${errorMessage}`)
-
-                            // Restore button state on error
-                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
-                            if (button) {
-                                button.innerHTML =
-                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                button.disabled = false
-                            }
-                        }
-                    }}
+                    onClick={() =>
+                        generateFeedbackPDF(
+                            professors,
+                            subjects,
+                            options,
+                            feedback,
+                            ratings,
+                            autoEvaluationAnswers,
+                            coevaluations,
+                            studentEvaluations,
+                            questions
+                        )
+                    }
                     disabled={optionsDisabled}
                     className="flex items-center gap-2"
-                    data-pdf-button
                 >
                     <Download className="h-4 w-4" />
                     Generar PDF
@@ -2883,11 +1750,7 @@ export const FeedbackManagement = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <span className="mr-1 font-medium">{item.rating}/10</span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {item.feedback_date
-                                                    ? new Date(item.feedback_date).toLocaleDateString("es-ES")
-                                                    : "Sin fecha"}
-                                            </span>
+                                            <span className="text-xs text-muted-foreground">{item.feedback_date}</span>
                                         </div>
                                     </div>
                                     <p className="text-sm">{item.feedback_text}</p>
@@ -3043,9 +1906,7 @@ export const FeedbackManagement = () => {
                                             <div className="flex items-center justify-between">
                                                 <CardTitle className="text-lg text-primary">
                                                     📅 Coevaluación{" "}
-                                                    {coevaluation.semestre
-                                                        ? formatSemester(coevaluation.semestre)
-                                                        : "Sin semestre"}
+                                                    {new Date(coevaluation.created_at).toLocaleDateString("es-ES")}
                                                 </CardTitle>
                                             </div>
                                         </CardHeader>
@@ -3081,11 +1942,9 @@ export const FeedbackManagement = () => {
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-primary">📅 Semestre:</span>
+                                                            <span className="font-medium text-primary">📅 Fecha:</span>
                                                             <span>
-                                                                {coevaluation.semestre
-                                                                    ? formatSemester(coevaluation.semestre)
-                                                                    : "Sin semestre"}
+                                                                {new Date(coevaluation.created_at).toLocaleString("es-ES")}
                                                             </span>
                                                         </div>
                                                     </div>
