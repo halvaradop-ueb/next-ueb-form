@@ -1,10 +1,9 @@
 import jsPDF from "jspdf"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
 import type { FeedbackState } from "@/lib/@types/types"
-import { filterByPeriod, getAverageRatings, ratingFeedback, formatSemester } from "@/lib/utils"
+import { filterByPeriod, getAverageRatings, formatSemester } from "@/lib/utils"
 
-// PDF Layout Constants and Helper Functions
-const PDF_CONSTANTS = {
+export const PDF_CONSTANTS = {
     MARGIN: 20,
     LINE_SPACING: 6,
     SECTION_SPACING: 12,
@@ -32,12 +31,12 @@ const PDF_CONSTANTS = {
 }
 
 // Helper function to get dynamic content width
-const getContentWidth = (doc: jsPDF): number => {
+export const getContentWidth = (doc: jsPDF): number => {
     return doc.internal.pageSize.getWidth() - PDF_CONSTANTS.MARGIN * 2
 }
 
 // Helper function to check and handle page breaks
-const checkPageBreak = (doc: jsPDF, y: number, minHeight: number = 50): number => {
+export const checkPageBreak = (doc: jsPDF, y: number, minHeight: number = 50): number => {
     if (y > 260 - minHeight) {
         doc.addPage()
         return 20
@@ -45,7 +44,6 @@ const checkPageBreak = (doc: jsPDF, y: number, minHeight: number = 50): number =
     return y
 }
 
-// Helper function to draw section headers
 const drawSectionHeader = (doc: jsPDF, title: string, y: number, marginLeft: number): number => {
     const contentWidth = getContentWidth(doc)
 
@@ -60,7 +58,6 @@ const drawSectionHeader = (doc: jsPDF, title: string, y: number, marginLeft: num
     return y + PDF_CONSTANTS.HEADER_HEIGHT + PDF_CONSTANTS.LINE_SPACING
 }
 
-// Helper function to set typography
 const setTypography = (doc: jsPDF, type: keyof typeof PDF_CONSTANTS.TYPOGRAPHY) => {
     const config = PDF_CONSTANTS.TYPOGRAPHY[type]
     doc.setFontSize(config.size)
@@ -110,10 +107,8 @@ const drawChartsInPDF = (
         currentY = timelineY
 
         return currentY
-    } catch (error) {
-        // Draw a simple test chart as fallback
+    } catch {
         currentY = drawTestCharts(doc, marginLeft, currentY)
-
         return currentY
     }
 }
@@ -819,10 +814,7 @@ export const generateFeedbackPDF = async (
     // Set font for better Spanish character support
     try {
         doc.setFont("helvetica")
-    } catch (error) {
-        // Helvetica font not available, using default
-    }
-
+    } catch {}
     const marginLeft = 20
     let y = 25
 

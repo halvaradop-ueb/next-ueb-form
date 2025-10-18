@@ -1,6 +1,12 @@
 import { z } from "zod"
 export type { GoogleProfile } from "next-auth/providers/google"
 
+// Generic OAuth profile type for OAuth providers (Google, Microsoft, etc.)
+export interface OAuthProfile {
+    email: string
+    name?: string
+}
+
 export interface FormState {
     idle: "idle" | "loading" | "success" | "error"
     message: string

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { loginAction, signInWithGoogle } from "@/lib/actions/login"
+import { loginAction, signInWithGoogle, signInWithOutlook } from "@/lib/actions/login"
 import type { FormState } from "@/lib/@types/types"
 
 const AuthPage = () => {
@@ -46,6 +46,11 @@ const AuthPage = () => {
                     <form action={signInWithGoogle}>
                         <Button className="w-full mt-6 hover:cursor-pointer" variant="outline" disabled={isPending}>
                             Iniciar sesión con Google
+                        </Button>
+                    </form>
+                    <form action={signInWithOutlook}>
+                        <Button className="w-full mt-2 hover:cursor-pointer" variant="outline" disabled={isPending}>
+                            Iniciar sesión con Outlook
                         </Button>
                     </form>
                 </CardContent>

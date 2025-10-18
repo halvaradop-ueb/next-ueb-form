@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client"
 import { UserService } from "@/lib/@types/services"
-import type { GoogleProfile } from "@/lib/@types/types"
+import type { OAuthProfile } from "@/lib/@types/types"
 import { hash, genSalt, compare } from "bcryptjs"
 
 export const authenticate = async (email: string, password: string): Promise<UserService | null> => {
@@ -24,7 +24,7 @@ export const hashPassword = async (password: string): Promise<string> => {
     return await hash(password, salt)
 }
 
-export const checkAndRegisterUser = async (profile: GoogleProfile): Promise<UserService | null> => {
+export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserService | null> => {
     const { email } = profile
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
     if (error) {
