@@ -319,7 +319,6 @@ const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, stud
     // Get responses - use real data when available
     const allResponses = studentEvaluations.numericResponses?.flatMap((item: any) => item.responses) || []
 
-
     // Use real data if available, otherwise show message
     if (allResponses.length === 0) {
         setTypography(doc, "regular")
@@ -1904,7 +1903,6 @@ export const FeedbackManagement = () => {
                                 button.disabled = true
                             }
 
-
                             // Verificar que tenemos datos antes de generar
                             if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
                                 alert(
@@ -1969,7 +1967,6 @@ export const FeedbackManagement = () => {
                                 semesterAveragesData
                             )
 
-
                             // Show success feedback
                             if (button) {
                                 button.innerHTML =
@@ -1981,7 +1978,6 @@ export const FeedbackManagement = () => {
                                 }, 2000)
                             }
                         } catch (error) {
-
                             // Show error message to user
                             const errorMessage = error instanceof Error ? error.message : "Error desconocido"
                             alert(`Error generando PDF: ${errorMessage}`)
