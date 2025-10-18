@@ -10,7 +10,6 @@ export const getQuestions = async (): Promise<Question[]> => {
         const json = await response.json()
         return Array.isArray(json.questions) ? json.questions : []
     } catch (error) {
-        console.error("Error en getQuestions:", error)
         return []
     }
 }
@@ -32,7 +31,6 @@ export const addQuestion = async (question: Question): Promise<Question | null> 
         const data = await response.json()
         return data || null
     } catch (error) {
-        console.error("Error en addQuestion:", error)
         return null
     }
 }
@@ -54,7 +52,6 @@ export const updateQuestion = async (question: Question): Promise<Question | nul
         const data = await response.json()
         return data || null
     } catch (error) {
-        console.error("Error en updateQuestion:", error)
         return null
     }
 }
@@ -72,7 +69,6 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
         const data = await response.json()
         return data.success || false
     } catch (error) {
-        console.error("Error en deleteQuestion:", error)
         return false
     }
 }
@@ -86,7 +82,6 @@ export const getQuestionsForStudents = async (): Promise<[Question[], Partial<Re
         const data = await response.json()
         return [data.questions || [], data.grouped || {}]
     } catch (error) {
-        console.error("Error en getQuestionsForStudents:", error)
         return [[], {}]
     }
 }
@@ -100,7 +95,6 @@ export const getQuestionsForProfessors = async (): Promise<[Question[], Partial<
         const data = await response.json()
         return [data.questions || [], data.grouped || {}]
     } catch (error) {
-        console.error("Error en getQuestionsForProfessors:", error)
         return [[], {}]
     }
 }
@@ -116,38 +110,27 @@ export const getQuestionTitleById = async (questionId: string): Promise<string |
         const question = Array.isArray(data.questions) ? data.questions[0] : data
         return question?.title || null
     } catch (error) {
-        console.error("Error fetching question title by ID:", error)
         return null
     }
 }
 
 export const getQuestionTitleByAnswerId = async (answerValueId: string): Promise<string | null> => {
     try {
-        console.log("🔍 [DEBUG] Fetching question title for answer value ID:", answerValueId)
-
-        console.log("❌ [DEBUG] This function is deprecated. The backend should already provide question_id.")
-        console.log("❌ [DEBUG] Answer value ID:", answerValueId)
-
         return null
     } catch (error) {
-        console.error("❌ [DEBUG] Error in deprecated getQuestionTitleByAnswerId:", error)
         return null
     }
 }
 
 export const getQuestionsBySubject = async (subjectId: string): Promise<Question[]> => {
     try {
-        console.log("🔍 [FRONTEND] getQuestionsBySubject called with:", subjectId)
         const response = await fetch(`${API_ENDPOINT}/questions?subject=${subjectId}`)
-        console.log("🔍 [FRONTEND] Response status:", response.status)
         if (!response.ok) {
             throw new Error(`Error fetching questions for subject: ${response.statusText}`)
         }
         const data = await response.json()
-        console.log("🔍 [FRONTEND] Questions data:", data)
         return Array.isArray(data.questions) ? data.questions : []
     } catch (error) {
-        console.error("❌ [FRONTEND] Error en getQuestionsBySubject:", error)
         return []
     }
 }

@@ -48,7 +48,6 @@ export async function addAnswer(answer: any, userId: string): Promise<boolean> {
                 .select()
                 .single()
             if (error) {
-                console.error("Error inserting answer:", error)
                 throw new Error("Failed to insert answer")
             }
 
@@ -58,13 +57,11 @@ export async function addAnswer(answer: any, userId: string): Promise<boolean> {
             }))
             const { error: errorOptions } = await supabase.from("answervalue").insert(answerOptions)
             if (errorOptions) {
-                console.error("Error inserting answer options:", errorOptions)
                 throw new Error("Failed to insert answer options")
             }
         }
         return true
     } catch (error) {
-        console.error("Error adding answer:", error)
         return false
     }
 }
@@ -83,12 +80,6 @@ export async function saveStudentEvaluation(
     answers: Record<string, any>
 ): Promise<boolean> {
     try {
-        console.log("💾 [BACKEND] Saving student evaluation to studenevalua table...")
-        console.log("💾 [BACKEND] Professor ID:", professorId)
-        console.log("💾 [BACKEND] Subject ID:", subjectId)
-        console.log("💾 [BACKEND] Semester:", semester)
-        console.log("💾 [BACKEND] Answers:", answers)
-
         // Convert answers object to array of records for the studenevalua table
         const studentEvaluationRecords = []
 
@@ -109,10 +100,7 @@ export async function saveStudentEvaluation(
             }
         }
 
-        console.log("💾 [BACKEND] Student evaluation records to insert:", studentEvaluationRecords)
-
         if (studentEvaluationRecords.length === 0) {
-            console.log("⚠️ No valid answer values to insert")
             return true // Consider this a success since no data to save
         }
 

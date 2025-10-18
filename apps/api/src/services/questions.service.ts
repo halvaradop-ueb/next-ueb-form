@@ -39,7 +39,6 @@ export const getQuestions = async (): Promise<any[]> => {
 
         return questionsWithOptions
     } catch (error) {
-        console.error("Error fetching questions:", error)
         return []
     }
 }
@@ -87,7 +86,6 @@ export const addQuestion = async (question: any): Promise<any | null> => {
 
         return completeQuestion
     } catch (error) {
-        console.error("Error adding question:", error)
         return null
     }
 }
@@ -108,7 +106,6 @@ export const updateQuestion = async (question: any): Promise<any | null> => {
         }
         return data
     } catch (error) {
-        console.error("Error updating question:", error)
         return null
     }
 }
@@ -123,7 +120,6 @@ export const deleteQuestion = async (id: string): Promise<boolean> => {
         }
         return true
     } catch (error) {
-        console.error("Error deleting question:", error)
         return false
     }
 }
@@ -158,21 +154,17 @@ export const getQuestionTitle = async (questionId: string): Promise<string | nul
         const { data: question, error } = await supabase.from("question").select("title").eq("id", questionId).single()
 
         if (error) {
-            console.error("Error fetching question title:", error)
             return null
         }
 
         return question?.title || null
     } catch (error) {
-        console.error("Error in getQuestionTitle:", error)
         return null
     }
 }
 
 export const getQuestionsBySubject = async (subjectId: string): Promise<any[]> => {
     try {
-        console.log("🔍 [BACKEND] getQuestionsBySubject called with:", subjectId)
-
         // First, let's try to find stages that contain this subject
         const { data: stagesWithSubject, error: stageError } = await supabase
             .from("stage")
@@ -185,12 +177,9 @@ export const getQuestionsBySubject = async (subjectId: string): Promise<any[]> =
             )
             .eq("subjects.id", subjectId)
 
-        console.log("🔍 [BACKEND] Stages with subject:", { data: stagesWithSubject, error: stageError })
-
         let questions: any[] = []
 
         if (stageError || !stagesWithSubject || stagesWithSubject.length === 0) {
-            console.log("⚠️ [BACKEND] No stages found with this subject, trying alternative approach")
             // Fallback: get all questions
             const { data: allQuestions, error: allError } = await supabase.from("question").select(`
                     id,
@@ -206,8 +195,6 @@ export const getQuestionsBySubject = async (subjectId: string): Promise<any[]> =
                     )
                 `)
 
-            console.log("🔍 [BACKEND] All questions:", { data: allQuestions, error: allError })
-
             if (allError) {
                 throw new Error(`Error fetching all questions: ${allError.message}`)
             }
@@ -216,28 +203,25 @@ export const getQuestionsBySubject = async (subjectId: string): Promise<any[]> =
         } else {
             // Get questions for the found stages
             const stageIds = stagesWithSubject.map((stage) => stage.id)
-            console.log("🔍 [BACKEND] Found stage IDs:", stageIds)
 
-            const { data: stageQuestions, error } = await supabase
+            const { data: stageQuestions } = await supabase
                 .from("question")
                 .select(
                     `
+                id,
+                title,
+                description,
+                question_type,
+                target_audience,
+                required,
+                stage_id,
+                stage: stage_id (
                     id,
-                    title,
-                    description,
-                    question_type,
-                    target_audience,
-                    required,
-                    stage_id,
-                    stage: stage_id (
-                        id,
-                        name
-                    )
-                `
+                    name
+                )
+            `
                 )
                 .in("stage_id", stageIds)
-
-            console.log("🔍 [BACKEND] Questions for stages:", { data: stageQuestions, error })
             questions = stageQuestions || []
         }
 
@@ -258,10 +242,8 @@ export const getQuestionsBySubject = async (subjectId: string): Promise<any[]> =
             })
         )
 
-        console.log("🔍 [BACKEND] Final questions with options:", questionsWithOptions)
         return questionsWithOptions
     } catch (error) {
-        console.error("❌ [BACKEND] Error fetching questions by subject:", error)
         return []
     }
 }

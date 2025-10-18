@@ -29,7 +29,7 @@ export function calculateSemester(): string {
 
     // If it's after June, it's the second semester of the current year
     // If it's January to June, it's the first semester of the current year
-    if (currentMonth > 6) {
+    if (currentMonth > 7) {
         return `${currentYear} - 2`
     } else {
         return `${currentYear} - 1`
@@ -40,10 +40,8 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
     try {
         // Get current semester for filtering
         const currentSemester = calculateSemester()
-        console.log("🔍 [BACKEND] Current semester calculated:", currentSemester)
 
         // Query the answervalue table with proper joins to get the complete data
-        console.log("🔍 [BACKEND] Querying answervalue table with joins")
 
         const { data: answers, error } = await supabase
             .from("answervalue")
@@ -67,20 +65,13 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
             .eq("subject_id", subjectId)
             .eq("semester", currentSemester)
 
-        console.log("🔍 [BACKEND] Query result:", { data: answers, error })
-
         if (error) {
-            console.log("❌ Error querying answervalue table:", error)
             return []
         }
 
         if (!answers || answers.length === 0) {
-            console.log("📭 No auto-evaluation data found")
             return []
         }
-
-        console.log("✅ Successfully found data in answervalue table:", answers.length, "records")
-        console.log("🔍 [Backend] Raw data from database:", answers)
 
         // Group answers by semester and remove duplicates
         const groupedBySemester: { [key: string]: AutoEvaluationAnswer[] } = {}
@@ -108,12 +99,6 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
                     }
                 }
 
-                console.log("🔍 [DEBUG] Processing record:", {
-                    record,
-                    questionTitle,
-                    questionId,
-                })
-
                 groupedBySemester[semester].push({
                     id: record.id,
                     answer_id: record.answer_id,
@@ -133,10 +118,8 @@ export async function getAutoEvaluationAnswers(professorId: string, subjectId: s
             answers,
         }))
 
-        console.log("🔍 [BACKEND] Final grouped result:", result)
         return result
     } catch (error) {
-        console.error("❌ Error in getAutoEvaluationAnswers:", error)
         return []
     }
 }
@@ -148,19 +131,11 @@ export async function saveAutoEvaluationAnswers(
     answers: Record<string, any>
 ): Promise<boolean> {
     try {
-        console.log("💾 [BACKEND] Saving auto-evaluation answers to database...")
-        console.log("💾 [BACKEND] Subject ID:", subjectId)
-        console.log("💾 [BACKEND] Professor ID:", professorId)
-        console.log("💾 [BACKEND] Semester:", semester)
-        console.log("💾 [BACKEND] Answers:", answers)
-
         // Convert answers object to array of records
         const answerRecords = Object.entries(answers).map(([questionId]) => ({
             question_id: questionId,
             user_id: professorId, // For auto-evaluations, professor is the "user"
         }))
-
-        console.log("💾 [BACKEND] Answer records to insert:", answerRecords)
 
         // Check if answer records already exist
         const { data: existingAnswers, error: checkError } = await supabase
@@ -173,11 +148,8 @@ export async function saveAutoEvaluationAnswers(
             .eq("user_id", professorId)
 
         if (checkError) {
-            console.log("❌ Error checking existing answers:", checkError)
             return false
         }
-
-        console.log("🔍 [BACKEND] Existing answers found:", existingAnswers?.length || 0)
 
         // Filter out records that already exist
         const existingQuestionIds = new Set(existingAnswers?.map((answer) => answer.question_id) || [])
@@ -187,31 +159,23 @@ export async function saveAutoEvaluationAnswers(
 
         // Insert new answer records if any
         if (newAnswerRecords.length > 0) {
-            console.log("💾 [BACKEND] Inserting new answer records:", newAnswerRecords.length)
-
             const { data: newInsertedAnswers, error: answerError } = await supabase
                 .from("answer")
                 .insert(newAnswerRecords)
                 .select()
 
             if (answerError) {
-                console.log("❌ Error inserting into answer table:", answerError)
                 return false
             }
 
             if (newInsertedAnswers) {
                 insertedAnswers = [...insertedAnswers, ...newInsertedAnswers]
             }
-
-            console.log("✅ Successfully inserted new answer records:", newInsertedAnswers?.length || 0)
         }
 
         if (insertedAnswers.length === 0) {
-            console.log("❌ No answer records available")
             return false
         }
-
-        console.log("✅ Total answer records available:", insertedAnswers.length)
 
         // Now, prepare the answervalue records
         const answervalueRecords = []
@@ -239,10 +203,7 @@ export async function saveAutoEvaluationAnswers(
             }
         }
 
-        console.log("💾 [BACKEND] Answervalue records to insert:", answervalueRecords)
-
         if (answervalueRecords.length === 0) {
-            console.log("⚠️ No valid answer values to insert")
             return true // Consider this a success since the answer records were created
         }
 
@@ -262,9 +223,9 @@ export async function saveAutoEvaluationAnswers(
             insertedAnswervalues?.length || 0,
             "records"
         )
+
         return true
     } catch (error) {
-        console.error("❌ Error in saveAutoEvaluationAnswers:", error)
         return false
     }
 }
@@ -273,10 +234,8 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
     try {
         // Get current semester for filtering
         const currentSemester = calculateSemester()
-        console.log("🔍 [BACKEND 2] Current semester calculated:", currentSemester)
 
         // Query the answervalue table with proper joins to get the complete data
-        console.log("🔍 [BACKEND 2] Querying answervalue table with joins")
 
         const { data: answers, error } = await supabase
             .from("answervalue")
@@ -299,20 +258,13 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
             .eq("professor_id", professorId)
             .eq("semester", currentSemester)
 
-        console.log("🔍 [BACKEND 2] Query result:", { data: answers, error })
-
         if (error) {
-            console.log("❌ Error querying answervalue table:", error)
             return []
         }
 
         if (!answers || answers.length === 0) {
-            console.log("📭 No auto-evaluation data found for professor")
             return []
         }
-
-        console.log("✅ Successfully found data in answervalue table:", answers.length, "records")
-        console.log("🔍 [Backend] Raw data from database:", answers)
 
         // Group answers by semester and remove duplicates
         const groupedBySemester: { [key: string]: AutoEvaluationAnswer[] } = {}
@@ -340,12 +292,6 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
                     }
                 }
 
-                console.log("🔍 [DEBUG 2] Processing record:", {
-                    record,
-                    questionTitle,
-                    questionId,
-                })
-
                 groupedBySemester[semester].push({
                     id: record.id,
                     answer_id: record.answer_id,
@@ -365,10 +311,8 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
             answers,
         }))
 
-        console.log("🔍 [BACKEND 2] Final grouped result:", result)
         return result
     } catch (error) {
-        console.error("❌ Error in getAutoEvaluationAnswersByProfessor:", error)
         return []
     }
 }
