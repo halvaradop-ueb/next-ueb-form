@@ -16,7 +16,6 @@ export const getAutoEvaluationAnswers = async (professorId: string, subjectId: s
         const result = await createService(request)
         return result || []
     } catch (error) {
-        console.error("Error fetching autoevaluation answers:", error)
         return []
     }
 }
@@ -27,7 +26,6 @@ export const getAutoEvaluationAnswersByProfessor = async (professorId: string): 
         const result = await createService(request)
         return result || []
     } catch (error) {
-        console.error("Error fetching autoevaluation answers for professor:", error)
         return []
     }
 }
