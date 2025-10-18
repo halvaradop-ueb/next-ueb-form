@@ -75,7 +75,6 @@ const getStudentEvaluationsByQuestionType = async (
             }
         })
     } catch (error) {
-        console.error("❌ [DEBUG] Error fetching student evaluations:", error)
         // Return empty arrays - no sample data
         return { numericResponses: [], textResponses: [] }
     }
@@ -268,52 +267,32 @@ const drawChartsInPDF = (
 ): number => {
     let currentY = y
 
-    console.log("🎨 Starting chart generation with data:", studentEvaluations)
-
     try {
         // 1. Statistical Overview - matches the "Análisis Estadístico General" section
-        console.log("📊 Drawing statistical overview...")
         currentY = drawStatisticalOverview(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Statistical overview completed at Y:", currentY)
 
         // 2. Score Distribution - matches the pie chart data
-        console.log("📈 Drawing score distribution...")
         currentY = drawScoreDistribution(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Score distribution completed at Y:", currentY)
 
         // 3. Performance Trends - matches "Tendencias de Desempeño"
-        console.log("📉 Drawing performance trends...")
         currentY = drawPerformanceTrends(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Performance trends completed at Y:", currentY)
 
         // 4. Histogram - matches "Histograma de Calificaciones"
-        console.log("📊 Drawing histogram...")
         currentY = drawHistogram(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Histogram completed at Y:", currentY)
 
         // 5. Performance Categories - matches "Categorías de Desempeño"
-        console.log("🏆 Drawing performance categories...")
         currentY = drawPerformanceCategories(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Performance categories completed at Y:", currentY)
 
         // 6. Trend Indicator - matches the "Tendencia General" section from the web page
-        console.log("📈 Drawing trend indicator...")
         currentY = drawTrendIndicator(doc, marginLeft, currentY, studentEvaluations)
-        console.log("✅ Trend indicator completed at Y:", currentY)
 
         // 7. Grade Timeline - shows teacher performance evolution over semesters
-        console.log("📅 Drawing grade timeline...")
         const timelineY = drawGradeTimeline(doc, marginLeft, currentY, semesterAverages || [])
         currentY = timelineY
-        console.log("✅ Grade timeline completed at Y:", currentY)
 
-        console.log("🎉 All charts completed successfully!")
         return currentY
     } catch (error) {
-        console.error("❌ Error drawing charts:", error)
-
         // Draw a simple test chart as fallback
-        console.log("🔧 Drawing fallback test chart...")
         currentY = drawTestCharts(doc, marginLeft, currentY)
 
         return currentY
@@ -340,10 +319,6 @@ const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, stud
     // Get responses - use real data when available
     const allResponses = studentEvaluations.numericResponses?.flatMap((item: any) => item.responses) || []
 
-    console.log("📊 Statistical overview data:", {
-        originalLength: allResponses.length,
-        data: allResponses,
-    })
 
     // Use real data if available, otherwise show message
     if (allResponses.length === 0) {
@@ -1027,7 +1002,7 @@ const generateFeedbackPDF = async (
     try {
         doc.setFont("helvetica")
     } catch (error) {
-        console.warn("Helvetica font not available, using default")
+        // Helvetica font not available, using default
     }
 
     const marginLeft = 20
@@ -1257,15 +1232,6 @@ const generateFeedbackPDF = async (
     const hasStudentEvaluations = studentEvaluations.numericResponses.length > 0 || studentEvaluations.textResponses.length > 0
     const hasFeedbackData = feedback.length > 0
 
-    console.log("🔍 Checking chart conditions:", {
-        hasStudentEvaluations,
-        hasFeedbackData,
-        numericCount: studentEvaluations.numericResponses.length,
-        textCount: studentEvaluations.textResponses.length,
-        feedbackCount: feedback.length,
-        studentEvaluationsData: studentEvaluations,
-    })
-
     // Show charts section if we have any data OR force for testing
     if (hasStudentEvaluations || hasFeedbackData) {
         // Always start charts section on a new page if we're not at the beginning
@@ -1277,18 +1243,9 @@ const generateFeedbackPDF = async (
         // Section header - using new standards
         y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
 
-        // Generate charts with REAL data
-        console.log("📊 Generating charts with real data:", {
-            numericResponses: studentEvaluations.numericResponses.length,
-            textResponses: studentEvaluations.textResponses.length,
-            sampleNumericData: studentEvaluations.numericResponses.slice(0, 2),
-            sampleTextData: studentEvaluations.textResponses.slice(0, 2),
-        })
-
         // Use the actual student evaluations data
         y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations, finalSemesterAverages)
     } else {
-        console.log("⚠️ No chart data available, but still trying to generate charts for debugging")
         // Force chart generation even without data to see what happens
         if (y > 50) {
             doc.addPage()
@@ -1728,7 +1685,7 @@ export const FeedbackManagement = () => {
                 const professorsData = await getProfessors()
                 setProfessors(professorsData)
             } catch (err) {
-                console.error("Fetch error:", err)
+                // Fetch error handled silently
             }
         }
 
@@ -1742,7 +1699,7 @@ export const FeedbackManagement = () => {
                 const subjectsData = await getSubjectsByProfessorId(options.professorId)
                 setSubjects(subjectsData)
             } catch (err) {
-                console.error("Fetch error:", err)
+                // Fetch error handled silently
             }
         }
 
@@ -1802,7 +1759,6 @@ export const FeedbackManagement = () => {
 
                 setAutoEvaluationAnswers(filteredAutoEvaluations)
             } catch (error) {
-                console.error("Error in fetchAutoEvaluation:", error)
                 setAutoEvaluationAnswers([])
             }
         }
@@ -1826,7 +1782,6 @@ export const FeedbackManagement = () => {
                     setQuestions(questionsData)
                 }
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching questions:", error)
                 setQuestions([])
             }
         }
@@ -1872,7 +1827,6 @@ export const FeedbackManagement = () => {
                 const data = await getStudentEvaluationsByQuestionType(questions, options.subjectId, filteredEvaluations)
                 setStudentEvaluations(data)
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching student evaluations:", error)
                 setStudentEvaluations({ numericResponses: [], textResponses: [] })
             }
         }
@@ -1925,7 +1879,6 @@ export const FeedbackManagement = () => {
 
                 setCoevaluations(filteredCoevaluations)
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching coevaluations:", error)
                 setCoevaluations([])
             }
         }
@@ -1951,12 +1904,6 @@ export const FeedbackManagement = () => {
                                 button.disabled = true
                             }
 
-                            console.log("🚀 Iniciando generación de PDF con gráficas...")
-                            console.log("📊 Datos disponibles:")
-                            console.log("- studentEvaluations.numericResponses:", studentEvaluations.numericResponses.length)
-                            console.log("- studentEvaluations.textResponses:", studentEvaluations.textResponses.length)
-                            console.log("- feedback.length:", feedback.length)
-                            console.log("- questions.length:", questions.length)
 
                             // Verificar que tenemos datos antes de generar
                             if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
@@ -2022,7 +1969,6 @@ export const FeedbackManagement = () => {
                                 semesterAveragesData
                             )
 
-                            console.log("✅ PDF generado exitosamente con gráficas")
 
                             // Show success feedback
                             if (button) {
@@ -2035,7 +1981,6 @@ export const FeedbackManagement = () => {
                                 }, 2000)
                             }
                         } catch (error) {
-                            console.error("❌ Error generando PDF:", error)
 
                             // Show error message to user
                             const errorMessage = error instanceof Error ? error.message : "Error desconocido"
