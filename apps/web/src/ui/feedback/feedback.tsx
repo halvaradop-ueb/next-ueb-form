@@ -1,12 +1,12 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
 import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback, formatSemester } from "@/lib/utils"
@@ -495,7 +495,7 @@ export const FeedbackManagement = () => {
                 </div>
             </div>
             <Tabs className="w-full" defaultValue="summary">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="summary" disabled={optionsDisabled}>
                         Resumen
                     </TabsTrigger>
@@ -509,6 +509,9 @@ export const FeedbackManagement = () => {
                         Autoevaluación
                     </TabsTrigger>
                     <TabsTrigger value="coevaluation">Coevaluación</TabsTrigger>
+                    <TabsTrigger value="comparative" disabled={optionsDisabled}>
+                        Análisis Comparativo
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary" className="space-y-4 pt-4">
                     {defaultCardMessage !== "success" && (
@@ -592,8 +595,10 @@ export const FeedbackManagement = () => {
                                                 const semesterAverages = Object.entries(feedbackBySemester)
                                                     .map(([semester, semesterFeedback]) => {
                                                         const avg =
-                                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) /
-                                                            semesterFeedback.length
+                                                            semesterFeedback.reduce(
+                                                                (sum: number, item: any) => sum + item.rating,
+                                                                0
+                                                            ) / semesterFeedback.length
                                                         // Convert from 1-10 scale to 1-5 university scale
                                                         const universityAvg = avg / 2
                                                         return {
@@ -673,7 +678,8 @@ export const FeedbackManagement = () => {
                                                                 <div className="text-lg font-bold text-blue-600">
                                                                     {(
                                                                         semesterAverages.reduce(
-                                                                            (sum, item) => sum + item.universityAverage,
+                                                                            (sum: number, item: any) =>
+                                                                                sum + item.universityAverage,
                                                                             0
                                                                         ) / semesterAverages.length
                                                                     ).toFixed(2)}
@@ -1500,7 +1506,460 @@ export const FeedbackManagement = () => {
                         </div>
                     )}
                 </TabsContent>
+                <TabsContent value="comparative" className="space-y-4 pt-4">
+                    {defaultCardMessage !== "success" && (
+                        <div className="flex items-center justify-center w-full h-32">
+                            <p
+                                className={cn("text-sm text-muted-foreground", {
+                                    "text-destructive": options.professorId && subjects.length === 0,
+                                })}
+                            >
+                                {defaultCardMessage}
+                            </p>
+                        </div>
+                    )}
+                    {defaultCardMessage === "success" && (
+                        <ComparativeAnalysis
+                            feedback={feedback}
+                            studentEvaluations={studentEvaluations}
+                            questions={questions}
+                            professors={professors}
+                            subjects={subjects}
+                            options={options}
+                        />
+                    )}
+                </TabsContent>
             </Tabs>
         </section>
+    )
+}
+
+const ComparativeAnalysis = ({
+    feedback,
+    studentEvaluations,
+    questions,
+    professors,
+    subjects,
+    options,
+}: {
+    feedback: Feedback[]
+    studentEvaluations: any
+    questions: Question[]
+    professors: ProfessorService[]
+    subjects: SubjectService[]
+    options: FeedbackState
+}) => {
+    const [selectedSemesters, setSelectedSemesters] = useState<string[]>([])
+    const [comparisonData, setComparisonData] = useState<any>(null)
+
+    // Semestres disponibles
+    const availableSemesters = useMemo(() => {
+        const semesters = new Set<string>()
+        feedback.forEach((item) => {
+            const date = new Date(item.feedback_date)
+            const year = date.getFullYear()
+            const month = date.getMonth() + 1
+            const semester = month >= 7 ? `${year}-2` : `${year}-1`
+            semesters.add(semester)
+        })
+        return Array.from(semesters).sort()
+    }, [feedback])
+
+    // Cálculo de métricas
+    const calculateSemesterMetrics = useCallback((semesterFeedback: Feedback[]) => {
+        if (semesterFeedback.length === 0) return null
+        const ratings = semesterFeedback.map((f) => f.rating).filter((r) => typeof r === "number")
+        if (ratings.length === 0) return null
+
+        const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
+        const sortedRatings = [...ratings].sort((a, b) => a - b)
+        const median =
+            sortedRatings.length % 2 === 0
+                ? (sortedRatings[sortedRatings.length / 2 - 1] + sortedRatings[sortedRatings.length / 2]) / 2
+                : sortedRatings[Math.floor(sortedRatings.length / 2)]
+
+        // Calculate semester from the first feedback item
+        const firstFeedback = semesterFeedback[0]
+        let semester = "N/A"
+        if (firstFeedback?.feedback_date) {
+            const date = new Date(firstFeedback.feedback_date)
+            const year = date.getFullYear()
+            const month = date.getMonth() + 1
+            semester = month >= 7 ? `${year}-2` : `${year}-1`
+        }
+
+        return {
+            semester,
+            count: ratings.length,
+            average: Number(avg.toFixed(2)),
+            median: Number(median.toFixed(2)),
+            min: Math.min(...ratings),
+            max: Math.max(...ratings),
+            universityAverage: Number((avg / 2).toFixed(2)), // Escala 1–5
+            distribution: {
+                excellent: ratings.filter((r) => r >= 9).length,
+                good: ratings.filter((r) => r >= 7 && r < 9).length,
+                regular: ratings.filter((r) => r >= 5 && r < 7).length,
+                poor: ratings.filter((r) => r < 5).length,
+            },
+        }
+    }, [])
+
+    // Actualización de comparación
+    useEffect(() => {
+        if (selectedSemesters.length < 2) {
+            setComparisonData(null)
+            return
+        }
+
+        const semesterData: any[] = []
+        selectedSemesters.forEach((semester) => {
+            const semesterFeedback = feedback.filter((item) => {
+                const date = new Date(item.feedback_date)
+                const year = date.getFullYear()
+                const month = date.getMonth() + 1
+                const itemSemester = month >= 7 ? `${year}-2` : `${year}-1`
+                return itemSemester === semester
+            })
+
+            const metrics = calculateSemesterMetrics(semesterFeedback)
+            if (metrics) semesterData.push({ ...metrics, semester })
+        })
+
+        setComparisonData(semesterData)
+    }, [selectedSemesters, feedback, calculateSemesterMetrics])
+
+    // Selección de semestres
+    const handleSemesterToggle = (semester: string) => {
+        setSelectedSemesters((prev) =>
+            prev.includes(semester) ? prev.filter((s) => s !== semester) : prev.length < 4 ? [...prev, semester] : prev
+        )
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Selector de semestres */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>📊 Selección de Semestres</CardTitle>
+                    <CardDescription>Selecciona hasta 4 semestres para comparar</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {availableSemesters.map((semester) => (
+                            <div
+                                key={semester}
+                                onClick={() => handleSemesterToggle(semester)}
+                                className={cn(
+                                    "p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md",
+                                    selectedSemesters.includes(semester)
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border hover:border-primary/50"
+                                )}
+                            >
+                                <div className="text-center">
+                                    <div className="font-semibold">Semestre {semester.replace("-", " - ")}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {
+                                            feedback.filter((item) => {
+                                                const date = new Date(item.feedback_date)
+                                                const year = date.getFullYear()
+                                                const month = date.getMonth() + 1
+                                                const itemSemester = month >= 7 ? `${year}-2` : `${year}-1`
+                                                return itemSemester === semester
+                                            }).length
+                                        }{" "}
+                                        evaluaciones
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Contenido comparativo */}
+            {comparisonData && comparisonData.length >= 2 ? (
+                <div className="space-y-6">
+                    {/* Resumen Ejecutivo */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📊 Resumen Comparativo</CardTitle>
+                            <CardDescription>
+                                Comparación de métricas clave entre {comparisonData.length} semestres seleccionados
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                        {(() => {
+                                            const totalEvaluations = comparisonData.reduce(
+                                                (sum: number, data: any) => sum + data.count,
+                                                0
+                                            )
+                                            return totalEvaluations
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-blue-700">Total Evaluaciones</div>
+                                </div>
+                                <div className="text-center p-4 bg-green-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-green-600">
+                                        {(() => {
+                                            const avgRating =
+                                                comparisonData.reduce((sum: number, data: any) => sum + data.average, 0) /
+                                                comparisonData.length
+                                            return avgRating.toFixed(1)
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-green-700">Promedio General</div>
+                                </div>
+                                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-purple-600">
+                                        {(() => {
+                                            const bestSemester = comparisonData.reduce((best: any, current: any) =>
+                                                current.average > best.average ? current : best
+                                            )
+                                            return bestSemester.semester
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-purple-700">Mejor Semestre</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Gráfico de Comparación de Promedios */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📈 Evolución de Promedios por Semestre</CardTitle>
+                            <CardDescription>Comparación visual de los promedios de calificación entre semestres</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={comparisonData.map((data: any) => ({
+                                            semestre: `Semestre ${data.semester.replace("-", " - ")}`,
+                                            promedio: data.average,
+                                            promedioUniversitario: data.universityAverage,
+                                            evaluaciones: data.count,
+                                        }))}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <XAxis dataKey="semestre" angle={-45} textAnchor="end" height={80} fontSize={12} />
+                                        <YAxis domain={[0, 10]} />
+                                        <Tooltip
+                                            formatter={(value, name) => [
+                                                name === "promedio"
+                                                    ? `${Number(value).toFixed(2)}/10`
+                                                    : name === "promedioUniversitario"
+                                                      ? `${Number(value).toFixed(2)}/5`
+                                                      : value,
+                                                name === "promedio"
+                                                    ? "Promedio (1-10)"
+                                                    : name === "promedioUniversitario"
+                                                      ? "Promedio Universitario (1-5)"
+                                                      : "Evaluaciones",
+                                            ]}
+                                        />
+                                        <Legend />
+                                        <Bar dataKey="promedio" fill="#3b82f6" name="Promedio (1-10)" />
+                                        <Bar dataKey="promedioUniversitario" fill="#10b981" name="Promedio Universitario (1-5)" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Distribución de Calificaciones por Semestre */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">🏆 Distribución de Calificaciones</CardTitle>
+                            <CardDescription>Comparación de la distribución de calificaciones entre semestres</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={comparisonData.map((data: any) => ({
+                                            semestre: `Semestre ${data.semester.replace("-", " - ")}`,
+                                            excelente: data.distribution.excellent,
+                                            bueno: data.distribution.good,
+                                            regular: data.distribution.regular,
+                                            deficiente: data.distribution.poor,
+                                        }))}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <XAxis dataKey="semestre" angle={-45} textAnchor="end" height={80} fontSize={12} />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="excelente" stackId="a" fill="#22c55e" name="Excelente (9-10)" />
+                                        <Bar dataKey="bueno" stackId="a" fill="#3b82f6" name="Bueno (7-8)" />
+                                        <Bar dataKey="regular" stackId="a" fill="#eab308" name="Regular (5-6)" />
+                                        <Bar dataKey="deficiente" stackId="a" fill="#ef4444" name="Deficiente (0-4)" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Estadísticas Detalladas */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📋 Estadísticas Detalladas por Semestre</CardTitle>
+                            <CardDescription>Métricas estadísticas completas para cada semestre seleccionado</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {comparisonData.map((data: any) => (
+                                    <Card key={data.semester} className="border-2 border-primary/10">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg text-primary">
+                                                Semestre {data.semester.replace("-", " - ")}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3">
+                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Promedio:</span>
+                                                        <span className="font-semibold">{data.average}/10</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Universitario:</span>
+                                                        <span className="font-semibold">{data.universityAverage}/5</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Mediana:</span>
+                                                        <span className="font-semibold">{data.median}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Mínimo:</span>
+                                                        <span className="font-semibold">{data.min}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Máximo:</span>
+                                                        <span className="font-semibold">{data.max}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Total:</span>
+                                                        <span className="font-semibold">{data.count}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Distribución de calificaciones */}
+                                            <div className="space-y-2">
+                                                <h5 className="font-medium text-sm">Distribución:</h5>
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-green-600">Excelente (9-10):</span>
+                                                        <span className="font-medium">{data.distribution.excellent}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-blue-600">Bueno (7-8):</span>
+                                                        <span className="font-medium">{data.distribution.good}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-yellow-600">Regular (5-6):</span>
+                                                        <span className="font-medium">{data.distribution.regular}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-red-600">Deficiente (0-4):</span>
+                                                        <span className="font-medium">{data.distribution.poor}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Análisis de Tendencias */}
+                    {comparisonData.length > 1 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">📈 Análisis de Tendencias</CardTitle>
+                                <CardDescription>
+                                    Comparación del rendimiento entre el primer y último semestre seleccionado
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                                        <div className="flex items-center justify-between text-sm mb-2">
+                                            <span className="font-medium text-blue-800">Tendencia General:</span>
+                                            <span
+                                                className={`font-bold ${
+                                                    comparisonData[comparisonData.length - 1].average > comparisonData[0].average
+                                                        ? "text-green-600"
+                                                        : "text-red-600"
+                                                }`}
+                                            >
+                                                {comparisonData[comparisonData.length - 1].average > comparisonData[0].average
+                                                    ? "↗"
+                                                    : "↘"}
+                                                {Math.abs(
+                                                    comparisonData[comparisonData.length - 1].average - comparisonData[0].average
+                                                ).toFixed(2)}{" "}
+                                                puntos
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-blue-700">
+                                            Cambio entre {comparisonData[0].semester.replace("-", " - ")} y{" "}
+                                            {comparisonData[comparisonData.length - 1].semester.replace("-", " - ")}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                                        <div className="text-sm">
+                                            <span className="font-medium text-green-800">Mejora en Consistencia:</span>
+                                        </div>
+                                        <div className="mt-2">
+                                            {(() => {
+                                                const firstSemester = comparisonData[0]
+                                                const lastSemester = comparisonData[comparisonData.length - 1]
+                                                const consistencyChange =
+                                                    Math.abs(lastSemester.max - lastSemester.min) -
+                                                    Math.abs(firstSemester.max - firstSemester.min)
+
+                                                return (
+                                                    <span
+                                                        className={`font-bold ${consistencyChange < 0 ? "text-green-600" : "text-red-600"}`}
+                                                    >
+                                                        {consistencyChange < 0 ? "↗" : "↘"}
+                                                        {Math.abs(consistencyChange).toFixed(2)} puntos de rango
+                                                    </span>
+                                                )
+                                            })()}
+                                        </div>
+                                        <p className="text-xs text-green-700 mt-1">
+                                            {Math.abs(
+                                                comparisonData[comparisonData.length - 1].max -
+                                                    comparisonData[comparisonData.length - 1].min
+                                            ) < Math.abs(comparisonData[0].max - comparisonData[0].min)
+                                                ? "Mejor consistencia"
+                                                : "Mayor variabilidad"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            ) : (
+                <div className="flex items-center justify-center w-full h-32">
+                    <p className="text-sm text-muted-foreground">
+                        Selecciona al menos 2 semestres para ver el análisis comparativo
+                    </p>
+                </div>
+            )}
+        </div>
     )
 }
