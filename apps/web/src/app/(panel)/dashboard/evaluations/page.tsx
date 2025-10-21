@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function EvaluationPage() {
-    return null
+    return <Evaluations />
 }

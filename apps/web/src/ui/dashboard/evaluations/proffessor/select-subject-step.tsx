@@ -1,6 +1,5 @@
 "use client"
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getSubjectsByProfessorId } from "@/services/subjects"
@@ -8,18 +7,21 @@ import type { SubjectService } from "@/lib/@types/services"
 import type { ProfessorFormState } from "@/lib/@types/types"
 import type { SelectSubjectStepProps } from "@/lib/@types/props"
 
-export const SelectSubject = ({ formData, setFormData }: SelectSubjectStepProps<ProfessorFormState>) => {
-    const { data: session } = useSession()
+export const SelectSubject = ({
+    formData,
+    setFormData,
+    session,
+}: SelectSubjectStepProps<ProfessorFormState> & { session: any }) => {
     const [subjects, setSubjects] = useState<SubjectService[]>([])
 
     useEffect(() => {
         const fetchSubjects = async () => {
-            if (!session?.user) return
-            const subjects = await getSubjectsByProfessorId(session.user.id!)
+            if (!session?.user?.id) return
+            const subjects = await getSubjectsByProfessorId(session.user.id)
             setSubjects(subjects)
         }
         fetchSubjects()
-    }, [])
+    }, [session])
 
     return (
         <section className="space-y-6">
