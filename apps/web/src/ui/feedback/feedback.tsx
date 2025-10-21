@@ -1,16 +1,15 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
-import jsPDF from "jspdf"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
-import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback } from "@/lib/utils"
+import { cn, createPeriods, filterByPeriod, getAverageRatings, ratingFeedback, formatSemester } from "@/lib/utils"
 import { getProfessors, getAllCoevaluations } from "@/services/professors"
 import { getSubjectsByProfessorId } from "@/services/subjects"
 import { getFeedback } from "@/services/feedback"
@@ -18,6 +17,7 @@ import { getAutoEvaluationAnswers } from "@/services/auto-evaluation"
 import { getQuestionsBySubject } from "@/services/questions"
 import { getStudentEvaluationsBySubject } from "@/services/answer"
 import { API_ENDPOINT } from "@/services/utils"
+import { generateFeedbackPDF } from "./generateFeedbackPDF"
 
 const timeframes = createPeriods(new Date("2024-01-01"))
 
@@ -75,653 +75,11 @@ const getStudentEvaluationsByQuestionType = async (
             }
         })
     } catch (error) {
-        console.error("❌ [DEBUG] Error fetching student evaluations:", error)
-        // Return empty arrays - no sample data
         return { numericResponses: [], textResponses: [] }
     }
 
-    // No additional fallback - return empty arrays if no data
-
     return { numericResponses, textResponses }
 }
-
-// Component for numeric question charts
-const NumericQuestionChart = ({ question, responses }: { question: Question; responses: number[] }) => {
-    if (responses.length === 0) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">{question.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">No hay respuestas numéricas disponibles</p>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    const avg = responses.reduce((a, b) => a + b, 0) / responses.length
-    const min = Math.min(...responses)
-    const max = Math.max(...responses)
-
-    // Create distribution data
-    const distribution = Array.from({ length: 10 }, (_, i) => {
-        const rating = i + 1
-        const count = responses.filter((r) => Math.floor(r) === rating).length
-        return { rating, count, percentage: (count / responses.length) * 100 }
-    }).filter((item) => item.count > 0)
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-lg">{question.title}</CardTitle>
-                <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span>Promedio: {avg.toFixed(1)}</span>
-                    <span>
-                        Rango: {min} - {max}
-                    </span>
-                    <span>Total: {responses.length}</span>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-2">
-                    {distribution.map(({ rating, count, percentage }) => (
-                        <div key={rating} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                                <span>
-                                    {rating} punto{rating !== 1 ? "s" : ""}
-                                </span>
-                                <span>
-                                    {count} ({percentage.toFixed(1)}%)
-                                </span>
-                            </div>
-                            <div className="w-full bg-secondary rounded-full h-2">
-                                <div
-                                    className="bg-primary h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${percentage}%` }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-// Component for text question responses
-const TextQuestionDisplay = ({ question, responses }: { question: Question; responses: string[] }) => {
-    if (responses.length === 0) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">{question.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">No hay respuestas de texto disponibles</p>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-lg">{question.title}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    {responses.length} respuesta{responses.length !== 1 ? "s" : ""}
-                </p>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-3">
-                    {responses.map((response, index) => (
-                        <div key={index} className="p-3 bg-muted rounded-lg border-l-4 border-l-primary">
-                            <p className="text-sm leading-relaxed">{response}</p>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-// PDF Generation Function
-const generateFeedbackPDF = (
-    professors: ProfessorService[],
-    subjects: SubjectService[],
-    options: FeedbackState,
-    feedback: Feedback[],
-    ratings: ReturnType<typeof ratingFeedback>,
-    autoEvaluationAnswers: AutoEvaluationBySemester[],
-    coevaluations: any[],
-    studentEvaluations: {
-        numericResponses: Array<{ question: Question; responses: number[] }>
-        textResponses: Array<{ question: Question; responses: string[] }>
-    },
-    questions: Question[]
-) => {
-    const doc = new jsPDF()
-
-    // Set up Spanish character support
-    doc.setProperties({
-        title: "Reporte de Retroalimentacion",
-        subject: "Sistema de Evaluacion Docente",
-        author: "Universidad El Bosque",
-        keywords: "retroalimentacion, evaluacion, docente",
-        creator: "Sistema de Evaluacion Docente UEB",
-    })
-
-    // Set font for better Spanish character support
-    try {
-        doc.setFont("helvetica")
-    } catch (error) {
-        console.warn("Helvetica font not available, using default")
-    }
-
-    const marginLeft = 20
-    let y = 25
-
-    // Get professor and subject names
-    const professor = professors.find((p) => p.id === options.professorId)
-    const subject = subjects.find((s) => s.id === options.subjectId)
-
-    // PDF Header with better styling
-    doc.setFillColor(30, 41, 59)
-    doc.rect(0, 0, 210, 35, "F")
-
-    // Main title
-    doc.setFontSize(18)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("REPORTE DE RETROALIMENTACIÓN", 105, 20, { align: "center" })
-
-    // Subtitle
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "normal")
-    doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 28, { align: "center" })
-
-    // Report Info with better spacing
-    y = 45
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(11)
-    doc.setFont("helvetica", "normal")
-
-    const currentDate = new Date().toLocaleDateString("es-ES", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    })
-
-    // Info section with background
-    doc.setFillColor(245, 247, 250)
-    doc.rect(marginLeft - 5, y - 5, 170, 35, "F")
-    doc.setDrawColor(220, 220, 220)
-    doc.rect(marginLeft - 5, y - 5, 170, 35)
-
-    doc.setFontSize(10)
-    doc.setFont("helvetica", "bold")
-    doc.text("INFORMACIÓN DEL REPORTE", marginLeft, y + 2)
-    y += 10
-
-    doc.setFontSize(9)
-    doc.setFont("helvetica", "normal")
-    doc.text(`Docente: ${professor ? `${professor.first_name} ${professor.last_name}` : "No seleccionado"}`, marginLeft, y)
-    y += 7
-    doc.text(`Materia: ${subject ? subject.name : "No seleccionada"}`, marginLeft, y)
-    y += 7
-    doc.text(`Fecha del reporte: ${currentDate}`, marginLeft, y)
-    y += 7
-    doc.text(
-        `Periodo de tiempo: ${options.timeframe ? new Date(options.timeframe.split(" - ")[0]).toLocaleDateString("es-ES") : "No seleccionado"}`,
-        marginLeft,
-        y
-    )
-    y += 15
-
-    // Summary Section with better proportions
-    const summaryBoxHeight = 50
-    doc.setFillColor(240, 245, 255)
-    doc.rect(marginLeft - 5, y - 3, 170, summaryBoxHeight, "F")
-    doc.setDrawColor(30, 41, 59)
-    doc.setLineWidth(0.8)
-    doc.rect(marginLeft - 5, y - 3, 170, summaryBoxHeight)
-
-    doc.setFontSize(10)
-    doc.setTextColor(30, 41, 59)
-    doc.setFont("helvetica", "bold")
-    doc.text("[+] RESUMEN EJECUTIVO", marginLeft, y + 3)
-    y += 12
-
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(8)
-    doc.setFont("helvetica", "normal")
-
-    const filteredFeedback = filterByPeriod(feedback, options.timeframe)
-    const avgRating = getAverageRatings(filteredFeedback)
-
-    // Create better spaced visual indicators
-    const indicatorSpacing = 10
-    const indicatorY = y
-
-    doc.setFillColor(255, 193, 7)
-    doc.circle(marginLeft + 2, indicatorY - 1, 2.2, "F")
-    doc.text(`* Calificacion promedio: ${avgRating.toFixed(1)}/5`, marginLeft + 8, indicatorY)
-    y += indicatorSpacing
-
-    doc.setFillColor(40, 167, 69)
-    doc.circle(marginLeft + 2, indicatorY + 7, 2.2, "F")
-    doc.text(`* Total de evaluaciones: ${filteredFeedback.length}`, marginLeft + 8, indicatorY + 8)
-    y += indicatorSpacing
-
-    doc.setFillColor(23, 162, 184)
-    doc.circle(marginLeft + 2, indicatorY + 15, 2.2, "F")
-    doc.text(`* Total de comentarios: ${feedback.length}`, marginLeft + 8, indicatorY + 16)
-    y += 15
-
-    // Comments Section with visual enhancement
-    if (filteredFeedback.length > 0) {
-        if (y > 200) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header with background
-        doc.setFillColor(255, 243, 224)
-        doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(255, 193, 7)
-        doc.setLineWidth(0.3)
-        doc.rect(marginLeft - 5, y - 3, 170, 8)
-
-        doc.setFontSize(11)
-        doc.setTextColor(139, 69, 19)
-        doc.setFont("helvetica", "bold")
-        doc.text("[+] COMENTARIOS DE ESTUDIANTES", marginLeft, y + 2)
-        y += 15
-
-        doc.setTextColor(0, 0, 0)
-        doc.setFontSize(9)
-        doc.setFont("helvetica", "normal")
-
-        filteredFeedback.forEach((item, index) => {
-            if (y > 240) {
-                doc.addPage()
-                y = 20
-            }
-
-            // Comment box with better proportions
-            const commentBoxHeight = 22
-            doc.setFillColor(254, 249, 231)
-            doc.rect(marginLeft, y - 3, 165, commentBoxHeight, "F")
-            doc.setDrawColor(255, 193, 7)
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, commentBoxHeight)
-
-            doc.setFontSize(8)
-            doc.setFont("helvetica", "bold")
-            doc.text(`${index + 1}. ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
-            y += 6
-
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "normal")
-            doc.text(`   * Calificacion: ${item.rating}/10 | Fecha: ${item.feedback_date}`, marginLeft + 3, y + 1)
-            y += 5
-
-            const commentLines = doc.splitTextToSize(`   Comentario: ${item.feedback_text}`, 155)
-            doc.text(commentLines, marginLeft + 3, y + 1)
-            y += commentLines.length * 4 + 10
-        })
-    }
-
-    // Student Evaluations Section with enhanced visuals
-    if (studentEvaluations.numericResponses.length > 0 || studentEvaluations.textResponses.length > 0) {
-        if (y > 180) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header with background
-        doc.setFillColor(232, 245, 233)
-        doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(40, 167, 69)
-        doc.setLineWidth(0.3)
-        doc.rect(marginLeft - 5, y - 3, 170, 8)
-
-        doc.setFontSize(11)
-        doc.setTextColor(21, 101, 42)
-        doc.setFont("helvetica", "bold")
-        doc.text("[+] EVALUACIONES DE ESTUDIANTES", marginLeft, y + 2)
-        y += 15
-
-        // Numeric Questions with visual enhancement
-        studentEvaluations.numericResponses.forEach((item) => {
-            if (y > 200) {
-                doc.addPage()
-                y = 20
-            }
-
-            // Question box with better proportions
-            const questionBoxHeight = 14
-            doc.setFillColor(240, 248, 255)
-            doc.rect(marginLeft, y - 3, 165, questionBoxHeight, "F")
-            doc.setDrawColor(30, 144, 255)
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, questionBoxHeight)
-
-            doc.setFontSize(8)
-            doc.setTextColor(30, 64, 175)
-            doc.setFont("helvetica", "bold")
-            doc.text(`[*] ${item.question.title}`, marginLeft + 3, y + 1)
-            y += 10
-
-            doc.setTextColor(0, 0, 0)
-            doc.setFontSize(8)
-            doc.setFont("helvetica", "normal")
-
-            const avg = item.responses.reduce((a, b) => a + b, 0) / item.responses.length
-            const min = Math.min(...item.responses)
-            const max = Math.max(...item.responses)
-
-            // Statistics with colored indicators
-            doc.setFillColor(255, 193, 7)
-            doc.circle(marginLeft + 2, y - 1, 1.5, "F")
-            doc.text(`Promedio: ${avg.toFixed(1)} | Rango: ${min}-${max} | Total: ${item.responses.length}`, marginLeft + 7, y)
-            y += 7
-
-            // Distribution bars (visual representation)
-            const distribution = Array.from({ length: 10 }, (_, i) => {
-                const rating = i + 1
-                const count = item.responses.filter((r) => Math.floor(r) === rating).length
-                return { rating, count, percentage: (count / item.responses.length) * 100 }
-            }).filter((item) => item.count > 0)
-
-            distribution.forEach(({ rating, count, percentage }) => {
-                if (y > 250) {
-                    doc.addPage()
-                    y = 20
-                }
-
-                // Visual bar
-                const barWidth = (percentage / 100) * 80
-                doc.setFillColor(30, 144, 255)
-                doc.rect(marginLeft + 7, y - 2, barWidth, 3, "F")
-
-                doc.text(`${rating}⭐ ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
-                y += 6
-            })
-            y += 8
-        })
-
-        // Text Questions with enhanced visuals
-        studentEvaluations.textResponses.forEach((item) => {
-            if (y > 180) {
-                doc.addPage()
-                y = 20
-            }
-
-            // Question header box with better proportions
-            const textQuestionBoxHeight = 12
-            doc.setFillColor(248, 240, 252)
-            doc.rect(marginLeft, y - 3, 165, textQuestionBoxHeight, "F")
-            doc.setDrawColor(139, 92, 246)
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, textQuestionBoxHeight)
-
-            doc.setFontSize(8)
-            doc.setTextColor(79, 70, 229)
-            doc.setFont("helvetica", "bold")
-            doc.text(`[+] ${item.question.title}`, marginLeft + 3, y + 1)
-            y += 9
-
-            doc.setTextColor(0, 0, 0)
-            doc.setFontSize(8)
-            doc.setFont("helvetica", "normal")
-            doc.text(`   Respuestas: ${item.responses.length}`, marginLeft + 3, y)
-            y += 7
-
-            item.responses.forEach((response, index) => {
-                if (y > 230) {
-                    doc.addPage()
-                    y = 20
-                }
-
-                // Response box with better proportions
-                const responseBoxHeight = 10
-                doc.setFillColor(252, 251, 250)
-                doc.rect(marginLeft + 3, y - 2, 160, responseBoxHeight, "F")
-                doc.setDrawColor(209, 213, 219)
-                doc.setLineWidth(0.2)
-                doc.rect(marginLeft + 3, y - 2, 160, responseBoxHeight)
-
-                doc.setFontSize(7)
-                doc.setFont("helvetica", "normal")
-                const responseLines = doc.splitTextToSize(`${index + 1}. ${response}`, 150)
-                doc.text(responseLines, marginLeft + 6, y + 2)
-                y += responseLines.length * 4 + 8
-            })
-            y += 8
-        })
-    }
-
-    // Autoevaluation Section with enhanced visuals
-    if (autoEvaluationAnswers.length > 0) {
-        if (y > 160) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header
-        doc.setFillColor(225, 236, 255)
-        doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(59, 130, 246)
-        doc.setLineWidth(0.3)
-        doc.rect(marginLeft - 5, y - 3, 170, 8)
-
-        doc.setFontSize(11)
-        doc.setTextColor(29, 78, 216)
-        doc.setFont("helvetica", "bold")
-        doc.text("[+] AUTOEVALUACION DOCENTE", marginLeft, y + 2)
-        y += 15
-
-        doc.setTextColor(0, 0, 0)
-        doc.setFontSize(9)
-        doc.setFont("helvetica", "normal")
-
-        autoEvaluationAnswers.forEach((semesterData) => {
-            if (y > 200) {
-                doc.addPage()
-                y = 20
-            }
-
-            if (semesterData && semesterData.semester) {
-                // Semester box with better proportions
-                const semesterBoxHeight = 8
-                doc.setFillColor(239, 246, 255)
-                doc.rect(marginLeft, y - 2, 165, semesterBoxHeight, "F")
-                doc.setDrawColor(59, 130, 246)
-                doc.setLineWidth(0.3)
-                doc.rect(marginLeft, y - 2, 165, semesterBoxHeight)
-
-                doc.setFontSize(8)
-                doc.setFont("helvetica", "bold")
-                doc.text(
-                    `[+] Semestre ${semesterData.semester} (${semesterData.answers?.length || 0} respuestas)`,
-                    marginLeft + 3,
-                    y + 1
-                )
-                y += 10
-
-                if (semesterData.answers && Array.isArray(semesterData.answers)) {
-                    semesterData.answers.forEach((answer: any, answerIndex: number) => {
-                        if (y > 240) {
-                            doc.addPage()
-                            y = 20
-                        }
-
-                        // Answer box with better proportions
-                        const answerBoxHeight = 12
-                        doc.setFillColor(250, 248, 242)
-                        doc.rect(marginLeft + 3, y - 2, 160, answerBoxHeight, "F")
-                        doc.setDrawColor(245, 158, 11)
-                        doc.setLineWidth(0.2)
-                        doc.rect(marginLeft + 3, y - 2, 160, answerBoxHeight)
-
-                        doc.setFontSize(7)
-                        doc.setFont("helvetica", "bold")
-                        doc.text(`Pregunta: ${answer.question_title || `Pregunta ${answer.answer_id}`}`, marginLeft + 6, y + 1)
-                        y += 6
-
-                        doc.setFontSize(7)
-                        doc.setFont("helvetica", "normal")
-                        const answerLines = doc.splitTextToSize(`Respuesta: ${answer.answer_text || "Sin respuesta"}`, 150)
-                        doc.text(answerLines, marginLeft + 6, y + 1)
-                        y += answerLines.length * 4 + 8
-                    })
-                }
-                y += 5
-            }
-        })
-    }
-
-    // Coevaluation Section with enhanced visuals
-    if (coevaluations.length > 0) {
-        if (y > 160) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header
-        doc.setFillColor(254, 242, 242)
-        doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(239, 68, 68)
-        doc.setLineWidth(0.3)
-        doc.rect(marginLeft - 5, y - 3, 170, 8)
-
-        doc.setFontSize(11)
-        doc.setTextColor(220, 38, 38)
-        doc.setFont("helvetica", "bold")
-        doc.text("[+] COEVALUACION INSTITUCIONAL", marginLeft, y + 2)
-        y += 15
-
-        doc.setTextColor(0, 0, 0)
-        doc.setFontSize(9)
-        doc.setFont("helvetica", "normal")
-
-        coevaluations.forEach((coevaluation, index) => {
-            if (y > 180) {
-                doc.addPage()
-                y = 20
-            }
-
-            // Coevaluation header box with better proportions
-            const coevaluationHeaderHeight = 8
-            doc.setFillColor(254, 249, 249)
-            doc.rect(marginLeft, y - 3, 165, coevaluationHeaderHeight, "F")
-            doc.setDrawColor(239, 68, 68)
-            doc.setLineWidth(0.3)
-            doc.rect(marginLeft, y - 3, 165, coevaluationHeaderHeight)
-
-            doc.setFontSize(8)
-            doc.setFont("helvetica", "bold")
-            doc.text(
-                `${index + 1}. Fecha: ${new Date(coevaluation.created_at).toLocaleDateString("es-ES")}`,
-                marginLeft + 3,
-                y + 1
-            )
-            y += 10
-
-            // Info section
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "normal")
-            doc.text(
-                `Profesor: ${coevaluation.professor ? `${coevaluation.professor.first_name} ${coevaluation.professor.last_name}` : "N/A"}`,
-                marginLeft + 3,
-                y
-            )
-            y += 5
-            doc.text(`Materia: ${coevaluation.subject ? coevaluation.subject.name : "N/A"}`, marginLeft + 3, y)
-            y += 5
-            doc.text(
-                `Admin: ${coevaluation.admin ? `${coevaluation.admin.first_name} ${coevaluation.admin.last_name}` : "N/A"}`,
-                marginLeft + 3,
-                y
-            )
-            y += 8
-
-            // Findings section with better proportions
-            const findingsBoxHeight = 8
-            doc.setFillColor(254, 228, 226)
-            doc.rect(marginLeft + 3, y - 2, 160, findingsBoxHeight, "F")
-            doc.setDrawColor(239, 68, 68)
-            doc.setLineWidth(0.2)
-            doc.rect(marginLeft + 3, y - 2, 160, findingsBoxHeight)
-
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "bold")
-            doc.text("HALLAZGOS:", marginLeft + 6, y + 1)
-            y += 8
-
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "normal")
-            const findingsLines = doc.splitTextToSize(coevaluation.findings, 150)
-            doc.text(findingsLines, marginLeft + 6, y)
-            y += findingsLines.length * 4 + 10
-
-            // Improvement plan section with better proportions
-            const planBoxHeight = 8
-            doc.setFillColor(226, 232, 240)
-            doc.rect(marginLeft + 3, y - 2, 160, planBoxHeight, "F")
-            doc.setDrawColor(30, 58, 138)
-            doc.setLineWidth(0.2)
-            doc.rect(marginLeft + 3, y - 2, 160, planBoxHeight)
-
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "bold")
-            doc.text("PLAN DE MEJORAMIENTO:", marginLeft + 6, y + 1)
-            y += 8
-
-            doc.setFontSize(7)
-            doc.setFont("helvetica", "normal")
-            const planLines = doc.splitTextToSize(coevaluation.improvement_plan, 150)
-            doc.text(planLines, marginLeft + 6, y)
-            y += planLines.length * 4 + 12
-        })
-    }
-
-    // Footer with enhanced styling
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i)
-
-        // Footer line
-        doc.setDrawColor(180, 180, 180)
-        doc.setLineWidth(0.5)
-        doc.line(20, 280, 190, 280)
-
-        // Page number
-        doc.setFontSize(8)
-        doc.setTextColor(100, 100, 100)
-        doc.text(`Página ${i} de ${pageCount}`, 105, 288, { align: "center" })
-
-        // Footer text
-        doc.setFontSize(7)
-        doc.text("Sistema de Evaluación Docente - Universidad El Bosque", 105, 295, { align: "center" })
-    }
-
-    // Save PDF with proper encoding
-    const professorName = professor ? `${professor.first_name}_${professor.last_name}` : "profesor"
-    const subjectName = subject ? subject.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "") : "materia"
-    const fileName = `Retroalimentacion_${professorName}_${subjectName}_${currentDate.replace(/\s+/g, "_")}.pdf`
-
-    // Set PDF metadata for better character support
-    try {
-        doc.save(fileName)
-    } catch (error) {
-        console.error("Error saving PDF:", error)
-        // Fallback filename
-        doc.save("Reporte_Retroalimentacion.pdf")
-    }
-}
-
 export const FeedbackManagement = () => {
     const [feedback, setFeedback] = useState<Feedback[]>([])
     const [subjects, setSubjects] = useState<SubjectService[]>([])
@@ -729,7 +87,6 @@ export const FeedbackManagement = () => {
     const [options, setOptions] = useState<FeedbackState>(initialState)
     const [ratings, setRatings] = useState<ReturnType<typeof ratingFeedback>>([])
     const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationBySemester[]>([])
-    const [questionTitles, setQuestionTitles] = useState<Record<string, string>>({})
     const [questions, setQuestions] = useState<Question[]>([])
     const [studentEvaluations, setStudentEvaluations] = useState<{
         numericResponses: Array<{ question: Question; responses: number[] }>
@@ -766,7 +123,7 @@ export const FeedbackManagement = () => {
                 const professorsData = await getProfessors()
                 setProfessors(professorsData)
             } catch (err) {
-                console.error("Fetch error:", err)
+                // Fetch error handled silently
             }
         }
 
@@ -780,7 +137,7 @@ export const FeedbackManagement = () => {
                 const subjectsData = await getSubjectsByProfessorId(options.professorId)
                 setSubjects(subjectsData)
             } catch (err) {
-                console.error("Fetch error:", err)
+                // Error handled silently
             }
         }
 
@@ -803,14 +160,48 @@ export const FeedbackManagement = () => {
 
             try {
                 const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
-                setAutoEvaluationAnswers(autoEvaluationData)
+
+                // Apply semester filter if a specific timeframe is selected
+                let filteredAutoEvaluations = autoEvaluationData
+                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
+                    let targetSemester = ""
+                    const parts = options.timeframe.split(" - ")
+                    if (parts.length >= 2) {
+                        const firstPart = parts[0]
+                        if (firstPart.includes("T")) {
+                            // Parse ISO date and determine semester
+                            const date = new Date(firstPart)
+                            const year = date.getFullYear()
+                            const month = date.getMonth() + 1
+                            targetSemester = month >= 7 ? `${year} - 2` : `${year} - 1`
+                        } else {
+                            // Already in semester format
+                            targetSemester = firstPart
+                        }
+                    }
+
+                    // Filter autoevaluations by semester
+                    if (targetSemester) {
+                        filteredAutoEvaluations = autoEvaluationData.filter((autoEvaluation: any) => {
+                            // Filter by semester - check if it's grouped data or individual answers
+                            if (autoEvaluation.semester) {
+                                return autoEvaluation.semester === targetSemester
+                            } else if (autoEvaluation.answers && Array.isArray(autoEvaluation.answers)) {
+                                // If it's grouped data, filter the groups
+                                return autoEvaluation.semester === targetSemester
+                            }
+                            return false
+                        })
+                    }
+                }
+
+                setAutoEvaluationAnswers(filteredAutoEvaluations)
             } catch (error) {
-                console.error("Error in fetchAutoEvaluation:", error)
                 setAutoEvaluationAnswers([])
             }
         }
         fetchAutoEvaluation()
-    }, [options?.professorId, options?.subjectId])
+    }, [options?.professorId, options?.subjectId, options?.timeframe])
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -829,7 +220,6 @@ export const FeedbackManagement = () => {
                     setQuestions(questionsData)
                 }
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching questions:", error)
                 setQuestions([])
             }
         }
@@ -875,7 +265,6 @@ export const FeedbackManagement = () => {
                 const data = await getStudentEvaluationsByQuestionType(questions, options.subjectId, filteredEvaluations)
                 setStudentEvaluations(data)
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching student evaluations:", error)
                 setStudentEvaluations({ numericResponses: [], textResponses: [] })
             }
         }
@@ -887,15 +276,53 @@ export const FeedbackManagement = () => {
         const fetchCoevaluations = async () => {
             try {
                 const coevaluationData = await getAllCoevaluations(options.professorId, options.subjectId)
-                setCoevaluations(coevaluationData)
+
+                // Apply semester filter if a specific timeframe is selected
+                let filteredCoevaluations = coevaluationData
+                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
+                    let targetSemester = ""
+                    const parts = options.timeframe.split(" - ")
+                    if (parts.length >= 2) {
+                        const firstPart = parts[0]
+                        if (firstPart.includes("T")) {
+                            // Parse ISO date and determine semester
+                            const date = new Date(firstPart)
+                            const year = date.getFullYear()
+                            const month = date.getMonth() + 1
+                            targetSemester = month >= 7 ? `${year} - 2` : `${year} - 1`
+                        } else {
+                            // Already in semester format
+                            targetSemester = firstPart
+                        }
+                    }
+
+                    // Filter coevaluations by semester
+                    if (targetSemester) {
+                        filteredCoevaluations = coevaluationData.filter((coevaluation: any) => {
+                            // Extract semester from the timeframe field
+                            if (coevaluation.semestre) {
+                                // Convert stored semester format to match target format
+                                const storedSemester = coevaluation.semestre.split(" - ")[0] // Get "2025-07-02T00:00:00.000Z"
+                                const storedDate = new Date(storedSemester)
+                                const storedYear = storedDate.getFullYear()
+                                const storedMonth = storedDate.getMonth() + 1
+                                const storedSemesterPeriod = storedMonth >= 7 ? `${storedYear} - 2` : `${storedYear} - 1`
+
+                                return storedSemesterPeriod === targetSemester
+                            }
+                            return false
+                        })
+                    }
+                }
+
+                setCoevaluations(filteredCoevaluations)
             } catch (error) {
-                console.error("❌ [FRONTEND] Error fetching coevaluations:", error)
                 setCoevaluations([])
             }
         }
 
         fetchCoevaluations()
-    }, [options?.professorId, options?.subjectId])
+    }, [options?.professorId, options?.subjectId, options?.timeframe])
 
     return (
         <section className="space-y-6">
@@ -905,21 +332,107 @@ export const FeedbackManagement = () => {
                     <p className="text-muted-foreground">Revisar la retroalimentación proporcionada por los estudiantes</p>
                 </div>
                 <Button
-                    onClick={() =>
-                        generateFeedbackPDF(
-                            professors,
-                            subjects,
-                            options,
-                            feedback,
-                            ratings,
-                            autoEvaluationAnswers,
-                            coevaluations,
-                            studentEvaluations,
-                            questions
-                        )
-                    }
+                    onClick={async () => {
+                        try {
+                            // Show loading state
+                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
+                            if (button) {
+                                button.innerHTML =
+                                    '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Generando PDF...'
+                                button.disabled = true
+                            }
+
+                            // Verificar que tenemos datos antes de generar
+                            if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
+                                alert(
+                                    "No hay datos disponibles para generar el PDF. Por favor, asegúrese de que la información se haya cargado completamente."
+                                )
+                                if (button) {
+                                    button.innerHTML =
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                    button.disabled = false
+                                }
+                                return
+                            }
+
+                            // Calculate semester averages for the PDF timeline (using ALL feedback, not filtered)
+                            const semesterAveragesData = (() => {
+                                // Group ALL feedback by semester (ignoring time filter)
+                                const feedbackBySemester = feedback.reduce(
+                                    (acc, item) => {
+                                        // Extract semester from feedback_date
+                                        const date = new Date(item.feedback_date)
+                                        const year = date.getFullYear()
+                                        const month = date.getMonth() + 1
+                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
+
+                                        if (!acc[semester]) {
+                                            acc[semester] = []
+                                        }
+                                        acc[semester].push(item)
+                                        return acc
+                                    },
+                                    {} as Record<string, typeof feedback>
+                                )
+
+                                return Object.entries(feedbackBySemester)
+                                    .map(([semester, semesterFeedback]) => {
+                                        const avg =
+                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) / semesterFeedback.length
+                                        // Convert from 1-10 scale to 1-5 university scale
+                                        const universityAvg = avg / 2
+                                        return {
+                                            semester,
+                                            average: avg,
+                                            universityAverage: universityAvg,
+                                            count: semesterFeedback.length,
+                                            semesterName: `Semestre ${semester.replace("-", " - ")}`,
+                                        }
+                                    })
+                                    .sort((a, b) => a.semester.localeCompare(b.semester))
+                            })()
+
+                            // Generate PDF directly with available data
+                            await generateFeedbackPDF(
+                                professors,
+                                subjects,
+                                options,
+                                feedback,
+                                ratings,
+                                autoEvaluationAnswers,
+                                coevaluations,
+                                studentEvaluations,
+                                questions,
+                                semesterAveragesData
+                            )
+
+                            // Show success feedback
+                            if (button) {
+                                button.innerHTML =
+                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡PDF Generado!'
+                                setTimeout(() => {
+                                    button.innerHTML =
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                    button.disabled = false
+                                }, 2000)
+                            }
+                        } catch (error) {
+                            // Show error message to user
+                            const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+                            alert(`Error generando PDF: ${errorMessage}`)
+
+                            // Restore button state on error
+                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
+                            if (button) {
+                                button.innerHTML =
+                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
+                                button.disabled = false
+                            }
+                        }
+                    }}
                     disabled={optionsDisabled}
                     className="flex items-center gap-2"
+                    data-pdf-button
                 >
                     <Download className="h-4 w-4" />
                     Generar PDF
@@ -982,7 +495,7 @@ export const FeedbackManagement = () => {
                 </div>
             </div>
             <Tabs className="w-full" defaultValue="summary">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="summary" disabled={optionsDisabled}>
                         Resumen
                     </TabsTrigger>
@@ -996,6 +509,9 @@ export const FeedbackManagement = () => {
                         Autoevaluación
                     </TabsTrigger>
                     <TabsTrigger value="coevaluation">Coevaluación</TabsTrigger>
+                    <TabsTrigger value="comparative" disabled={optionsDisabled}>
+                        Análisis Comparativo
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="summary" className="space-y-4 pt-4">
                     {defaultCardMessage !== "success" && (
@@ -1079,8 +595,10 @@ export const FeedbackManagement = () => {
                                                 const semesterAverages = Object.entries(feedbackBySemester)
                                                     .map(([semester, semesterFeedback]) => {
                                                         const avg =
-                                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) /
-                                                            semesterFeedback.length
+                                                            semesterFeedback.reduce(
+                                                                (sum: number, item: any) => sum + item.rating,
+                                                                0
+                                                            ) / semesterFeedback.length
                                                         // Convert from 1-10 scale to 1-5 university scale
                                                         const universityAvg = avg / 2
                                                         return {
@@ -1160,7 +678,8 @@ export const FeedbackManagement = () => {
                                                                 <div className="text-lg font-bold text-blue-600">
                                                                     {(
                                                                         semesterAverages.reduce(
-                                                                            (sum, item) => sum + item.universityAverage,
+                                                                            (sum: number, item: any) =>
+                                                                                sum + item.universityAverage,
                                                                             0
                                                                         ) / semesterAverages.length
                                                                     ).toFixed(2)}
@@ -1750,7 +1269,11 @@ export const FeedbackManagement = () => {
                                         </div>
                                         <div className="flex items-center">
                                             <span className="mr-1 font-medium">{item.rating}/10</span>
-                                            <span className="text-xs text-muted-foreground">{item.feedback_date}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {item.feedback_date
+                                                    ? new Date(item.feedback_date).toLocaleDateString("es-ES")
+                                                    : "Sin fecha"}
+                                            </span>
                                         </div>
                                     </div>
                                     <p className="text-sm">{item.feedback_text}</p>
@@ -1906,7 +1429,9 @@ export const FeedbackManagement = () => {
                                             <div className="flex items-center justify-between">
                                                 <CardTitle className="text-lg text-primary">
                                                     📅 Coevaluación{" "}
-                                                    {new Date(coevaluation.created_at).toLocaleDateString("es-ES")}
+                                                    {coevaluation.semestre
+                                                        ? formatSemester(coevaluation.semestre)
+                                                        : "Sin semestre"}
                                                 </CardTitle>
                                             </div>
                                         </CardHeader>
@@ -1942,9 +1467,11 @@ export const FeedbackManagement = () => {
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-primary">📅 Fecha:</span>
+                                                            <span className="font-medium text-primary">📅 Semestre:</span>
                                                             <span>
-                                                                {new Date(coevaluation.created_at).toLocaleString("es-ES")}
+                                                                {coevaluation.semestre
+                                                                    ? formatSemester(coevaluation.semestre)
+                                                                    : "Sin semestre"}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1979,7 +1506,460 @@ export const FeedbackManagement = () => {
                         </div>
                     )}
                 </TabsContent>
+                <TabsContent value="comparative" className="space-y-4 pt-4">
+                    {defaultCardMessage !== "success" && (
+                        <div className="flex items-center justify-center w-full h-32">
+                            <p
+                                className={cn("text-sm text-muted-foreground", {
+                                    "text-destructive": options.professorId && subjects.length === 0,
+                                })}
+                            >
+                                {defaultCardMessage}
+                            </p>
+                        </div>
+                    )}
+                    {defaultCardMessage === "success" && (
+                        <ComparativeAnalysis
+                            feedback={feedback}
+                            studentEvaluations={studentEvaluations}
+                            questions={questions}
+                            professors={professors}
+                            subjects={subjects}
+                            options={options}
+                        />
+                    )}
+                </TabsContent>
             </Tabs>
         </section>
+    )
+}
+
+const ComparativeAnalysis = ({
+    feedback,
+    studentEvaluations,
+    questions,
+    professors,
+    subjects,
+    options,
+}: {
+    feedback: Feedback[]
+    studentEvaluations: any
+    questions: Question[]
+    professors: ProfessorService[]
+    subjects: SubjectService[]
+    options: FeedbackState
+}) => {
+    const [selectedSemesters, setSelectedSemesters] = useState<string[]>([])
+    const [comparisonData, setComparisonData] = useState<any>(null)
+
+    // Semestres disponibles
+    const availableSemesters = useMemo(() => {
+        const semesters = new Set<string>()
+        feedback.forEach((item) => {
+            const date = new Date(item.feedback_date)
+            const year = date.getFullYear()
+            const month = date.getMonth() + 1
+            const semester = month >= 7 ? `${year}-2` : `${year}-1`
+            semesters.add(semester)
+        })
+        return Array.from(semesters).sort()
+    }, [feedback])
+
+    // Cálculo de métricas
+    const calculateSemesterMetrics = useCallback((semesterFeedback: Feedback[]) => {
+        if (semesterFeedback.length === 0) return null
+        const ratings = semesterFeedback.map((f) => f.rating).filter((r) => typeof r === "number")
+        if (ratings.length === 0) return null
+
+        const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length
+        const sortedRatings = [...ratings].sort((a, b) => a - b)
+        const median =
+            sortedRatings.length % 2 === 0
+                ? (sortedRatings[sortedRatings.length / 2 - 1] + sortedRatings[sortedRatings.length / 2]) / 2
+                : sortedRatings[Math.floor(sortedRatings.length / 2)]
+
+        // Calculate semester from the first feedback item
+        const firstFeedback = semesterFeedback[0]
+        let semester = "N/A"
+        if (firstFeedback?.feedback_date) {
+            const date = new Date(firstFeedback.feedback_date)
+            const year = date.getFullYear()
+            const month = date.getMonth() + 1
+            semester = month >= 7 ? `${year}-2` : `${year}-1`
+        }
+
+        return {
+            semester,
+            count: ratings.length,
+            average: Number(avg.toFixed(2)),
+            median: Number(median.toFixed(2)),
+            min: Math.min(...ratings),
+            max: Math.max(...ratings),
+            universityAverage: Number((avg / 2).toFixed(2)), // Escala 1–5
+            distribution: {
+                excellent: ratings.filter((r) => r >= 9).length,
+                good: ratings.filter((r) => r >= 7 && r < 9).length,
+                regular: ratings.filter((r) => r >= 5 && r < 7).length,
+                poor: ratings.filter((r) => r < 5).length,
+            },
+        }
+    }, [])
+
+    // Actualización de comparación
+    useEffect(() => {
+        if (selectedSemesters.length < 2) {
+            setComparisonData(null)
+            return
+        }
+
+        const semesterData: any[] = []
+        selectedSemesters.forEach((semester) => {
+            const semesterFeedback = feedback.filter((item) => {
+                const date = new Date(item.feedback_date)
+                const year = date.getFullYear()
+                const month = date.getMonth() + 1
+                const itemSemester = month >= 7 ? `${year}-2` : `${year}-1`
+                return itemSemester === semester
+            })
+
+            const metrics = calculateSemesterMetrics(semesterFeedback)
+            if (metrics) semesterData.push({ ...metrics, semester })
+        })
+
+        setComparisonData(semesterData)
+    }, [selectedSemesters, feedback, calculateSemesterMetrics])
+
+    // Selección de semestres
+    const handleSemesterToggle = (semester: string) => {
+        setSelectedSemesters((prev) =>
+            prev.includes(semester) ? prev.filter((s) => s !== semester) : prev.length < 4 ? [...prev, semester] : prev
+        )
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Selector de semestres */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>📊 Selección de Semestres</CardTitle>
+                    <CardDescription>Selecciona hasta 4 semestres para comparar</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {availableSemesters.map((semester) => (
+                            <div
+                                key={semester}
+                                onClick={() => handleSemesterToggle(semester)}
+                                className={cn(
+                                    "p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md",
+                                    selectedSemesters.includes(semester)
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border hover:border-primary/50"
+                                )}
+                            >
+                                <div className="text-center">
+                                    <div className="font-semibold">Semestre {semester.replace("-", " - ")}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {
+                                            feedback.filter((item) => {
+                                                const date = new Date(item.feedback_date)
+                                                const year = date.getFullYear()
+                                                const month = date.getMonth() + 1
+                                                const itemSemester = month >= 7 ? `${year}-2` : `${year}-1`
+                                                return itemSemester === semester
+                                            }).length
+                                        }{" "}
+                                        evaluaciones
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Contenido comparativo */}
+            {comparisonData && comparisonData.length >= 2 ? (
+                <div className="space-y-6">
+                    {/* Resumen Ejecutivo */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📊 Resumen Comparativo</CardTitle>
+                            <CardDescription>
+                                Comparación de métricas clave entre {comparisonData.length} semestres seleccionados
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                        {(() => {
+                                            const totalEvaluations = comparisonData.reduce(
+                                                (sum: number, data: any) => sum + data.count,
+                                                0
+                                            )
+                                            return totalEvaluations
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-blue-700">Total Evaluaciones</div>
+                                </div>
+                                <div className="text-center p-4 bg-green-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-green-600">
+                                        {(() => {
+                                            const avgRating =
+                                                comparisonData.reduce((sum: number, data: any) => sum + data.average, 0) /
+                                                comparisonData.length
+                                            return avgRating.toFixed(1)
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-green-700">Promedio General</div>
+                                </div>
+                                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-purple-600">
+                                        {(() => {
+                                            const bestSemester = comparisonData.reduce((best: any, current: any) =>
+                                                current.average > best.average ? current : best
+                                            )
+                                            return bestSemester.semester
+                                        })()}
+                                    </div>
+                                    <div className="text-sm text-purple-700">Mejor Semestre</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Gráfico de Comparación de Promedios */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📈 Evolución de Promedios por Semestre</CardTitle>
+                            <CardDescription>Comparación visual de los promedios de calificación entre semestres</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={comparisonData.map((data: any) => ({
+                                            semestre: `Semestre ${data.semester.replace("-", " - ")}`,
+                                            promedio: data.average,
+                                            promedioUniversitario: data.universityAverage,
+                                            evaluaciones: data.count,
+                                        }))}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <XAxis dataKey="semestre" angle={-45} textAnchor="end" height={80} fontSize={12} />
+                                        <YAxis domain={[0, 10]} />
+                                        <Tooltip
+                                            formatter={(value, name) => [
+                                                name === "promedio"
+                                                    ? `${Number(value).toFixed(2)}/10`
+                                                    : name === "promedioUniversitario"
+                                                      ? `${Number(value).toFixed(2)}/5`
+                                                      : value,
+                                                name === "promedio"
+                                                    ? "Promedio (1-10)"
+                                                    : name === "promedioUniversitario"
+                                                      ? "Promedio Universitario (1-5)"
+                                                      : "Evaluaciones",
+                                            ]}
+                                        />
+                                        <Legend />
+                                        <Bar dataKey="promedio" fill="#3b82f6" name="Promedio (1-10)" />
+                                        <Bar dataKey="promedioUniversitario" fill="#10b981" name="Promedio Universitario (1-5)" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Distribución de Calificaciones por Semestre */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">🏆 Distribución de Calificaciones</CardTitle>
+                            <CardDescription>Comparación de la distribución de calificaciones entre semestres</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={comparisonData.map((data: any) => ({
+                                            semestre: `Semestre ${data.semester.replace("-", " - ")}`,
+                                            excelente: data.distribution.excellent,
+                                            bueno: data.distribution.good,
+                                            regular: data.distribution.regular,
+                                            deficiente: data.distribution.poor,
+                                        }))}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <XAxis dataKey="semestre" angle={-45} textAnchor="end" height={80} fontSize={12} />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="excelente" stackId="a" fill="#22c55e" name="Excelente (9-10)" />
+                                        <Bar dataKey="bueno" stackId="a" fill="#3b82f6" name="Bueno (7-8)" />
+                                        <Bar dataKey="regular" stackId="a" fill="#eab308" name="Regular (5-6)" />
+                                        <Bar dataKey="deficiente" stackId="a" fill="#ef4444" name="Deficiente (0-4)" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Estadísticas Detalladas */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">📋 Estadísticas Detalladas por Semestre</CardTitle>
+                            <CardDescription>Métricas estadísticas completas para cada semestre seleccionado</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {comparisonData.map((data: any) => (
+                                    <Card key={data.semester} className="border-2 border-primary/10">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg text-primary">
+                                                Semestre {data.semester.replace("-", " - ")}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3">
+                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Promedio:</span>
+                                                        <span className="font-semibold">{data.average}/10</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Universitario:</span>
+                                                        <span className="font-semibold">{data.universityAverage}/5</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Mediana:</span>
+                                                        <span className="font-semibold">{data.median}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Mínimo:</span>
+                                                        <span className="font-semibold">{data.min}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Máximo:</span>
+                                                        <span className="font-semibold">{data.max}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="text-muted-foreground">Total:</span>
+                                                        <span className="font-semibold">{data.count}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Distribución de calificaciones */}
+                                            <div className="space-y-2">
+                                                <h5 className="font-medium text-sm">Distribución:</h5>
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-green-600">Excelente (9-10):</span>
+                                                        <span className="font-medium">{data.distribution.excellent}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-blue-600">Bueno (7-8):</span>
+                                                        <span className="font-medium">{data.distribution.good}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-yellow-600">Regular (5-6):</span>
+                                                        <span className="font-medium">{data.distribution.regular}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-red-600">Deficiente (0-4):</span>
+                                                        <span className="font-medium">{data.distribution.poor}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Análisis de Tendencias */}
+                    {comparisonData.length > 1 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">📈 Análisis de Tendencias</CardTitle>
+                                <CardDescription>
+                                    Comparación del rendimiento entre el primer y último semestre seleccionado
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                                        <div className="flex items-center justify-between text-sm mb-2">
+                                            <span className="font-medium text-blue-800">Tendencia General:</span>
+                                            <span
+                                                className={`font-bold ${
+                                                    comparisonData[comparisonData.length - 1].average > comparisonData[0].average
+                                                        ? "text-green-600"
+                                                        : "text-red-600"
+                                                }`}
+                                            >
+                                                {comparisonData[comparisonData.length - 1].average > comparisonData[0].average
+                                                    ? "↗"
+                                                    : "↘"}
+                                                {Math.abs(
+                                                    comparisonData[comparisonData.length - 1].average - comparisonData[0].average
+                                                ).toFixed(2)}{" "}
+                                                puntos
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-blue-700">
+                                            Cambio entre {comparisonData[0].semester.replace("-", " - ")} y{" "}
+                                            {comparisonData[comparisonData.length - 1].semester.replace("-", " - ")}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+                                        <div className="text-sm">
+                                            <span className="font-medium text-green-800">Mejora en Consistencia:</span>
+                                        </div>
+                                        <div className="mt-2">
+                                            {(() => {
+                                                const firstSemester = comparisonData[0]
+                                                const lastSemester = comparisonData[comparisonData.length - 1]
+                                                const consistencyChange =
+                                                    Math.abs(lastSemester.max - lastSemester.min) -
+                                                    Math.abs(firstSemester.max - firstSemester.min)
+
+                                                return (
+                                                    <span
+                                                        className={`font-bold ${consistencyChange < 0 ? "text-green-600" : "text-red-600"}`}
+                                                    >
+                                                        {consistencyChange < 0 ? "↗" : "↘"}
+                                                        {Math.abs(consistencyChange).toFixed(2)} puntos de rango
+                                                    </span>
+                                                )
+                                            })()}
+                                        </div>
+                                        <p className="text-xs text-green-700 mt-1">
+                                            {Math.abs(
+                                                comparisonData[comparisonData.length - 1].max -
+                                                    comparisonData[comparisonData.length - 1].min
+                                            ) < Math.abs(comparisonData[0].max - comparisonData[0].min)
+                                                ? "Mejor consistencia"
+                                                : "Mayor variabilidad"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            ) : (
+                <div className="flex items-center justify-center w-full h-32">
+                    <p className="text-sm text-muted-foreground">
+                        Selecciona al menos 2 semestres para ver el análisis comparativo
+                    </p>
+                </div>
+            )}
+        </div>
     )
 }

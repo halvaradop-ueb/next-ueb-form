@@ -131,10 +131,6 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
     try {
         const subjectId = req.query.subjectId as string
         const semester = req.query.semester as string
-
-        console.log("🔍 [BACKEND] getStudentEvaluationsController called:", { subjectId, semester })
-        console.log("🔍 [BACKEND] Request query:", req.query)
-
         if (!subjectId) {
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
@@ -175,7 +171,6 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
         })
 
         if (error) {
-            console.error("❌ [BACKEND] Error fetching student evaluations:", error)
             return res.status(500).json(errorResponse("Failed to fetch student evaluations"))
         }
 
@@ -185,7 +180,6 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
             message: "Student evaluations retrieved successfully",
         })
     } catch (error) {
-        console.error("❌ [BACKEND] Error in getStudentEvaluationsController:", error)
         res.status(500).json(errorResponse("Failed to fetch student evaluations"))
     }
 }
