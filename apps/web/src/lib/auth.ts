@@ -1,5 +1,6 @@
 import NextAuth, { User } from "next-auth"
 import Google, { type GoogleProfile } from "next-auth/providers/google"
+import { OAuthConfig } from "next-auth/providers"
 import Credentials from "next-auth/providers/credentials"
 import { authenticate, checkAndRegisterUser } from "@/services/auth"
 
@@ -42,6 +43,33 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 } as User
             },
         }),
+        {
+            id: "outlook",
+            name: "Outlook.com",
+            type: "oauth",
+            wellKnown: "https://login.live.com/.well-known/openid_configuration",
+            authorization: {
+                url: "https://login.live.com/oauth20_authorize.srf",
+                params: {
+                    scope: "openid profile email",
+                    response_type: "code",
+                },
+            },
+            token: "https://login.live.com/oauth20_token.srf",
+            userinfo: "https://graph.microsoft.com/oidc/userinfo",
+            async profile(oauthProfile) {
+                const newUser = await checkAndRegisterUser(oauthProfile)
+                if (!newUser) {
+                    throw new Error("Error creating user")
+                }
+                return {
+                    id: newUser.id,
+                    role: "student",
+                    email: oauthProfile.email,
+                    name: "unknown",
+                } as User
+            },
+        } satisfies OAuthConfig<any>,
     ],
     callbacks: {
         async jwt({ user, token }) {

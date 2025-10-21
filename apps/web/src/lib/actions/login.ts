@@ -42,6 +42,10 @@ export const signInWithGoogle = async () => {
     await signIn("google")
 }
 
+export const signInWithOutlook = async () => {
+    await signIn("outlook")
+}
+
 export const signOutSession = async () => {
     await signOut({ redirectTo: "/auth" })
 }
