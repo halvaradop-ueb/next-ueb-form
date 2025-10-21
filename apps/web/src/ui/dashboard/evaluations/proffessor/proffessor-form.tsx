@@ -20,7 +20,8 @@ const getSteps = (
     errors: Record<string, string>,
     onChange: (key: keyof ProfessorFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
-    stages: Partial<Record<string, Question[]>>
+    stages: Partial<Record<string, Question[]>>,
+    session: any
 ): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
         id: `step-${index + 10}`,
@@ -40,7 +41,7 @@ const getSteps = (
         {
             id: "step-1",
             name: "Evaluación",
-            component: <SelectSubject formData={formData} errors={errors} setFormData={onChange} />,
+            component: <SelectSubject formData={formData} errors={errors} setFormData={onChange} session={session} />,
             schema: AssignedProfessorSchema,
         },
         ...mappedStages,
@@ -152,7 +153,7 @@ export const ProffessorForm = ({ session }: ProfessorFormProps) => {
         }
     }
 
-    const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages)
+    const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages, session)
 
     useEffect(() => {
         const fetchQuestions = async () => {
