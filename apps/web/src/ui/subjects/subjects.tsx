@@ -37,6 +37,7 @@ import {
     deleteSubject,
     getProfessorsBySubject,
     getSubjects,
+    updateSubject,
 } from "@/services/subjects"
 import type { ProfessorService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { getProfessors } from "@/services/professors"
@@ -50,6 +51,7 @@ interface Materia {
     departamento: string
     creditos: number
     activa: boolean
+    semestre: string
 }
 
 interface AsignacionProfesor {
@@ -66,6 +68,7 @@ export const Subjects = () => {
 
     const [search, setSearch] = useState("")
     const [busquedaProfesor, setBusquedaProfesor] = useState("")
+    const [selectedSemester, setSelectedSemester] = useState<string>("all")
 
     const [materiaActual, setMateriaActual] = useState<Materia>({
         id: "",
@@ -75,6 +78,7 @@ export const Subjects = () => {
         departamento: "",
         creditos: 3,
         activa: true,
+        semestre: "",
     })
 
     const [assignment, setAsignacionActual] = useState<AsignacionProfesor>({
@@ -87,6 +91,9 @@ export const Subjects = () => {
 
     const [dialogoMateriaAbierto, setDialogoMateriaAbierto] = useState(false)
     const [dialogoAsignacionAbierto, setDialogoAsignacionAbierto] = useState(false)
+    const [dialogoEditarSemestreAbierto, setDialogoEditarSemestreAbierto] = useState(false)
+    const [semestreActual, setSemestreActual] = useState("")
+    const [subjectIdToEdit, setSubjectIdToEdit] = useState<string | null>(null)
 
     const [errores, setErrores] = useState<{ [key: string]: string }>({})
 
@@ -97,10 +104,17 @@ export const Subjects = () => {
     const [confirmDeleteAssignmentText, setConfirmDeleteAssignmentText] = useState("")
     const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null)
 
+    const uniqueSemesters = Array.from(new Set(subjects.map((s) => s.semestre))).sort()
+
     const filteredSubjects = subjects.filter(
-        (subjects) =>
-            subjects.name.toLowerCase().includes(search.toLowerCase()) ||
-            subjects.description.toLowerCase().includes(search.toLowerCase())
+        (subject) =>
+            (subject.name.toLowerCase().includes(search.toLowerCase()) ||
+                subject.description.toLowerCase().includes(search.toLowerCase())) &&
+            (selectedSemester === "all" || subject.semestre === selectedSemester)
+    )
+
+    const filteredAssignments = assignments.filter((assignment) =>
+        `${assignment.user.first_name} ${assignment.user.last_name}`.toLowerCase().includes(busquedaProfesor.toLowerCase())
     )
 
     const iniciarCrearMateria = () => {
@@ -112,6 +126,7 @@ export const Subjects = () => {
             departamento: "",
             creditos: 3,
             activa: true,
+            semestre: "",
         })
         setModoFormulario("crear")
         setErrores({})
@@ -126,6 +141,13 @@ export const Subjects = () => {
             //setErrores({})
             //setDialogoMateriaAbierto(true)
         }
+    }
+
+    const handleEditSemester = (subjectId: string, currentSemestre: string) => {
+        setSubjectIdToEdit(subjectId)
+        setSemestreActual(currentSemestre)
+        setErrores({})
+        setDialogoEditarSemestreAbierto(true)
     }
 
     const handleCreateAssignment = (materiaId: string) => {
@@ -155,6 +177,9 @@ export const Subjects = () => {
         const nuevosErrores: { [key: string]: string } = {}
         if (!materiaActual.nombre.trim()) {
             nuevosErrores.nombre = "El nombre de la materia es obligatorio"
+        }
+        if (!materiaActual.semestre.trim()) {
+            nuevosErrores.semestre = "El semestre es obligatorio"
         }
         const nombreExiste = subjects.some(
             (subject) => subject.name.trim().toLowerCase() === materiaActual.nombre.trim().toLowerCase()
@@ -200,6 +225,7 @@ export const Subjects = () => {
             const newSubject = await addSubject({
                 name: materiaActual.nombre,
                 description: materiaActual.descripcion,
+                semestre: materiaActual.semestre,
             })
             setSubjects((previous) => [...previous, newSubject])
         } else {
@@ -225,6 +251,22 @@ export const Subjects = () => {
         setDialogoAsignacionAbierto(false)
         if (!expandedSubjects.includes(assignment.materiaId)) {
             setExpandedSubjects([...expandedSubjects, assignment.materiaId])
+        }
+        return true
+    }
+
+    const handleSaveSemester = async () => {
+        if (!semestreActual.trim()) {
+            setErrores({ semestre: "El semestre es obligatorio" })
+            return false
+        }
+        if (subjectIdToEdit) {
+            await updateSubject(subjectIdToEdit, { semestre: semestreActual })
+            setSubjects((previous) =>
+                previous.map((subject) => (subject.id === subjectIdToEdit ? { ...subject, semestre: semestreActual } : subject))
+            )
+            setDialogoEditarSemestreAbierto(false)
+            setSubjectIdToEdit(null)
         }
         return true
     }
@@ -325,6 +367,19 @@ export const Subjects = () => {
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
                                 </div>
+                                <Select value={selectedSemester} onValueChange={setSelectedSemester}>
+                                    <SelectTrigger className="w-64">
+                                        <SelectValue placeholder="Seleccionar semestre" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos los semestres</SelectItem>
+                                        {uniqueSemesters.map((semester) => (
+                                            <SelectItem key={semester} value={semester}>
+                                                {semester}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <Dialog open={dialogoMateriaAbierto} onOpenChange={setDialogoMateriaAbierto}>
@@ -370,6 +425,47 @@ export const Subjects = () => {
                                             />
                                         </div>
 
+                                        <div className="space-y-2">
+                                            <Label htmlFor="semestre" className="flex items-center">
+                                                Semestre <span className="text-red-500 ml-1">*</span>
+                                            </Label>
+                                            <Select
+                                                value={materiaActual.semestre}
+                                                onValueChange={(value) => actualizarCampoMateria("semestre", value)}
+                                            >
+                                                <SelectTrigger id="semestre" className={errores.semestre ? "border-red-500" : ""}>
+                                                    <SelectValue placeholder="Seleccionar semestre" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Semestre 1">Semestre 1</SelectItem>
+                                                    <SelectItem value="Semestre 2">Semestre 2</SelectItem>
+                                                    <SelectItem value="Semestre 3">Semestre 3</SelectItem>
+                                                    <SelectItem value="Electiva de profundización 1">
+                                                        Electiva de profundización 1
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva de profundización 2">
+                                                        Electiva de profundización 2
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva de profundización 3">
+                                                        Electiva de profundización 3
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva de profundización 4">
+                                                        Electiva de profundización 4
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva profesional en gerencia de proyectos 1">
+                                                        Electiva profesional en gerencia de proyectos 1
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva profesional en gerencia de proyectos 2">
+                                                        Electiva profesional en gerencia de proyectos 2
+                                                    </SelectItem>
+                                                    <SelectItem value="Electiva profesional en gerencia de proyectos 3">
+                                                        Electiva profesional en gerencia de proyectos 3
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {errores.semestre && <p className="text-sm text-red-500">{errores.semestre}</p>}
+                                        </div>
+
                                         <div className="flex items-center space-x-2">
                                             <input
                                                 type="checkbox"
@@ -403,6 +499,7 @@ export const Subjects = () => {
                                             <TableHead className="w-[30px]"></TableHead>
                                             <TableHead>Nombre</TableHead>
                                             <TableHead>Descripción</TableHead>
+                                            <TableHead>Semestre</TableHead>
                                             <TableHead>Estado</TableHead>
                                             <TableHead className="text-right">Acciones</TableHead>
                                         </TableRow>
@@ -410,7 +507,7 @@ export const Subjects = () => {
                                     <TableBody>
                                         {filteredSubjects.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                                                     No se encontraron materias que coincidan con la búsqueda.
                                                 </TableCell>
                                             </TableRow>
@@ -424,6 +521,7 @@ export const Subjects = () => {
                                                         expandedSubjects={expandedSubjects}
                                                         setExpandedSubjects={handleToggleSubjectExpantion}
                                                         onEditSubject={handleEditSubject}
+                                                        onEditSemester={handleEditSemester}
                                                         onDeleteSubject={handleDeleteSubject}
                                                         onCreateAssignment={handleCreateAssignment}
                                                         onDeleteAssignment={handleDeleteAssignment}
@@ -462,10 +560,14 @@ export const Subjects = () => {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid gap-4 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
-                                    {assignments.length === 0 ? (
-                                        <p className="text-center text-muted-foreground">No hay asignaciones registradas.</p>
+                                    {filteredAssignments.length === 0 ? (
+                                        <p className="text-center text-muted-foreground">
+                                            {assignments.length === 0
+                                                ? "No hay asignaciones registradas."
+                                                : "No se encontraron asignaciones que coincidan con la búsqueda."}
+                                        </p>
                                     ) : (
-                                        assignments.map((assignment) => (
+                                        filteredAssignments.map((assignment) => (
                                             <Card key={assignment.id}>
                                                 <CardContent className="p-4">
                                                     <div className="flex items-center justify-between">
@@ -606,6 +708,52 @@ export const Subjects = () => {
                     setOpen={setConfirmDeleteAssignmentOpen}
                     onDelete={confirmDeleteAssignment}
                 />
+
+                <Dialog open={dialogoEditarSemestreAbierto} onOpenChange={setDialogoEditarSemestreAbierto}>
+                    <DialogContent className="sm:max-w-[400px]">
+                        <DialogHeader>
+                            <DialogTitle>Editar Semestre</DialogTitle>
+                            <DialogDescription>Modifica el semestre de la materia.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="semestre" className="flex items-center">
+                                    Semestre <span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                <Select value={semestreActual} onValueChange={(value) => setSemestreActual(value)}>
+                                    <SelectTrigger id="semestre" className={errores.semestre ? "border-red-500" : ""}>
+                                        <SelectValue placeholder="Seleccionar semestre" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Semestre 1">Semestre 1</SelectItem>
+                                        <SelectItem value="Semestre 2">Semestre 2</SelectItem>
+                                        <SelectItem value="Semestre 3">Semestre 3</SelectItem>
+                                        <SelectItem value="Electiva de profundización 1">Electiva de profundización 1</SelectItem>
+                                        <SelectItem value="Electiva de profundización 2">Electiva de profundización 2</SelectItem>
+                                        <SelectItem value="Electiva de profundización 3">Electiva de profundización 3</SelectItem>
+                                        <SelectItem value="Electiva de profundización 4">Electiva de profundización 4</SelectItem>
+                                        <SelectItem value="Electiva profesional en gerencia de proyectos 1">
+                                            Electiva profesional en gerencia de proyectos 1
+                                        </SelectItem>
+                                        <SelectItem value="Electiva profesional en gerencia de proyectos 2">
+                                            Electiva profesional en gerencia de proyectos 2
+                                        </SelectItem>
+                                        <SelectItem value="Electiva profesional en gerencia de proyectos 3">
+                                            Electiva profesional en gerencia de proyectos 3
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errores.semestre && <p className="text-sm text-red-500">{errores.semestre}</p>}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setDialogoEditarSemestreAbierto(false)}>
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleSaveSemester}>Guardar</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </section>
     )

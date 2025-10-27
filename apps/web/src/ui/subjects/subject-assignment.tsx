@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { SubjectAssignmentProps } from "@/lib/@types/props"
-import { ChevronDown, ChevronRight, Trash2, User, UserMinus, UserPlus } from "lucide-react"
+import { ChevronDown, ChevronRight, Trash2, User, UserMinus, UserPlus, Edit } from "lucide-react"
 import { ConfirmAction } from "../common/confirm-action"
 import { useState } from "react"
 
@@ -14,6 +14,7 @@ export const SubjectAssignment = ({
     onDeleteSubject,
     onCreateAssignment,
     onDeleteAssignment,
+    onEditSemester,
 }: SubjectAssignmentProps) => {
     const isExpanded = expandedSubjects.includes(subject.id)
     const professors = assignments.filter((assignment) => assignment.subject_id === subject.id)
@@ -45,6 +46,7 @@ export const SubjectAssignment = ({
                 </TableCell>
                 <TableCell className="font-medium">{subject.name}</TableCell>
                 <TableCell>{subject.description}</TableCell>
+                <TableCell>{subject.semestre}</TableCell>
                 <TableCell>
                     <Badge>Activa</Badge>
                 </TableCell>
@@ -59,6 +61,17 @@ export const SubjectAssignment = ({
                             <UserPlus className="h-4 w-4" />
                             <span className="sr-only">Asignar profesor</span>
                         </Button>
+                        {onEditSemester && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onEditSemester(subject.id, subject.semestre)}
+                                title="Editar semestre"
+                            >
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Editar semestre</span>
+                            </Button>
+                        )}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -89,7 +102,7 @@ export const SubjectAssignment = ({
             </TableRow>
             {isExpanded && (
                 <TableRow key={`expanded-${subject.id}`}>
-                    <TableCell colSpan={7} className="bg-muted/30 p-0">
+                    <TableCell colSpan={6} className="bg-muted/30 p-0">
                         <div className="p-4">
                             <h4 className="text-sm font-medium mb-2">Profesores asignados</h4>
                             {professors.length === 0 ? (

@@ -62,8 +62,7 @@ export const getAverageRatings = (feedback: Feedback[]) => {
     const n = feedback.length
     if (n === 0) return 0
 
-    // Convert ratings from 1-10 scale to 1-5 scale for display
-    const convertedRatings = feedback.map((item) => item.rating / 2)
+    const convertedRatings = feedback.map((item) => item.rating)
     return convertedRatings.reduce((previous, now) => previous + now, 0) / n
 }
 
@@ -135,10 +134,10 @@ export const createQuestionSchema = (type: Pick<Question, "question_type">) => {
             return z
                 .string({
                     errorMap: () => ({
-                        message: "Este campo es obligatorio y debe ser un número mayor o igual a 1.",
+                        message: "Este campo es obligatorio y debe ser un número entre 0 y 5.",
                     }),
                 })
-                .regex(/^(10|[1-9])$/, "Este campo es obligatorio y debe ser un número mayor o igual a 1.")
+                .regex(/^(5|[0-4])$/, "Este campo es obligatorio y debe ser un número entre 0 y 5.")
         case "single_choice":
             return z.string().min(1, "Por favor selecciona una opción.")
         case "multiple_choice":

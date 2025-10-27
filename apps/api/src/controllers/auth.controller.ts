@@ -66,3 +66,54 @@ export const registerController = async (req: Request, res: Response<APIResponse
         return res.status(500).json(errorResponse<SafeUser>("Internal server error"))
     }
 }
+
+export const outlookController = async (req: Request, res: Response<APIResponse<SafeUser>>) => {
+    try {
+        const { access_token } = req.body
+
+        if (!access_token) {
+            return res.status(400).json({
+                data: null,
+                errors: ["Missing access_token"],
+                message: "Missing access_token",
+            })
+        }
+
+        // Get user info from Microsoft
+        const userInfoResponse = await fetch("https://graph.microsoft.com/oidc/userinfo", {
+            headers: {
+                Authorization: `Bearer ${access_token}`,
+            },
+        })
+
+        if (!userInfoResponse.ok) {
+            return res.status(400).json({
+                data: null,
+                errors: ["Invalid access_token"],
+                message: "Invalid access_token",
+            })
+        }
+
+        const userInfo = await userInfoResponse.json()
+
+        // Register or get user
+        const user = await checkAndRegisterUser({ email: userInfo.email })
+
+        if (!user) {
+            return res.status(500).json({
+                data: null,
+                errors: ["Failed to register user"],
+                message: "Failed to register user",
+            })
+        }
+
+        return res.status(200).json({
+            data: user,
+            errors: null,
+            message: "Outlook authentication successful",
+        })
+    } catch (error) {
+        console.error("Error in outlook auth:", error)
+        return res.status(500).json(errorResponse<SafeUser>("Internal server error"))
+    }
+}

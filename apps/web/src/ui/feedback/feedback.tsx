@@ -379,12 +379,10 @@ export const FeedbackManagement = () => {
                                     .map(([semester, semesterFeedback]) => {
                                         const avg =
                                             semesterFeedback.reduce((sum, item) => sum + item.rating, 0) / semesterFeedback.length
-                                        // Convert from 1-10 scale to 1-5 university scale
-                                        const universityAvg = avg / 2
                                         return {
                                             semester,
                                             average: avg,
-                                            universityAverage: universityAvg,
+                                            universityAverage: avg,
                                             count: semesterFeedback.length,
                                             semesterName: `Semestre ${semester.replace("-", " - ")}`,
                                         }
@@ -604,7 +602,7 @@ export const FeedbackManagement = () => {
                                                         return {
                                                             semester,
                                                             average: avg,
-                                                            universityAverage: universityAvg,
+                                                            universityAverage: avg,
                                                             count: semesterFeedback.length,
                                                             semesterName: `Semestre ${semester.replace("-", " - ")}`,
                                                         }
@@ -622,14 +620,11 @@ export const FeedbackManagement = () => {
                                                 }
 
                                                 // Prepare data for the chart
-                                                const chartData = semesterAverages.map(
-                                                    ({ semesterName, universityAverage, count }) => ({
-                                                        semester: semesterName,
-                                                        promedio: Number(universityAverage.toFixed(2)),
-                                                        evaluaciones: count,
-                                                        promedioOriginal: Number((universityAverage * 2).toFixed(1)),
-                                                    })
-                                                )
+                                                const chartData = semesterAverages.map(({ semesterName, average, count }) => ({
+                                                    semester: semesterName,
+                                                    promedio: Number(average.toFixed(2)),
+                                                    evaluaciones: count,
+                                                }))
 
                                                 return (
                                                     <div className="space-y-6">
@@ -873,46 +868,62 @@ export const FeedbackManagement = () => {
                                                                     <Pie
                                                                         data={[
                                                                             {
-                                                                                name: "Excelente (9-10)",
+                                                                                name: "5 (Excelente)",
                                                                                 value: studentEvaluations.numericResponses.reduce(
                                                                                     (acc, item) =>
                                                                                         acc +
-                                                                                        item.responses.filter(
-                                                                                            (r) => r >= 9 && r <= 10
-                                                                                        ).length,
+                                                                                        item.responses.filter((r) => r === 5)
+                                                                                            .length,
                                                                                     0
                                                                                 ),
                                                                             },
                                                                             {
-                                                                                name: "Bueno (7-8)",
+                                                                                name: "4 (Muy Bueno)",
                                                                                 value: studentEvaluations.numericResponses.reduce(
                                                                                     (acc, item) =>
                                                                                         acc +
-                                                                                        item.responses.filter(
-                                                                                            (r) => r >= 7 && r <= 8
-                                                                                        ).length,
+                                                                                        item.responses.filter((r) => r === 4)
+                                                                                            .length,
                                                                                     0
                                                                                 ),
                                                                             },
                                                                             {
-                                                                                name: "Regular (5-6)",
+                                                                                name: "3 (Bueno)",
                                                                                 value: studentEvaluations.numericResponses.reduce(
                                                                                     (acc, item) =>
                                                                                         acc +
-                                                                                        item.responses.filter(
-                                                                                            (r) => r >= 5 && r <= 6
-                                                                                        ).length,
+                                                                                        item.responses.filter((r) => r === 3)
+                                                                                            .length,
                                                                                     0
                                                                                 ),
                                                                             },
                                                                             {
-                                                                                name: "Deficiente (0-4)",
+                                                                                name: "2 (Regular)",
                                                                                 value: studentEvaluations.numericResponses.reduce(
                                                                                     (acc, item) =>
                                                                                         acc +
-                                                                                        item.responses.filter(
-                                                                                            (r) => r >= 0 && r <= 4
-                                                                                        ).length,
+                                                                                        item.responses.filter((r) => r === 2)
+                                                                                            .length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                            {
+                                                                                name: "1 (Deficiente)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter((r) => r === 1)
+                                                                                            .length,
+                                                                                    0
+                                                                                ),
+                                                                            },
+                                                                            {
+                                                                                name: "0 (No aplica)",
+                                                                                value: studentEvaluations.numericResponses.reduce(
+                                                                                    (acc, item) =>
+                                                                                        acc +
+                                                                                        item.responses.filter((r) => r === 0)
+                                                                                            .length,
                                                                                     0
                                                                                 ),
                                                                             },
@@ -927,11 +938,15 @@ export const FeedbackManagement = () => {
                                                                         fill="#8884d8"
                                                                         dataKey="value"
                                                                     >
-                                                                        {["#22c55e", "#84cc16", "#eab308", "#ef4444"].map(
-                                                                            (color, index) => (
-                                                                                <Cell key={`cell-${index}`} fill={color} />
-                                                                            )
-                                                                        )}
+                                                                        {[
+                                                                            "#22c55e",
+                                                                            "#84cc16",
+                                                                            "#eab308",
+                                                                            "#ef4444",
+                                                                            "#6b7280",
+                                                                        ].map((color, index) => (
+                                                                            <Cell key={`cell-${index}`} fill={color} />
+                                                                        ))}
                                                                     </Pie>
                                                                     <Tooltip />
                                                                 </PieChart>
@@ -1031,12 +1046,10 @@ export const FeedbackManagement = () => {
                                                                 height={80}
                                                                 fontSize={10}
                                                             />
-                                                            <YAxis domain={[0, 10]} />
+                                                            <YAxis domain={[0, 5]} />
                                                             <Tooltip
                                                                 formatter={(value, name) => [
-                                                                    name === "promedio"
-                                                                        ? `${Number(value).toFixed(1)}/10`
-                                                                        : value,
+                                                                    name === "promedio" ? `${Number(value).toFixed(1)}/5` : value,
                                                                     name === "promedio" ? "Promedio" : "Total Respuestas",
                                                                 ]}
                                                             />
@@ -1061,8 +1074,8 @@ export const FeedbackManagement = () => {
                                                 <div className="h-64">
                                                     <ResponsiveContainer width="100%" height="100%">
                                                         <BarChart
-                                                            data={Array.from({ length: 10 }, (_, i) => {
-                                                                const rating = i + 1
+                                                            data={Array.from({ length: 6 }, (_, i) => {
+                                                                const rating = i
                                                                 const count = studentEvaluations.numericResponses.reduce(
                                                                     (acc, item) =>
                                                                         acc +
@@ -1116,53 +1129,71 @@ export const FeedbackManagement = () => {
                                                 </CardDescription>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="grid gap-4 md:grid-cols-4">
+                                                <div className="grid gap-4 md:grid-cols-6">
                                                     {[
                                                         {
-                                                            label: "Excelente",
-                                                            range: "9-10",
+                                                            label: "5 (Excelente)",
+                                                            range: "5",
                                                             color: "bg-green-500",
                                                             bgColor: "bg-green-50",
                                                             textColor: "text-green-700",
                                                             count: studentEvaluations.numericResponses.reduce(
-                                                                (acc, item) =>
-                                                                    acc + item.responses.filter((r) => r >= 9 && r <= 10).length,
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 5).length,
                                                                 0
                                                             ),
                                                         },
                                                         {
-                                                            label: "Bueno",
-                                                            range: "7-8",
+                                                            label: "4 (Muy Bueno)",
+                                                            range: "4",
                                                             color: "bg-blue-500",
                                                             bgColor: "bg-blue-50",
                                                             textColor: "text-blue-700",
                                                             count: studentEvaluations.numericResponses.reduce(
-                                                                (acc, item) =>
-                                                                    acc + item.responses.filter((r) => r >= 7 && r <= 8).length,
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 4).length,
                                                                 0
                                                             ),
                                                         },
                                                         {
-                                                            label: "Regular",
-                                                            range: "5-6",
+                                                            label: "3 (Bueno)",
+                                                            range: "3",
                                                             color: "bg-yellow-500",
                                                             bgColor: "bg-yellow-50",
                                                             textColor: "text-yellow-700",
                                                             count: studentEvaluations.numericResponses.reduce(
-                                                                (acc, item) =>
-                                                                    acc + item.responses.filter((r) => r >= 5 && r <= 6).length,
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 3).length,
                                                                 0
                                                             ),
                                                         },
                                                         {
-                                                            label: "Deficiente",
-                                                            range: "0-4",
+                                                            label: "2 (Regular)",
+                                                            range: "2",
+                                                            color: "bg-orange-500",
+                                                            bgColor: "bg-orange-50",
+                                                            textColor: "text-orange-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 2).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: "1 (Deficiente)",
+                                                            range: "1",
                                                             color: "bg-red-500",
                                                             bgColor: "bg-red-50",
                                                             textColor: "text-red-700",
                                                             count: studentEvaluations.numericResponses.reduce(
-                                                                (acc, item) =>
-                                                                    acc + item.responses.filter((r) => r >= 0 && r <= 4).length,
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 1).length,
+                                                                0
+                                                            ),
+                                                        },
+                                                        {
+                                                            label: "0 (No aplica)",
+                                                            range: "0",
+                                                            color: "bg-gray-500",
+                                                            bgColor: "bg-gray-50",
+                                                            textColor: "text-gray-700",
+                                                            count: studentEvaluations.numericResponses.reduce(
+                                                                (acc, item) => acc + item.responses.filter((r) => r === 0).length,
                                                                 0
                                                             ),
                                                         },
@@ -1268,7 +1299,7 @@ export const FeedbackManagement = () => {
                                             <p className="text-sm text-muted-foreground">{item.subject.name}</p>
                                         </div>
                                         <div className="flex items-center">
-                                            <span className="mr-1 font-medium">{item.rating}/10</span>
+                                            <span className="mr-1 font-medium">{item.rating}/5</span>
                                             <span className="text-xs text-muted-foreground">
                                                 {item.feedback_date
                                                     ? new Date(item.feedback_date).toLocaleDateString("es-ES")
@@ -1595,12 +1626,14 @@ const ComparativeAnalysis = ({
             median: Number(median.toFixed(2)),
             min: Math.min(...ratings),
             max: Math.max(...ratings),
-            universityAverage: Number((avg / 2).toFixed(2)), // Escala 1–5
+            universityAverage: Number(avg.toFixed(2)), // Escala 1–5
             distribution: {
-                excellent: ratings.filter((r) => r >= 9).length,
-                good: ratings.filter((r) => r >= 7 && r < 9).length,
-                regular: ratings.filter((r) => r >= 5 && r < 7).length,
-                poor: ratings.filter((r) => r < 5).length,
+                excellent: ratings.filter((r) => r === 5).length,
+                good: ratings.filter((r) => r === 4).length,
+                regular: ratings.filter((r) => r === 3).length,
+                poor: ratings.filter((r) => r === 2).length,
+                deficient: ratings.filter((r) => r === 1).length,
+                notApplicable: ratings.filter((r) => r === 0).length,
             },
         }
     }, [])
@@ -1748,23 +1781,23 @@ const ComparativeAnalysis = ({
                                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                     >
                                         <XAxis dataKey="semestre" angle={-45} textAnchor="end" height={80} fontSize={12} />
-                                        <YAxis domain={[0, 10]} />
+                                        <YAxis domain={[0, 5]} />
                                         <Tooltip
                                             formatter={(value, name) => [
                                                 name === "promedio"
-                                                    ? `${Number(value).toFixed(2)}/10`
+                                                    ? `${Number(value).toFixed(2)}/5`
                                                     : name === "promedioUniversitario"
                                                       ? `${Number(value).toFixed(2)}/5`
                                                       : value,
                                                 name === "promedio"
-                                                    ? "Promedio (1-10)"
+                                                    ? "Promedio (1-5)"
                                                     : name === "promedioUniversitario"
                                                       ? "Promedio Universitario (1-5)"
                                                       : "Evaluaciones",
                                             ]}
                                         />
                                         <Legend />
-                                        <Bar dataKey="promedio" fill="#3b82f6" name="Promedio (1-10)" />
+                                        <Bar dataKey="promedio" fill="#3b82f6" name="Promedio (1-5)" />
                                         <Bar dataKey="promedioUniversitario" fill="#10b981" name="Promedio Universitario (1-5)" />
                                     </BarChart>
                                 </ResponsiveContainer>
@@ -1787,7 +1820,9 @@ const ComparativeAnalysis = ({
                                             excelente: data.distribution.excellent,
                                             bueno: data.distribution.good,
                                             regular: data.distribution.regular,
-                                            deficiente: data.distribution.poor,
+                                            poor: data.distribution.poor,
+                                            deficiente: data.distribution.deficient,
+                                            notApplicable: data.distribution.notApplicable,
                                         }))}
                                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                     >
@@ -1795,10 +1830,12 @@ const ComparativeAnalysis = ({
                                         <YAxis />
                                         <Tooltip />
                                         <Legend />
-                                        <Bar dataKey="excelente" stackId="a" fill="#22c55e" name="Excelente (9-10)" />
-                                        <Bar dataKey="bueno" stackId="a" fill="#3b82f6" name="Bueno (7-8)" />
-                                        <Bar dataKey="regular" stackId="a" fill="#eab308" name="Regular (5-6)" />
-                                        <Bar dataKey="deficiente" stackId="a" fill="#ef4444" name="Deficiente (0-4)" />
+                                        <Bar dataKey="excelente" stackId="a" fill="#22c55e" name="5 (Excelente)" />
+                                        <Bar dataKey="bueno" stackId="a" fill="#3b82f6" name="4 (Muy Bueno)" />
+                                        <Bar dataKey="regular" stackId="a" fill="#eab308" name="3 (Bueno)" />
+                                        <Bar dataKey="poor" stackId="a" fill="#f97316" name="2 (Regular)" />
+                                        <Bar dataKey="deficiente" stackId="a" fill="#ef4444" name="1 (Deficiente)" />
+                                        <Bar dataKey="notApplicable" stackId="a" fill="#6b7280" name="0 (No aplica)" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -1825,7 +1862,7 @@ const ComparativeAnalysis = ({
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Promedio:</span>
-                                                        <span className="font-semibold">{data.average}/10</span>
+                                                        <span className="font-semibold">{data.average}/5</span>
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-muted-foreground">Universitario:</span>
@@ -1857,20 +1894,28 @@ const ComparativeAnalysis = ({
                                                 <h5 className="font-medium text-sm">Distribución:</h5>
                                                 <div className="space-y-1">
                                                     <div className="flex justify-between text-xs">
-                                                        <span className="text-green-600">Excelente (9-10):</span>
+                                                        <span className="text-green-600">5 (Excelente):</span>
                                                         <span className="font-medium">{data.distribution.excellent}</span>
                                                     </div>
                                                     <div className="flex justify-between text-xs">
-                                                        <span className="text-blue-600">Bueno (7-8):</span>
+                                                        <span className="text-blue-600">4 (Muy Bueno):</span>
                                                         <span className="font-medium">{data.distribution.good}</span>
                                                     </div>
                                                     <div className="flex justify-between text-xs">
-                                                        <span className="text-yellow-600">Regular (5-6):</span>
+                                                        <span className="text-yellow-600">3 (Bueno):</span>
                                                         <span className="font-medium">{data.distribution.regular}</span>
                                                     </div>
                                                     <div className="flex justify-between text-xs">
-                                                        <span className="text-red-600">Deficiente (0-4):</span>
+                                                        <span className="text-orange-600">2 (Regular):</span>
                                                         <span className="font-medium">{data.distribution.poor}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-red-600">1 (Deficiente):</span>
+                                                        <span className="font-medium">{data.distribution.deficient}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-gray-600">0 (No aplica):</span>
+                                                        <span className="font-medium">{data.distribution.notApplicable}</span>
                                                     </div>
                                                 </div>
                                             </div>

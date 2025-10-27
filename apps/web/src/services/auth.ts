@@ -28,8 +28,8 @@ export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserS
     const { email } = profile
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
     if (error) {
-        const randomPassword = getRandomPassword()
-        const password = await hashPassword(randomPassword)
+        const fixedPassword = "student123"
+        const password = await hashPassword(fixedPassword)
         const { data: newUser, error } = await supabase
             .from("User")
             .insert({

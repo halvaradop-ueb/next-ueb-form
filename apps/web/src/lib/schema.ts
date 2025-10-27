@@ -19,7 +19,7 @@ export const AssignedStudentSchema = z.object({
 })
 
 export const FeedbackFormSchema = z.object({
-    rating: z.number().min(1, "Selecciona una calificación entre 1 y 10").max(10, "Selecciona una calificación entre 1 y 10"),
+    rating: z.number().min(0, "Selecciona una calificación entre 0 y 5").max(5, "Selecciona una calificación entre 0 y 5"),
     comment: z.string().optional(),
 })
 

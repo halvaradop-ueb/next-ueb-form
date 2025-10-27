@@ -60,6 +60,7 @@ export interface SubjectAssignmentProps {
     setExpandedSubjects: (subjectId: string) => void
     onCreateAssignment: (subjectId: string) => void
     onEditSubject: (subjectId: string) => void
+    onEditSemester?: (subjectId: string, currentSemestre: string) => void
     onDeleteSubject: (subjectId: string) => void
     onDeleteAssignment: (assignmentId: string) => void
 }
