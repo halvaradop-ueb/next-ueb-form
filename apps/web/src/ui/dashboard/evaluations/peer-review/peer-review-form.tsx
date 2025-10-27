@@ -27,12 +27,21 @@ export interface PeerReviewState {
     comments?: string
     findings?: string
 }
-const timeframes = createPeriods(new Date("2024-01-01"))
+const timeframes = createPeriods(new Date("2023-01-01"))
 
 const initialselectedOptionsState: PeerReviewState = {
     professor: "",
     subject: "",
-    semestre: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    semestre: (() => {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
+        const semester = month >= 7 ? 2 : 1
+        const startMonth = semester === 1 ? 1 : 7
+        const startDate = new Date(year, startMonth - 1, 1)
+        const endDate = semester === 1 ? new Date(year, 6, 30) : new Date(year, 11, 31)
+        return `${startDate.toISOString()} - ${endDate.toISOString()}`
+    })(),
     comments: "",
     findings: "",
 }
@@ -79,7 +88,16 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
         setSelectedOptions({
             professor: evaluation.professor.id,
             subject: evaluation.subject.id,
-            semestre: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+            semestre: (() => {
+                const now = new Date()
+                const year = now.getFullYear()
+                const month = now.getMonth() + 1
+                const semester = month >= 7 ? 2 : 1
+                const startMonth = semester === 1 ? 1 : 7
+                const startDate = new Date(year, startMonth - 1, 1)
+                const endDate = semester === 1 ? new Date(year, 6, 30) : new Date(year, 11, 31)
+                return `${startDate.toISOString()} - ${endDate.toISOString()}`
+            })(),
             comments: evaluation.improvement_plan || "",
             findings: evaluation.findings || "",
         })

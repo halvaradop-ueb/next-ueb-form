@@ -22,7 +22,18 @@ import { generateFeedbackPDF } from "./generateFeedbackPDF"
 const timeframes = createPeriods(new Date("2023-01-01"))
 
 const initialState = {
-    timeframe: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    professorId: "",
+    subjectId: "",
+    timeframe: (() => {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
+        const semester = month >= 7 ? 2 : 1
+        const startMonth = semester === 1 ? 1 : 7
+        const startDate = new Date(year, startMonth - 1, 1)
+        const endDate = semester === 1 ? new Date(year, 6, 30) : new Date(year, 11, 31)
+        return `${startDate.toISOString()} - ${endDate.toISOString()}`
+    })(),
 } as FeedbackState
 
 const getQuestionsByType = (questions: Question[]) => {

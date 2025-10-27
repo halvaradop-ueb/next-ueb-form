@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import { authenticate, checkAndRegisterUser } from "@/services/auth"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-    basePath: "/api/auth",
+    basePath: "/auth",
     providers: [
         Credentials({
             credentials: {
@@ -31,12 +31,22 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             issuer: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}/v2.0`,
             clientId: process.env.AZURE_CLIENT_ID,
             clientSecret: process.env.AZURE_CLIENT_SECRET,
+            checks: ["none"],
+            authorization: {
+                params: {
+                    scope: "openid profile email https://graph.microsoft.com/User.Read",
+                },
+            },
             async profile(profile: any) {
+                console.log("Outlook profile received:", profile)
                 const email = profile.email || "student@example.com"
+                console.log("Processing email:", email)
                 const newUser = await checkAndRegisterUser({ email })
                 if (!newUser) {
+                    console.error("Failed to create or find user for email:", email)
                     throw new Error("Error creating user")
                 }
+                console.log("User processed successfully:", newUser.email)
                 return {
                     id: newUser.id,
                     role: "student",

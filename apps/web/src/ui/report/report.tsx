@@ -26,13 +26,13 @@ export interface ReportState {
     [key: string]: any
 }
 
-const timeframes = createPeriods(new Date("2023-01-01"))
+const timeframes = createPeriods(new Date("2024-01-01"))
 
 const initialReportState: ReportState = {
     title: "",
     professor: "all",
     subject: "",
-    timeframe: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
     comments: "",
     recommendations: "",
 }

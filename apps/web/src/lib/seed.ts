@@ -9,6 +9,10 @@ const users: Partial<User>[] = [
         last_name: "User",
         email: "admin@example.com",
         password: await hashPassword("123"),
+        role: "admin",
+        status: true,
+        address: "",
+        phone: "",
     },
     {
         id: "professor-id",
@@ -16,6 +20,10 @@ const users: Partial<User>[] = [
         last_name: "User",
         email: "professor@example.com",
         password: await hashPassword("123"),
+        role: "professor",
+        status: true,
+        address: "",
+        phone: "",
     },
 ]
 
