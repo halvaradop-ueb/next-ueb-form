@@ -19,10 +19,10 @@ import { getStudentEvaluationsBySubject } from "@/services/answer"
 import { API_ENDPOINT } from "@/services/utils"
 import { generateFeedbackPDF } from "./generateFeedbackPDF"
 
-const timeframes = createPeriods(new Date("2024-01-01"))
+const timeframes = createPeriods(new Date("2023-01-01"))
 
 const initialState = {
-    timeframe: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    timeframe: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
 } as FeedbackState
 
 const getQuestionsByType = (questions: Question[]) => {
@@ -163,7 +163,7 @@ export const FeedbackManagement = () => {
 
                 // Apply semester filter if a specific timeframe is selected
                 let filteredAutoEvaluations = autoEvaluationData
-                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
+                if (options.timeframe && options.timeframe !== "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
                     let targetSemester = ""
                     const parts = options.timeframe.split(" - ")
                     if (parts.length >= 2) {
@@ -234,7 +234,7 @@ export const FeedbackManagement = () => {
 
             try {
                 const allEvaluations = await getStudentEvaluationsBySubject(options.subjectId, "")
-                const isDefaultTimeframe = options.timeframe === "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z"
+                const isDefaultTimeframe = options.timeframe === "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z"
 
                 let filteredEvaluations = allEvaluations
 
@@ -279,7 +279,7 @@ export const FeedbackManagement = () => {
 
                 // Apply semester filter if a specific timeframe is selected
                 let filteredCoevaluations = coevaluationData
-                if (options.timeframe && options.timeframe !== "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
+                if (options.timeframe && options.timeframe !== "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z") {
                     let targetSemester = ""
                     const parts = options.timeframe.split(" - ")
                     if (parts.length >= 2) {

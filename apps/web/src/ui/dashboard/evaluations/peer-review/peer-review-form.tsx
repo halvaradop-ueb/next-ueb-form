@@ -32,7 +32,7 @@ const timeframes = createPeriods(new Date("2024-01-01"))
 const initialselectedOptionsState: PeerReviewState = {
     professor: "",
     subject: "",
-    semestre: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+    semestre: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
     comments: "",
     findings: "",
 }
@@ -79,7 +79,7 @@ export const PeerReviewForm = ({ session }: PeerReviewFormProps) => {
         setSelectedOptions({
             professor: evaluation.professor.id,
             subject: evaluation.subject.id,
-            semestre: "2024-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
+            semestre: "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z",
             comments: evaluation.improvement_plan || "",
             findings: evaluation.findings || "",
         })

@@ -946,7 +946,11 @@ export const generateFeedbackPDF = async (
     y += 7
     doc.text(`Fecha del reporte: ${currentDate}`, marginLeft, y)
     y += 7
-    doc.text(`Periodo de tiempo: ${options.timeframe ? formatSemester(options.timeframe) : "No seleccionado"}`, marginLeft, y)
+    const timeframeDisplay =
+        options.timeframe === "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z"
+            ? "Todos los periodos"
+            : formatSemester(options.timeframe || "")
+    doc.text(`Periodo de tiempo: ${timeframeDisplay}`, marginLeft, y)
     y += 15
 
     // Summary Section with better proportions
