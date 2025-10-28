@@ -38,9 +38,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 },
             },
             async profile(profile: any) {
-                console.log("Outlook profile received:", profile)
                 const email = profile.email || "student@example.com"
-                console.log("Processing email:", email)
                 const newUser = await checkAndRegisterUser({ email })
                 if (!newUser) {
                     console.error("Failed to create or find user for email:", email)
