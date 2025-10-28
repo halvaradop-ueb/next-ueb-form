@@ -1,10 +1,9 @@
 import { supabase } from "@/lib/supabase/client"
-import { UserService } from "@/lib/@types/services"
 import type { OAuthProfile } from "@/lib/@types/types"
 import { hash, genSalt, compare } from "bcryptjs"
+import type { User } from "@ueb/types"
 
-export const authenticate = async (email: string, password: string): Promise<UserService | null> => {
-    console.log("Authenticating user:", email)
+export const authenticate = async (email: string, password: string): Promise<User | null> => {
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
     if (error) {
         console.error("Error fetching user:", error)
@@ -14,9 +13,7 @@ export const authenticate = async (email: string, password: string): Promise<Use
         console.log("User not found:", email)
         return null
     }
-    console.log("User found, comparing password")
     const isAuthenticated = await compare(password, data.password)
-    console.log("Password match:", isAuthenticated)
     return isAuthenticated ? data : null
 }
 
@@ -30,16 +27,13 @@ export const hashPassword = async (password: string): Promise<string> => {
     return await hash(password, salt)
 }
 
-export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserService | null> => {
+export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<User | null> => {
     const { email } = profile
     console.log("Checking user for registration:", email)
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
     if (error) {
-        console.log("User not found, creating new user")
         const fixedPassword = "student123"
         const password = await hashPassword(fixedPassword)
-        console.log("Hashed password for new user")
-        console.log("Inserting new user with email:", email)
         const { data: newUser, error } = await supabase
             .from("User")
             .insert({
@@ -58,9 +52,7 @@ export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserS
             console.error("Error creating user:", error)
             return null
         }
-        console.log("User created successfully:", newUser.email)
         return newUser
     }
-    console.log("User already exists:", data.email)
     return data
 }
