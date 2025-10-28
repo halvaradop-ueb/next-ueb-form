@@ -38,10 +38,6 @@ export const loginAction = async (_: FormState, form: FormData): Promise<FormSta
     }
 }
 
-export const signInWithGoogle = async () => {
-    await signIn("google")
-}
-
 export const signInWithOutlook = async () => {
     await signIn("outlook")
 }

@@ -1,10 +1,9 @@
 import NextAuth, { User } from "next-auth"
-import Google, { type GoogleProfile } from "next-auth/providers/google"
-import { OAuthConfig } from "next-auth/providers"
 import Credentials from "next-auth/providers/credentials"
 import { authenticate, checkAndRegisterUser } from "@/services/auth"
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+    basePath: "/auth",
     providers: [
         Credentials({
             credentials: {
@@ -25,51 +24,34 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 }
             },
         }),
-        Google({
-            async profile(profile) {
-                const newUser = await checkAndRegisterUser(profile as GoogleProfile)
-                if (!newUser) {
-                    throw new Error("Error creating user")
-                }
-                return {
-                    id: newUser.id,
-                    role: "student",
-                    /**
-                     * TODO: Check if this is correct
-                     * May be undefined in the future
-                     */
-                    email: profile.email,
-                    name: "unknown",
-                } as User
-            },
-        }),
         {
             id: "outlook",
-            name: "Outlook.com",
-            type: "oauth",
-            wellKnown: "https://login.live.com/.well-known/openid_configuration",
+            name: "Microsoft",
+            type: "oidc",
+            issuer: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}/v2.0`,
+            clientId: process.env.AZURE_CLIENT_ID,
+            clientSecret: process.env.AZURE_CLIENT_SECRET,
+            checks: ["none"],
             authorization: {
-                url: "https://login.live.com/oauth20_authorize.srf",
                 params: {
-                    scope: "openid profile email",
-                    response_type: "code",
+                    scope: "openid profile email https://graph.microsoft.com/User.Read",
                 },
             },
-            token: "https://login.live.com/oauth20_token.srf",
-            userinfo: "https://graph.microsoft.com/oidc/userinfo",
-            async profile(oauthProfile) {
-                const newUser = await checkAndRegisterUser(oauthProfile)
+            async profile(profile: any) {
+                const email = profile.email || "student@example.com"
+                const newUser = await checkAndRegisterUser({ email })
                 if (!newUser) {
+                    console.error("Failed to create or find user for email:", email)
                     throw new Error("Error creating user")
                 }
                 return {
                     id: newUser.id,
                     role: "student",
-                    email: oauthProfile.email,
-                    name: "unknown",
+                    email: email,
+                    name: profile.name || "Student",
                 } as User
             },
-        } satisfies OAuthConfig<any>,
+        },
     ],
     callbacks: {
         async jwt({ user, token }) {

@@ -5,22 +5,22 @@ import { filterByPeriod, getAverageRatings, formatSemester } from "@/lib/utils"
 
 export const PDF_CONSTANTS = {
     MARGIN: 20,
-    LINE_SPACING: 6,
-    SECTION_SPACING: 12,
-    HEADER_HEIGHT: 10,
-    DATA_BAR_HEIGHT: 6,
-    CONTAINER_HEIGHT: 18,
+    LINE_SPACING: 8,
+    SECTION_SPACING: 15,
+    HEADER_HEIGHT: 12,
+    DATA_BAR_HEIGHT: 8,
+    CONTAINER_HEIGHT: 20,
     FOOTER_HEIGHT: 15,
     COLORS: {
         primary: [59, 130, 246],
-        success: [34, 197, 94],
-        warning: [245, 158, 11],
-        danger: [239, 68, 68],
-        background: [240, 244, 255],
+        primaryLight: [219, 234, 254],
+        background: [250, 250, 250],
         text: [30, 41, 59],
         textLight: [100, 100, 100],
         border: [220, 220, 220],
         white: [255, 255, 255],
+        gray: [107, 114, 128],
+        grayLight: [240, 240, 240],
     },
     TYPOGRAPHY: {
         mainTitle: { size: 16, font: "bold" },
@@ -119,7 +119,7 @@ const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, stud
     const contentWidth = getContentWidth(doc)
 
     // Main container with dynamic width and proper height
-    const containerHeight = 100
+    const containerHeight = 120
     doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
     doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
     doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
@@ -155,10 +155,12 @@ const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, stud
     const barY = currentY
 
     const categories = [
-        { name: "Excelente (9-10)", range: [9, 10], color: PDF_CONSTANTS.COLORS.success },
-        { name: "Bueno (7-8)", range: [7, 8], color: PDF_CONSTANTS.COLORS.primary },
-        { name: "Regular (5-6)", range: [5, 6], color: PDF_CONSTANTS.COLORS.warning },
-        { name: "Deficiente (0-4)", range: [0, 4], color: PDF_CONSTANTS.COLORS.danger },
+        { name: "5 (Excelente)", range: [5, 5], color: PDF_CONSTANTS.COLORS.primary },
+        { name: "4 (Muy Bueno)", range: [4, 4], color: PDF_CONSTANTS.COLORS.primaryLight },
+        { name: "3 (Bueno)", range: [3, 3], color: PDF_CONSTANTS.COLORS.gray },
+        { name: "2 (Regular)", range: [2, 2], color: PDF_CONSTANTS.COLORS.grayLight },
+        { name: "1 (Deficiente)", range: [1, 1], color: PDF_CONSTANTS.COLORS.gray },
+        { name: "0 (No aplica)", range: [0, 0], color: PDF_CONSTANTS.COLORS.grayLight },
     ]
 
     categories.forEach((category, index) => {
@@ -186,9 +188,9 @@ const drawStatisticalOverview = (doc: jsPDF, marginLeft: number, y: number, stud
     const boxHeight = 14
     const stats = [
         { label: "Promedio General", value: avg.toFixed(1), color: PDF_CONSTANTS.COLORS.primary },
-        { label: "Mediana", value: median.toFixed(1), color: PDF_CONSTANTS.COLORS.success },
-        { label: "Rango", value: `${min} - ${max}`, color: PDF_CONSTANTS.COLORS.warning },
-        { label: "Total Evaluaciones", value: allResponses.length.toString(), color: [139, 92, 246] },
+        { label: "Mediana", value: median.toFixed(1), color: PDF_CONSTANTS.COLORS.primaryLight },
+        { label: "Rango", value: `${min} - ${max}`, color: PDF_CONSTANTS.COLORS.gray },
+        { label: "Total Evaluaciones", value: allResponses.length.toString(), color: PDF_CONSTANTS.COLORS.grayLight },
     ]
 
     stats.forEach((stat, index) => {
@@ -218,7 +220,7 @@ const drawScoreDistribution = (doc: jsPDF, marginLeft: number, y: number, studen
     const contentWidth = getContentWidth(doc)
 
     // Container with proper spacing
-    const containerHeight = 80
+    const containerHeight = 100
     doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
     doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
     doc.setDrawColor(71, 85, 105)
@@ -238,10 +240,12 @@ const drawScoreDistribution = (doc: jsPDF, marginLeft: number, y: number, studen
     }
 
     const categories = [
-        { name: "Excelente (9-10)", range: [9, 10], color: PDF_CONSTANTS.COLORS.success },
-        { name: "Bueno (7-8)", range: [7, 8], color: PDF_CONSTANTS.COLORS.primary },
-        { name: "Regular (5-6)", range: [5, 6], color: PDF_CONSTANTS.COLORS.warning },
-        { name: "Deficiente (0-4)", range: [0, 4], color: PDF_CONSTANTS.COLORS.danger },
+        { name: "5 (Excelente)", range: [5, 5], color: PDF_CONSTANTS.COLORS.primary },
+        { name: "4 (Muy Bueno)", range: [4, 4], color: PDF_CONSTANTS.COLORS.primaryLight },
+        { name: "3 (Bueno)", range: [3, 3], color: PDF_CONSTANTS.COLORS.gray },
+        { name: "2 (Regular)", range: [2, 2], color: PDF_CONSTANTS.COLORS.grayLight },
+        { name: "1 (Deficiente)", range: [1, 1], color: PDF_CONSTANTS.COLORS.gray },
+        { name: "0 (No aplica)", range: [0, 0], color: PDF_CONSTANTS.COLORS.grayLight },
     ]
 
     categories.forEach((category, index) => {
@@ -284,9 +288,13 @@ const drawPerformanceTrends = (doc: jsPDF, marginLeft: number, y: number, studen
     const maxQuestions = Math.min(studentEvaluations.numericResponses.length, 5)
     const containerHeight = 20 + maxQuestions * 15 + 10
 
-    doc.setFillColor(254, 240, 238)
+    doc.setFillColor(
+        PDF_CONSTANTS.COLORS.primaryLight[0],
+        PDF_CONSTANTS.COLORS.primaryLight[1],
+        PDF_CONSTANTS.COLORS.primaryLight[2]
+    )
     doc.rect(marginLeft, y, getContentWidth(doc), containerHeight, "F")
-    doc.setDrawColor(251, 146, 60)
+    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
     doc.setLineWidth(0.3)
     doc.rect(marginLeft, y, getContentWidth(doc), containerHeight)
 
@@ -306,15 +314,15 @@ const drawPerformanceTrends = (doc: jsPDF, marginLeft: number, y: number, studen
         const item = studentEvaluations.numericResponses[i]
         const avgScore = item.responses.reduce((a: number, b: number) => a + b, 0) / item.responses.length
         const barY = currentY + i * (PDF_CONSTANTS.LINE_SPACING + 10)
-        const barWidth = Math.max((avgScore / 10) * (getContentWidth(doc) * 0.5), 3)
+        const barWidth = Math.max((avgScore / 5) * (getContentWidth(doc) * 0.5), 3)
         const barHeight = PDF_CONSTANTS.DATA_BAR_HEIGHT + 4
 
         // Background bar
-        doc.setFillColor(254, 249, 231)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.grayLight[0], PDF_CONSTANTS.COLORS.grayLight[1], PDF_CONSTANTS.COLORS.grayLight[2])
         doc.rect(marginLeft + 5, barY, getContentWidth(doc) * 0.5, barHeight, "F")
 
         // Value bar
-        doc.setFillColor(251, 146, 60)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.rect(marginLeft + 5, barY, barWidth, barHeight, "F")
 
         // Question label (truncated)
@@ -348,8 +356,8 @@ const drawHistogram = (doc: jsPDF, marginLeft: number, y: number, studentEvaluat
 
     const allResponses = studentEvaluations.numericResponses.flatMap((item: any) => item.responses)
 
-    // Create histogram data (0-10 scale)
-    const histogramData = Array.from({ length: 11 }, (_, i) => {
+    // Create histogram data (0-5 scale)
+    const histogramData = Array.from({ length: 6 }, (_, i) => {
         const score = i
         const count = allResponses.filter((response: number) => Math.floor(response) === score).length
         return { score, count }
@@ -373,7 +381,7 @@ const drawHistogram = (doc: jsPDF, marginLeft: number, y: number, studentEvaluat
         const barHeight = Math.max((data.count / maxCount) * chartHeight, 3)
 
         // Bar
-        doc.setFillColor(107, 114, 128)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
         doc.rect(barX, currentY + chartHeight - barHeight, barWidth, barHeight, "F")
 
         // Labels
@@ -392,7 +400,7 @@ const drawPerformanceCategories = (doc: jsPDF, marginLeft: number, y: number, st
     const contentWidth = getContentWidth(doc)
 
     // Container with proper dimensions
-    const containerHeight = 80
+    const containerHeight = 100
 
     doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
     doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
@@ -414,26 +422,46 @@ const drawPerformanceCategories = (doc: jsPDF, marginLeft: number, y: number, st
 
     const categories = [
         {
-            label: "Excelente",
-            range: "9-10",
-            color: PDF_CONSTANTS.COLORS.success,
-            bgColor: [220, 252, 231],
-            textColor: [21, 128, 61],
-        },
-        { label: "Bueno", range: "7-8", color: PDF_CONSTANTS.COLORS.primary, bgColor: [219, 234, 254], textColor: [29, 78, 216] },
-        {
-            label: "Regular",
-            range: "5-6",
-            color: PDF_CONSTANTS.COLORS.warning,
-            bgColor: [254, 243, 199],
-            textColor: [154, 52, 18],
+            label: "5 (Excelente)",
+            range: "5",
+            color: PDF_CONSTANTS.COLORS.primary,
+            bgColor: PDF_CONSTANTS.COLORS.primaryLight,
+            textColor: PDF_CONSTANTS.COLORS.primary,
         },
         {
-            label: "Deficiente",
-            range: "0-4",
-            color: PDF_CONSTANTS.COLORS.danger,
-            bgColor: [254, 228, 226],
-            textColor: [220, 38, 38],
+            label: "4 (Muy Bueno)",
+            range: "4",
+            color: PDF_CONSTANTS.COLORS.primaryLight,
+            bgColor: PDF_CONSTANTS.COLORS.primaryLight,
+            textColor: PDF_CONSTANTS.COLORS.primary,
+        },
+        {
+            label: "3 (Bueno)",
+            range: "3",
+            color: PDF_CONSTANTS.COLORS.gray,
+            bgColor: PDF_CONSTANTS.COLORS.grayLight,
+            textColor: PDF_CONSTANTS.COLORS.gray,
+        },
+        {
+            label: "2 (Regular)",
+            range: "2",
+            color: PDF_CONSTANTS.COLORS.grayLight,
+            bgColor: PDF_CONSTANTS.COLORS.grayLight,
+            textColor: PDF_CONSTANTS.COLORS.gray,
+        },
+        {
+            label: "1 (Deficiente)",
+            range: "1",
+            color: PDF_CONSTANTS.COLORS.gray,
+            bgColor: PDF_CONSTANTS.COLORS.grayLight,
+            textColor: PDF_CONSTANTS.COLORS.gray,
+        },
+        {
+            label: "0 (No aplica)",
+            range: "0",
+            color: PDF_CONSTANTS.COLORS.grayLight,
+            bgColor: PDF_CONSTANTS.COLORS.grayLight,
+            textColor: PDF_CONSTANTS.COLORS.gray,
         },
     ]
 
@@ -441,14 +469,18 @@ const drawPerformanceCategories = (doc: jsPDF, marginLeft: number, y: number, st
         const count = allResponses.filter((r: number) => {
             const num = Number(r)
             switch (category.range) {
-                case "9-10":
-                    return num >= 9 && num <= 10
-                case "7-8":
-                    return num >= 7 && num <= 8
-                case "5-6":
-                    return num >= 5 && num <= 6
-                case "0-4":
-                    return num >= 0 && num <= 4
+                case "5":
+                    return num === 5
+                case "4":
+                    return num === 4
+                case "3":
+                    return num === 3
+                case "2":
+                    return num === 2
+                case "1":
+                    return num === 1
+                case "0":
+                    return num === 0
                 default:
                     return false
             }
@@ -497,7 +529,7 @@ const drawGradeTimeline = (doc: jsPDF, marginLeft: number, y: number, semesterAv
     const contentWidth = getContentWidth(doc)
 
     // Container with proper dimensions
-    const containerHeight = 100
+    const containerHeight = 120
     doc.setFillColor(PDF_CONSTANTS.COLORS.background[0], PDF_CONSTANTS.COLORS.background[1], PDF_CONSTANTS.COLORS.background[2])
     doc.rect(marginLeft, y, contentWidth, containerHeight, "F")
     doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
@@ -552,7 +584,7 @@ const drawGradeTimeline = (doc: jsPDF, marginLeft: number, y: number, semesterAv
 
         // Draw background for semester label
         const labelTextWidth = doc.getTextWidth(semesterName)
-        doc.setFillColor(245, 245, 245)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.grayLight[0], PDF_CONSTANTS.COLORS.grayLight[1], PDF_CONSTANTS.COLORS.grayLight[2])
         doc.rect(labelX - labelTextWidth / 2 - 3, labelY - 3, labelTextWidth + 6, 10, "F")
         doc.setDrawColor(PDF_CONSTANTS.COLORS.border[0], PDF_CONSTANTS.COLORS.border[1], PDF_CONSTANTS.COLORS.border[2])
         doc.rect(labelX - labelTextWidth / 2 - 3, labelY - 3, labelTextWidth + 6, 10)
@@ -575,7 +607,7 @@ const drawGradeTimeline = (doc: jsPDF, marginLeft: number, y: number, semesterAv
         // Draw background box for better readability
         const scoreText = score.toFixed(1)
         const textWidth = doc.getTextWidth(scoreText)
-        doc.setFillColor(0, 0, 0)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
         doc.rect(x - textWidth / 2 - 2, yPos - 12, textWidth + 4, 8, "F")
 
         // Draw the score value
@@ -601,7 +633,7 @@ const drawGradeTimeline = (doc: jsPDF, marginLeft: number, y: number, semesterAv
         const evalTextWidth = doc.getTextWidth(evalText)
 
         // Draw background for evaluation count
-        doc.setFillColor(250, 250, 250)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.grayLight[0], PDF_CONSTANTS.COLORS.grayLight[1], PDF_CONSTANTS.COLORS.grayLight[2])
         doc.rect(x - evalTextWidth / 2 - 2, yPos + 8, evalTextWidth + 4, 8, "F")
         doc.setDrawColor(PDF_CONSTANTS.COLORS.border[0], PDF_CONSTANTS.COLORS.border[1], PDF_CONSTANTS.COLORS.border[2])
         doc.rect(x - evalTextWidth / 2 - 2, yPos + 8, evalTextWidth + 4, 8)
@@ -695,13 +727,13 @@ const drawTrendIndicator = (doc: jsPDF, marginLeft: number, y: number, studentEv
     // Trend indicator (arrow and difference)
     const trendX = marginLeft + contentWidth * 0.7
     if (isImproving) {
-        doc.setTextColor(PDF_CONSTANTS.COLORS.success[0], PDF_CONSTANTS.COLORS.success[1], PDF_CONSTANTS.COLORS.success[2])
+        doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.setFont("helvetica", "bold")
         doc.setFontSize(12)
         doc.text("↗", trendX, y + 12)
         doc.text(`+${trendDifference.toFixed(2)}`, trendX + 12, y + 12)
     } else {
-        doc.setTextColor(PDF_CONSTANTS.COLORS.danger[0], PDF_CONSTANTS.COLORS.danger[1], PDF_CONSTANTS.COLORS.danger[2])
+        doc.setTextColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
         doc.setFont("helvetica", "bold")
         doc.setFontSize(12)
         doc.text("↘", trendX, y + 12)
@@ -737,24 +769,28 @@ const drawTestCharts = (doc: jsPDF, marginLeft: number, y: number): number => {
     let currentY = y
 
     // Test container
-    doc.setFillColor(240, 248, 255)
+    doc.setFillColor(
+        PDF_CONSTANTS.COLORS.primaryLight[0],
+        PDF_CONSTANTS.COLORS.primaryLight[1],
+        PDF_CONSTANTS.COLORS.primaryLight[2]
+    )
     doc.rect(marginLeft - 2, currentY - 2, 166, 50, "F")
-    doc.setDrawColor(30, 144, 255)
+    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
     doc.setLineWidth(0.5)
     doc.rect(marginLeft - 2, currentY - 2, 166, 50)
 
     // Test title
     doc.setFontSize(10)
-    doc.setTextColor(30, 64, 175)
+    doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
     doc.setFont("helvetica", "bold")
     doc.text("GRAFICOS DE PRUEBA", marginLeft, currentY + 6)
     currentY += 15
 
     // Test bars
     const testData = [
-        { label: "Categoria A", value: 75, color: [34, 197, 94] },
-        { label: "Categoria B", value: 50, color: [59, 130, 246] },
-        { label: "Categoria C", value: 25, color: [245, 158, 11] },
+        { label: "Categoria A", value: 75, color: PDF_CONSTANTS.COLORS.primary },
+        { label: "Categoria B", value: 50, color: PDF_CONSTANTS.COLORS.primaryLight },
+        { label: "Categoria C", value: 25, color: PDF_CONSTANTS.COLORS.gray },
     ]
 
     testData.forEach((item, index) => {
@@ -846,12 +882,10 @@ export const generateFeedbackPDF = async (
         return Object.entries(feedbackBySemester)
             .map(([semester, semesterFeedback]: [string, any[]]) => {
                 const avg = semesterFeedback.reduce((sum: number, item: any) => sum + item.rating, 0) / semesterFeedback.length
-                // Convert from 1-10 scale to 1-5 university scale
-                const universityAvg = avg / 2
                 return {
                     semester,
                     average: avg,
-                    universityAverage: universityAvg,
+                    universityAverage: avg,
                     count: semesterFeedback.length,
                     semesterName: `Semestre ${semester.replace("-", " - ")}`,
                 }
@@ -912,11 +946,15 @@ export const generateFeedbackPDF = async (
     y += 7
     doc.text(`Fecha del reporte: ${currentDate}`, marginLeft, y)
     y += 7
-    doc.text(`Periodo de tiempo: ${options.timeframe ? formatSemester(options.timeframe) : "No seleccionado"}`, marginLeft, y)
+    const timeframeDisplay =
+        options.timeframe === "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z"
+            ? "Todos los periodos"
+            : formatSemester(options.timeframe || "")
+    doc.text(`Periodo de tiempo: ${timeframeDisplay}`, marginLeft, y)
     y += 15
 
     // Summary Section with better proportions
-    const summaryBoxHeight = 50
+    const summaryBoxHeight = 60
     doc.setFillColor(240, 245, 255)
     doc.rect(marginLeft - 5, y - 3, 170, summaryBoxHeight, "F")
     doc.setDrawColor(30, 41, 59)
@@ -940,17 +978,21 @@ export const generateFeedbackPDF = async (
     const indicatorSpacing = 10
     const indicatorY = y
 
-    doc.setFillColor(255, 193, 7)
+    doc.setFillColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
     doc.circle(marginLeft + 2, indicatorY - 1, 2.2, "F")
     doc.text(`* Calificacion promedio: ${avgRating.toFixed(1)}/5`, marginLeft + 8, indicatorY)
     y += indicatorSpacing
 
-    doc.setFillColor(40, 167, 69)
+    doc.setFillColor(
+        PDF_CONSTANTS.COLORS.primaryLight[0],
+        PDF_CONSTANTS.COLORS.primaryLight[1],
+        PDF_CONSTANTS.COLORS.primaryLight[2]
+    )
     doc.circle(marginLeft + 2, indicatorY + 7, 2.2, "F")
     doc.text(`* Total de evaluaciones: ${filteredFeedback.length}`, marginLeft + 8, indicatorY + 8)
     y += indicatorSpacing
 
-    doc.setFillColor(23, 162, 184)
+    doc.setFillColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
     doc.circle(marginLeft + 2, indicatorY + 15, 2.2, "F")
     doc.text(`* Total de comentarios: ${feedback.length}`, marginLeft + 8, indicatorY + 16)
     y += 15
@@ -970,14 +1012,18 @@ export const generateFeedbackPDF = async (
         }
 
         // Section header with background
-        doc.setFillColor(255, 243, 224)
+        doc.setFillColor(
+            PDF_CONSTANTS.COLORS.primaryLight[0],
+            PDF_CONSTANTS.COLORS.primaryLight[1],
+            PDF_CONSTANTS.COLORS.primaryLight[2]
+        )
         doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(255, 193, 7)
+        doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.setLineWidth(0.3)
         doc.rect(marginLeft - 5, y - 3, 170, 8)
 
         doc.setFontSize(11)
-        doc.setTextColor(139, 69, 19)
+        doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.setFont("helvetica", "bold")
         doc.text("[+] COMENTARIOS DE ESTUDIANTES", marginLeft, y + 2)
         y += 15
@@ -994,24 +1040,28 @@ export const generateFeedbackPDF = async (
 
             // Comment header with professor info
             const headerHeight = 12
-            doc.setFillColor(254, 243, 199)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.primaryLight[0],
+                PDF_CONSTANTS.COLORS.primaryLight[1],
+                PDF_CONSTANTS.COLORS.primaryLight[2]
+            )
             doc.rect(marginLeft, y - 3, 165, headerHeight, "F")
-            doc.setDrawColor(245, 158, 11)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setLineWidth(0.3)
             doc.rect(marginLeft, y - 3, 165, headerHeight)
 
             doc.setFontSize(8)
-            doc.setTextColor(154, 52, 18)
+            doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setFont("helvetica", "bold")
             doc.text(`Profesor: ${item.professor.first_name} ${item.professor.last_name}`, marginLeft + 3, y + 1)
             y += 8
 
             // Rating and date info
             doc.setFontSize(7)
-            doc.setTextColor(73, 41, 14)
+            doc.setTextColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
             doc.setFont("helvetica", "normal")
             doc.text(
-                `Calificacion: ${item.rating}/10 | Fecha: ${item.feedback_date ? new Date(item.feedback_date).toLocaleDateString("es-ES") : "Sin fecha"}`,
+                `Calificacion: ${item.rating}/5 | Fecha: ${item.feedback_date ? new Date(item.feedback_date).toLocaleDateString("es-ES") : "Sin fecha"}`,
                 marginLeft + 3,
                 y
             )
@@ -1021,14 +1071,18 @@ export const generateFeedbackPDF = async (
             const commentLines = doc.splitTextToSize(item.feedback_text, 155)
             const commentBoxHeight = commentLines.length * 4 + 8
 
-            doc.setFillColor(254, 249, 231)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.grayLight[0],
+                PDF_CONSTANTS.COLORS.grayLight[1],
+                PDF_CONSTANTS.COLORS.grayLight[2]
+            )
             doc.rect(marginLeft, y - 2, 165, commentBoxHeight, "F")
-            doc.setDrawColor(255, 193, 7)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setLineWidth(0.3)
             doc.rect(marginLeft, y - 2, 165, commentBoxHeight)
 
             doc.setFontSize(7)
-            doc.setTextColor(101, 67, 33)
+            doc.setTextColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
             doc.setFont("helvetica", "normal")
             doc.text("Comentario:", marginLeft + 3, y + 2)
             y += 6
@@ -1038,53 +1092,48 @@ export const generateFeedbackPDF = async (
         })
     }
 
-    // Charts Section - use the same data and calculations as the feedback page
-    const hasStudentEvaluations = studentEvaluations.numericResponses.length > 0 || studentEvaluations.textResponses.length > 0
-    const hasFeedbackData = feedback.length > 0
-
-    // Show charts section if we have any data OR force for testing
-    if (hasStudentEvaluations || hasFeedbackData) {
-        // Always start charts section on a new page if we're not at the beginning
-        if (y > 50) {
-            doc.addPage()
-            y = 20
-        }
-
-        // Section header - using new standards
-        y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
-
-        // Use the actual student evaluations data
-        y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations, finalSemesterAverages)
-    } else {
-        // Force chart generation even without data to see what happens
-        if (y > 50) {
-            doc.addPage()
-            y = 20
-        }
-        y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
-        y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations)
+    // Charts Section - always show to ensure visibility
+    if (y > 50) {
+        doc.addPage()
+        y = 20
     }
 
-    // Student Evaluations Section with enhanced visuals
-    if (studentEvaluations.numericResponses.length > 0 || studentEvaluations.textResponses.length > 0) {
-        if (y > 180) {
-            doc.addPage()
-            y = 20
-        }
+    // Section header - using new standards
+    y = drawSectionHeader(doc, "GRAFICAS Y VISUALIZACIONES", y, marginLeft)
 
-        // Section header with background
-        doc.setFillColor(232, 245, 233)
-        doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(40, 167, 69)
-        doc.setLineWidth(0.3)
-        doc.rect(marginLeft - 5, y - 3, 170, 8)
+    // Use the actual student evaluations data
+    y = generateChartsInPDF(doc, marginLeft, y, studentEvaluations, finalSemesterAverages)
 
-        doc.setFontSize(11)
-        doc.setTextColor(21, 101, 42)
-        doc.setFont("helvetica", "bold")
-        doc.text("[+] EVALUACIONES DE ESTUDIANTES", marginLeft, y + 2)
-        y += 15
+    // Student Evaluations Section with enhanced visuals - always show
+    if (y > 180) {
+        doc.addPage()
+        y = 20
+    }
 
+    // Section header with background
+    doc.setFillColor(
+        PDF_CONSTANTS.COLORS.primaryLight[0],
+        PDF_CONSTANTS.COLORS.primaryLight[1],
+        PDF_CONSTANTS.COLORS.primaryLight[2]
+    )
+    doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
+    doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
+    doc.setLineWidth(0.3)
+    doc.rect(marginLeft - 5, y - 3, 170, 8)
+
+    doc.setFontSize(11)
+    doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
+    doc.setFont("helvetica", "bold")
+    doc.text("[+] EVALUACIONES DE ESTUDIANTES", marginLeft, y + 2)
+    y += 15
+
+    // Check if there is data
+    if (studentEvaluations.numericResponses.length === 0 && studentEvaluations.textResponses.length === 0) {
+        setTypography(doc, "regular")
+        doc.setTextColor(PDF_CONSTANTS.COLORS.textLight[0], PDF_CONSTANTS.COLORS.textLight[1], PDF_CONSTANTS.COLORS.textLight[2])
+        doc.text("No hay evaluaciones de estudiantes disponibles para mostrar", marginLeft + 5, y)
+        y += 20
+    } else {
         // Numeric Questions with visual enhancement
         studentEvaluations.numericResponses.forEach((item) => {
             if (y > 200) {
@@ -1094,14 +1143,18 @@ export const generateFeedbackPDF = async (
 
             // Question box with better proportions
             const questionBoxHeight = 14
-            doc.setFillColor(240, 248, 255)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.primaryLight[0],
+                PDF_CONSTANTS.COLORS.primaryLight[1],
+                PDF_CONSTANTS.COLORS.primaryLight[2]
+            )
             doc.rect(marginLeft, y - 3, 165, questionBoxHeight, "F")
-            doc.setDrawColor(30, 144, 255)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setLineWidth(0.3)
             doc.rect(marginLeft, y - 3, 165, questionBoxHeight)
 
             doc.setFontSize(8)
-            doc.setTextColor(30, 64, 175)
+            doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setFont("helvetica", "bold")
             doc.text(`[*] ${item.question.title}`, marginLeft + 3, y + 1)
             y += 10
@@ -1115,14 +1168,14 @@ export const generateFeedbackPDF = async (
             const max = Math.max(...item.responses)
 
             // Statistics with colored indicators
-            doc.setFillColor(255, 193, 7)
+            doc.setFillColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.circle(marginLeft + 2, y - 1, 1.5, "F")
             doc.text(`Promedio: ${avg.toFixed(1)} | Rango: ${min}-${max} | Total: ${item.responses.length}`, marginLeft + 7, y)
             y += 7
 
             // Distribution bars (visual representation)
-            const distribution = Array.from({ length: 10 }, (_, i) => {
-                const rating = i + 1
+            const distribution = Array.from({ length: 6 }, (_, i) => {
+                const rating = i
                 const count = item.responses.filter((r) => Math.floor(r) === rating).length
                 return { rating, count, percentage: (count / item.responses.length) * 100 }
             }).filter((item) => item.count > 0)
@@ -1133,12 +1186,26 @@ export const generateFeedbackPDF = async (
                     y = 20
                 }
 
-                // Visual bar
-                const barWidth = (percentage / 100) * 80
-                doc.setFillColor(30, 144, 255)
-                doc.rect(marginLeft + 7, y - 2, barWidth, 3, "F")
+                // Background bar for full width
+                const fullBarWidth = 80
+                doc.setFillColor(
+                    PDF_CONSTANTS.COLORS.grayLight[0],
+                    PDF_CONSTANTS.COLORS.grayLight[1],
+                    PDF_CONSTANTS.COLORS.grayLight[2]
+                )
+                doc.rect(marginLeft + 7, y - 2, fullBarWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT, "F")
 
-                doc.text(`${rating} ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
+                // Value bar
+                const barWidth = (percentage / 100) * fullBarWidth
+                doc.setFillColor(
+                    PDF_CONSTANTS.COLORS.primary[0],
+                    PDF_CONSTANTS.COLORS.primary[1],
+                    PDF_CONSTANTS.COLORS.primary[2]
+                )
+                doc.rect(marginLeft + 7, y - 2, barWidth, PDF_CONSTANTS.DATA_BAR_HEIGHT, "F")
+
+                // Text with better alignment
+                doc.text(`${rating}: ${count} (${percentage.toFixed(1)}%)`, marginLeft + 90, y)
                 y += 6
             })
             y += 8
@@ -1153,14 +1220,18 @@ export const generateFeedbackPDF = async (
 
             // Question header box with better proportions
             const textQuestionBoxHeight = 12
-            doc.setFillColor(248, 240, 252)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.primaryLight[0],
+                PDF_CONSTANTS.COLORS.primaryLight[1],
+                PDF_CONSTANTS.COLORS.primaryLight[2]
+            )
             doc.rect(marginLeft, y - 3, 165, textQuestionBoxHeight, "F")
-            doc.setDrawColor(139, 92, 246)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setLineWidth(0.3)
             doc.rect(marginLeft, y - 3, 165, textQuestionBoxHeight)
 
             doc.setFontSize(8)
-            doc.setTextColor(79, 70, 229)
+            doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
             doc.setFont("helvetica", "bold")
             doc.text(`[+] ${item.question.title}`, marginLeft + 3, y + 1)
             y += 9
@@ -1179,9 +1250,13 @@ export const generateFeedbackPDF = async (
 
                 // Response box with better proportions
                 const responseBoxHeight = 10
-                doc.setFillColor(252, 251, 250)
+                doc.setFillColor(
+                    PDF_CONSTANTS.COLORS.grayLight[0],
+                    PDF_CONSTANTS.COLORS.grayLight[1],
+                    PDF_CONSTANTS.COLORS.grayLight[2]
+                )
                 doc.rect(marginLeft + 3, y - 2, 160, responseBoxHeight, "F")
-                doc.setDrawColor(209, 213, 219)
+                doc.setDrawColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
                 doc.setLineWidth(0.2)
                 doc.rect(marginLeft + 3, y - 2, 160, responseBoxHeight)
 
@@ -1203,14 +1278,18 @@ export const generateFeedbackPDF = async (
         }
 
         // Section header
-        doc.setFillColor(225, 236, 255)
+        doc.setFillColor(
+            PDF_CONSTANTS.COLORS.primaryLight[0],
+            PDF_CONSTANTS.COLORS.primaryLight[1],
+            PDF_CONSTANTS.COLORS.primaryLight[2]
+        )
         doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(59, 130, 246)
+        doc.setDrawColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.setLineWidth(0.3)
         doc.rect(marginLeft - 5, y - 3, 170, 8)
 
         doc.setFontSize(11)
-        doc.setTextColor(29, 78, 216)
+        doc.setTextColor(PDF_CONSTANTS.COLORS.primary[0], PDF_CONSTANTS.COLORS.primary[1], PDF_CONSTANTS.COLORS.primary[2])
         doc.setFont("helvetica", "bold")
         doc.text("[+] AUTOEVALUACION DOCENTE", marginLeft, y + 2)
         y += 15
@@ -1228,9 +1307,17 @@ export const generateFeedbackPDF = async (
             if (semesterData && semesterData.semester) {
                 // Semester box with better proportions
                 const semesterBoxHeight = 8
-                doc.setFillColor(239, 246, 255)
+                doc.setFillColor(
+                    PDF_CONSTANTS.COLORS.primaryLight[0],
+                    PDF_CONSTANTS.COLORS.primaryLight[1],
+                    PDF_CONSTANTS.COLORS.primaryLight[2]
+                )
                 doc.rect(marginLeft, y - 2, 165, semesterBoxHeight, "F")
-                doc.setDrawColor(59, 130, 246)
+                doc.setDrawColor(
+                    PDF_CONSTANTS.COLORS.primary[0],
+                    PDF_CONSTANTS.COLORS.primary[1],
+                    PDF_CONSTANTS.COLORS.primary[2]
+                )
                 doc.setLineWidth(0.3)
                 doc.rect(marginLeft, y - 2, 165, semesterBoxHeight)
 
@@ -1252,9 +1339,17 @@ export const generateFeedbackPDF = async (
 
                         // Answer box with better proportions
                         const answerBoxHeight = 12
-                        doc.setFillColor(250, 248, 242)
+                        doc.setFillColor(
+                            PDF_CONSTANTS.COLORS.grayLight[0],
+                            PDF_CONSTANTS.COLORS.grayLight[1],
+                            PDF_CONSTANTS.COLORS.grayLight[2]
+                        )
                         doc.rect(marginLeft + 3, y - 2, 160, answerBoxHeight, "F")
-                        doc.setDrawColor(245, 158, 11)
+                        doc.setDrawColor(
+                            PDF_CONSTANTS.COLORS.primary[0],
+                            PDF_CONSTANTS.COLORS.primary[1],
+                            PDF_CONSTANTS.COLORS.primary[2]
+                        )
                         doc.setLineWidth(0.2)
                         doc.rect(marginLeft + 3, y - 2, 160, answerBoxHeight)
 
@@ -1283,14 +1378,14 @@ export const generateFeedbackPDF = async (
         }
 
         // Section header
-        doc.setFillColor(254, 242, 242)
+        doc.setFillColor(PDF_CONSTANTS.COLORS.grayLight[0], PDF_CONSTANTS.COLORS.grayLight[1], PDF_CONSTANTS.COLORS.grayLight[2])
         doc.rect(marginLeft - 5, y - 3, 170, 8, "F")
-        doc.setDrawColor(239, 68, 68)
+        doc.setDrawColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
         doc.setLineWidth(0.3)
         doc.rect(marginLeft - 5, y - 3, 170, 8)
 
         doc.setFontSize(11)
-        doc.setTextColor(220, 38, 38)
+        doc.setTextColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
         doc.setFont("helvetica", "bold")
         doc.text("[+] COEVALUACION INSTITUCIONAL", marginLeft, y + 2)
         y += 15
@@ -1307,9 +1402,13 @@ export const generateFeedbackPDF = async (
 
             // Coevaluation header box with better proportions
             const coevaluationHeaderHeight = 8
-            doc.setFillColor(254, 249, 249)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.grayLight[0],
+                PDF_CONSTANTS.COLORS.grayLight[1],
+                PDF_CONSTANTS.COLORS.grayLight[2]
+            )
             doc.rect(marginLeft, y - 3, 165, coevaluationHeaderHeight, "F")
-            doc.setDrawColor(239, 68, 68)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
             doc.setLineWidth(0.3)
             doc.rect(marginLeft, y - 3, 165, coevaluationHeaderHeight)
 
@@ -1348,9 +1447,13 @@ export const generateFeedbackPDF = async (
 
             // Findings section with better proportions
             const findingsBoxHeight = 8
-            doc.setFillColor(254, 228, 226)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.grayLight[0],
+                PDF_CONSTANTS.COLORS.grayLight[1],
+                PDF_CONSTANTS.COLORS.grayLight[2]
+            )
             doc.rect(marginLeft + 3, y - 2, 160, findingsBoxHeight, "F")
-            doc.setDrawColor(239, 68, 68)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
             doc.setLineWidth(0.2)
             doc.rect(marginLeft + 3, y - 2, 160, findingsBoxHeight)
 
@@ -1367,9 +1470,13 @@ export const generateFeedbackPDF = async (
 
             // Improvement plan section with better proportions
             const planBoxHeight = 8
-            doc.setFillColor(226, 232, 240)
+            doc.setFillColor(
+                PDF_CONSTANTS.COLORS.grayLight[0],
+                PDF_CONSTANTS.COLORS.grayLight[1],
+                PDF_CONSTANTS.COLORS.grayLight[2]
+            )
             doc.rect(marginLeft + 3, y - 2, 160, planBoxHeight, "F")
-            doc.setDrawColor(30, 58, 138)
+            doc.setDrawColor(PDF_CONSTANTS.COLORS.gray[0], PDF_CONSTANTS.COLORS.gray[1], PDF_CONSTANTS.COLORS.gray[2])
             doc.setLineWidth(0.2)
             doc.rect(marginLeft + 3, y - 2, 160, planBoxHeight)
 

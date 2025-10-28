@@ -7,6 +7,7 @@ import {
     addAssignment,
     getProfessorsBySubject,
     deleteAssignment,
+    updateSubject,
 } from "../services/subjects.service.js"
 import { APIResponse } from "../lib/types.js"
 import { errorResponse } from "../lib/utils.js"
@@ -55,6 +56,25 @@ export const createSubjectController = async (req: Request, res: Response<APIRes
     } catch (error) {
         console.error("Error creating subject:", error)
         res.status(500).json(errorResponse("Failed to create subject"))
+    }
+}
+
+export const updateSubjectController = async (req: Request, res: Response<APIResponse<{}>>) => {
+    try {
+        const subjectId = req.params.id
+        if (!subjectId) {
+            return res.status(400).json(errorResponse("Subject ID is required"))
+        }
+        const updates = req.body
+        const updatedSubject = await updateSubject(subjectId, updates)
+        res.json({
+            data: updatedSubject,
+            errors: null,
+            message: "Subject updated successfully",
+        })
+    } catch (error) {
+        console.error("Error updating subject:", error)
+        res.status(500).json(errorResponse("Failed to update subject"))
     }
 }
 

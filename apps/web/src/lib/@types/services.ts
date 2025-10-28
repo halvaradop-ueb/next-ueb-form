@@ -55,6 +55,7 @@ export interface SubjectService {
     id: string
     name: string
     description: string
+    semestre: string
     /**
      * @deprecated
      */
@@ -101,6 +102,8 @@ export interface SubjectAssignmentWithProfessorService {
     subject: {
         id: string
         name: string
+        description: string
+        semestre: string
     }
 }
 

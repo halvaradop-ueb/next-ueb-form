@@ -29,7 +29,9 @@ export const getProfessorsBySubject = async (subjectId: string): Promise<Subject
                 subject_id,
                 Subject: subject_id (
                     id,
-                    name
+                    name,
+                    description,
+                    semestre
                 ),
                 User: professor_id (
                     id,
@@ -76,4 +78,13 @@ export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     const request = createRequest("DELETE", `subjects/${subjectId}`)
     const result = await createService(request)
     return result?.data || result || false
+}
+
+export const updateSubject = async (
+    subjectId: string,
+    updates: Partial<Omit<SubjectService, "id" | "professor_id">>
+): Promise<SubjectService> => {
+    const request = createRequest("PUT", `subjects/${subjectId}`, updates)
+    const result = await createService(request)
+    return result?.data || result
 }

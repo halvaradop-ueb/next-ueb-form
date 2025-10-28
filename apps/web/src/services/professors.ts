@@ -25,11 +25,6 @@ export const addCoevaluation = async (peerReview: PeerReview, admin: string) => 
     return await createService(request)
 }
 
-export const getPeerReviewsByProfessorId = async (professorId: string) => {
-    const request = createRequest("GET", `professors/${professorId}/co_evaluation`)
-    return await createService(request)
-}
-
 export const getAllCoevaluations = async (professorId?: string, subjectId?: string) => {
     const params = new URLSearchParams()
     if (professorId) params.append("professorId", professorId)
@@ -47,10 +42,5 @@ export const updateCoevaluation = async (professorId: string, reviewId: string, 
 
 export const deleteCoevaluation = async (professorId: string, reviewId: string) => {
     const request = createRequest("DELETE", `professors/${professorId}/co_evaluation/${reviewId}`)
-    return await createService(request)
-}
-
-export const getCoevaluationById = async (professorId: string, reviewId: string) => {
-    const request = createRequest("GET", `professors/${professorId}/co_evaluation/${reviewId}`)
     return await createService(request)
 }

@@ -18,12 +18,15 @@ export interface SubjectAssignmentWithProfessorService {
     subject: {
         id: string
         name: string
+        description: string
+        semestre: string
     }
 }
 export interface SubjectService {
     id: string
     name: string
     description: string
+    semestre: string
     /**
      * @deprecated
      */
@@ -52,7 +55,8 @@ export const getSubjectsByProfessorId = async (professorId: string): Promise<Sub
                 subject (
                     id,
                     name,
-                    description
+                    description,
+                    semestre
                 )
             `
             )
@@ -173,5 +177,21 @@ export const deleteSubject = async (subjectId: string): Promise<boolean> => {
     } catch (error) {
         console.error("Error deleting subject:", error)
         return false
+    }
+}
+
+export const updateSubject = async (
+    subjectId: string,
+    updates: Partial<Omit<SubjectService, "id" | "professor_id">>
+): Promise<SubjectService> => {
+    try {
+        const { data, error } = await supabase.from("subject").update(updates).eq("id", subjectId).select().single()
+        if (error) {
+            throw new Error(`Error updating subject: ${error.message}`)
+        }
+        return data
+    } catch (error) {
+        console.error("Error updating subject:", error)
+        return {} as SubjectService
     }
 }

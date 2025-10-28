@@ -1,16 +1,19 @@
 import { supabase } from "@/lib/supabase/client"
-import { UserService } from "@/lib/@types/services"
 import type { OAuthProfile } from "@/lib/@types/types"
 import { hash, genSalt, compare } from "bcryptjs"
+import type { User } from "@ueb/types"
 
-export const authenticate = async (email: string, password: string): Promise<UserService | null> => {
+export const authenticate = async (email: string, password: string): Promise<User | null> => {
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
-    if (!data) return null
-    const isAuthenticated = await compare(password, data.password)
     if (error) {
         console.error("Error fetching user:", error)
         return null
     }
+    if (!data) {
+        console.log("User not found:", email)
+        return null
+    }
+    const isAuthenticated = await compare(password, data.password)
     return isAuthenticated ? data : null
 }
 
@@ -24,12 +27,13 @@ export const hashPassword = async (password: string): Promise<string> => {
     return await hash(password, salt)
 }
 
-export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserService | null> => {
+export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<User | null> => {
     const { email } = profile
+    console.log("Checking user for registration:", email)
     const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
     if (error) {
-        const randomPassword = getRandomPassword()
-        const password = await hashPassword(randomPassword)
+        const fixedPassword = "student123"
+        const password = await hashPassword(fixedPassword)
         const { data: newUser, error } = await supabase
             .from("User")
             .insert({
@@ -37,8 +41,10 @@ export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<UserS
                 password,
                 role: "student",
                 status: true,
-                first_name: "unknown",
-                last_name: "unknown",
+                first_name: "UNKNOWN",
+                last_name: "UNKNOWN",
+                address: "",
+                phone: "",
             })
             .select()
             .single()

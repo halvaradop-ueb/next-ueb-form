@@ -24,13 +24,13 @@ export const FeedbackStep = ({ formData, setFormData }: FeedbackStepProps) => {
                 <div className="space-y-4">
                     <div>
                         <Label htmlFor="rating" className="mb-6 block">
-                            Calificación (0-10)
+                            Calificación (0-5)
                         </Label>
                         <div className="flex items-center space-x-4">
                             <Slider
                                 id="rating"
                                 min={0}
-                                max={10}
+                                max={5}
                                 step={1}
                                 value={[sliderValue]}
                                 onValueChange={handleSliderChange}
