@@ -13,7 +13,6 @@ const getRoutesByRole = (role: Role) => {
 
 export const middleware = async (request: NextRequest) => {
     const session = await auth()
-    console.log("Middleware session:", session)
 
     const url = request.nextUrl
 
