@@ -52,7 +52,9 @@ export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<User 
             console.error("Error creating user:", error)
             return null
         }
+        console.log("User created successfully:", newUser.email)
         return newUser
     }
+    console.log("User already exists:", data.email)
     return data
 }

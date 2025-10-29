@@ -787,10 +787,11 @@ export const FeedbackManagement = () => {
                                                             const allResponses = studentEvaluations.numericResponses.flatMap(
                                                                 (item) => item.responses
                                                             )
-                                                            return allResponses.length > 0
+                                                            const validResponses = allResponses.filter((r) => r > 0)
+                                                            return validResponses.length > 0
                                                                 ? (
-                                                                      allResponses.reduce((a, b) => a + b, 0) /
-                                                                      allResponses.length
+                                                                      validResponses.reduce((a, b) => a + b, 0) /
+                                                                      validResponses.length
                                                                   ).toFixed(1)
                                                                 : "0.0"
                                                         })()}
@@ -972,7 +973,8 @@ export const FeedbackManagement = () => {
                                                             const allResponses = studentEvaluations.numericResponses.flatMap(
                                                                 (item) => item.responses
                                                             )
-                                                            if (allResponses.length === 0)
+                                                            const validResponses = allResponses.filter((r) => r > 0)
+                                                            if (validResponses.length === 0)
                                                                 return (
                                                                     <p className="text-sm text-muted-foreground">
                                                                         No hay datos disponibles
@@ -980,11 +982,11 @@ export const FeedbackManagement = () => {
                                                                 )
 
                                                             const avg =
-                                                                allResponses.reduce((a, b) => a + b, 0) / allResponses.length
-                                                            const min = Math.min(...allResponses)
-                                                            const max = Math.max(...allResponses)
-                                                            const median = allResponses.sort((a, b) => a - b)[
-                                                                Math.floor(allResponses.length / 2)
+                                                                validResponses.reduce((a, b) => a + b, 0) / validResponses.length
+                                                            const min = Math.min(...validResponses)
+                                                            const max = Math.max(...validResponses)
+                                                            const median = validResponses.sort((a, b) => a - b)[
+                                                                Math.floor(validResponses.length / 2)
                                                             ]
 
                                                             return (
@@ -1038,15 +1040,22 @@ export const FeedbackManagement = () => {
                                                     <ResponsiveContainer width="100%" height="100%">
                                                         <BarChart
                                                             data={studentEvaluations.numericResponses.map(
-                                                                ({ question, responses }) => ({
-                                                                    name:
-                                                                        question.title.length > 15
-                                                                            ? question.title.substring(0, 15) + "..."
-                                                                            : question.title,
-                                                                    promedio:
-                                                                        responses.reduce((a, b) => a + b, 0) / responses.length,
-                                                                    total: responses.length,
-                                                                })
+                                                                ({ question, responses }) => {
+                                                                    const validResponses = responses.filter((r) => r > 0)
+                                                                    return {
+                                                                        name:
+                                                                            question.title.length > 40
+                                                                                ? question.title.substring(0, 40) + "..."
+                                                                                : question.title,
+                                                                        fullName: question.title,
+                                                                        promedio:
+                                                                            validResponses.length > 0
+                                                                                ? validResponses.reduce((a, b) => a + b, 0) /
+                                                                                  validResponses.length
+                                                                                : 0,
+                                                                        total: responses.length,
+                                                                    }
+                                                                }
                                                             )}
                                                             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                                         >
@@ -1059,10 +1068,17 @@ export const FeedbackManagement = () => {
                                                             />
                                                             <YAxis domain={[0, 5]} />
                                                             <Tooltip
-                                                                formatter={(value, name) => [
+                                                                formatter={(value, name, props) => [
                                                                     name === "promedio" ? `${Number(value).toFixed(1)}/5` : value,
                                                                     name === "promedio" ? "Promedio" : "Total Respuestas",
                                                                 ]}
+                                                                labelFormatter={(label, payload) => {
+                                                                    if (payload && payload[0]) {
+                                                                        return payload[0].payload.fullName
+                                                                    }
+                                                                    return label
+                                                                }}
+                                                                contentStyle={{ fontSize: "12px" }}
                                                             />
                                                             <Bar dataKey="promedio" fill="#8884d8" name="Promedio" />
                                                         </BarChart>

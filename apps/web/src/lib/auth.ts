@@ -44,6 +44,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                     console.error("Failed to create or find user for email:", email)
                     throw new Error("Error creating user")
                 }
+                console.log("User processed successfully:", newUser.email)
                 return {
                     id: newUser.id,
                     role: "student",
