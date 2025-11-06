@@ -2,9 +2,9 @@ import jsPDF from "jspdf"
 import type { Report } from "./@types/reports"
 import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { ReportState } from "@/ui/report/report"
-import logoUEB from "@/assets/ueb.png"
-import logoMGOP from "@/assets/MGOP_EGDP.png"
-import logoGDP from "@/assets/GDPCirclo.png"
+import logoUEB from "../../public/ueb.png"
+import logoMGOP from "../../public/MGOP_EGDP.png"
+import logoGDP from "../../public/GDPCirclo.png"
 
 export const generateSavedReportPDF = (reports: Report[], reportId: string) => {
     const savedReport = reports.find((r) => r.id === reportId)
@@ -35,6 +35,10 @@ export const generateSavedReportPDF = (reports: Report[], reportId: string) => {
     y += 8
     doc.text(`Materia: ${savedReport.subject_name || "No disponible"}`, marginLeft, y)
     y += 8
+    if (savedReport.semester) {
+        doc.text(`Semestre: ${savedReport.semester}`, marginLeft, y)
+        y += 8
+    }
     doc.text(`Fecha del informe: ${currentDate}`, marginLeft, y)
     y += 10
 
@@ -90,6 +94,25 @@ export const generateNewReportPDF = (report: ReportState, professors: ProfessorS
         return
     }
 
+    // Derive semester from timeframe
+    const deriveSemesterFromTimeframe = (timeframe: string): string | null => {
+        try {
+            const [startStr] = timeframe.split(" - ")
+            const startDate = new Date(startStr)
+            const year = startDate.getFullYear()
+            const month = startDate.getMonth() + 1 // getMonth() returns 0-11
+
+            // First semester: Jan-June, Second semester: July-Dec
+            if (month >= 1 && month <= 6) {
+                return `${year}-1`
+            } else {
+                return `${year}-2`
+            }
+        } catch {
+            return null
+        }
+    }
+
     const doc = new jsPDF()
     const marginLeft = 20
     let y = 20
@@ -117,6 +140,13 @@ export const generateNewReportPDF = (report: ReportState, professors: ProfessorS
     y += 8
     doc.text(`Materia: ${subject?.name || "N/A"}`, marginLeft, y)
     y += 8
+    if (report.timeframe) {
+        const semester = deriveSemesterFromTimeframe(report.timeframe)
+        if (semester) {
+            doc.text(`Semestre: ${semester}`, marginLeft, y)
+            y += 8
+        }
+    }
     doc.text(`Fecha: ${currentDate}`, marginLeft, y)
     y += 10
 
