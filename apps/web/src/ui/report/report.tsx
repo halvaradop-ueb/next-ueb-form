@@ -105,7 +105,6 @@ export const Reports = () => {
                 comments: report.comments || "",
                 recommendations: report.recommendations || "",
             }
-            console.log("Saving report with data:", reportData)
 
             const newReport = await createReport(reportData)
 
@@ -113,7 +112,6 @@ export const Reports = () => {
                 throw new Error("No se recibió respuesta del servidor")
             }
 
-            console.log("Report saved successfully:", newReport)
             setSavedReports((prev) => [newReport, ...(prev || [])])
             alert("Borrador guardado exitosamente!")
             setActiveTab("saved")

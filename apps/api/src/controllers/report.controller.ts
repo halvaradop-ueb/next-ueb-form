@@ -5,17 +5,15 @@ import { APIResponse } from "../lib/types.js"
 import { Report, CreateReportDto } from "@ueb/types/report"
 
 export const getReportsController = async (_req: Request, res: Response<APIResponse<Report[]>>) => {
-    console.log("🎯 getReportsController called!")
     try {
         const reports: Report[] = await getReports()
-        console.log("✅ Controller: Reports returned from service:", reports)
         return res.status(200).json({
             data: reports,
             errors: null,
             message: "Reports retrieved successfully",
         })
     } catch (error) {
-        console.error("💥 Controller: Error fetching reports:", error)
+        console.error("Error fetching reports:", error)
         return res.status(500).json(errorResponse<Report[]>("Failed to fetch reports"))
     }
 }
@@ -23,7 +21,6 @@ export const getReportsController = async (_req: Request, res: Response<APIRespo
 export const createReportController = async (req: Request, res: Response<APIResponse<Report>>) => {
     try {
         const body: CreateReportDto = req.body
-        console.log("Creating report with data:", body)
 
         // Validation
         if (!body.title?.trim()) {
@@ -60,7 +57,6 @@ export const createReportController = async (req: Request, res: Response<APIResp
             })
         }
 
-        console.log("Report created successfully:", newReport)
         return res.status(201).json({
             data: newReport,
             errors: null,
