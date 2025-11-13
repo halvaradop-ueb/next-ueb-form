@@ -111,6 +111,12 @@ export const addStudentEvaluationController = async (req: Request, res: Response
         if (!professorId || !subjectId || !semester || !answers) {
             return res.status(400).json(errorResponse("Professor ID, subject ID, semester, and answers are required"))
         }
+        console.log("🔍 [CONTROLLER] Adding student evaluation:", {
+            professorId,
+            subjectId,
+            semester,
+            answersCount: Object.keys(answers).length,
+        })
         const success = await saveStudentEvaluation(professorId, subjectId, semester, answers)
         if (success) {
             res.status(201).json({
@@ -131,24 +137,16 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
     try {
         const subjectId = req.query.subjectId as string
         const semester = req.query.semester as string
+        const professorId = req.query.professorId as string
+
         if (!subjectId) {
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
 
-        // First, let's see all data without filters to debug
-        const { data: allData, error: allError } = await supabase.from("studenevalua").select(`
-                id,
-                question_id,
-                response,
-                id_professor,
-                id_subject,
-                semester
-            `)
+        console.log("🔍 [BACKEND] Fetching student evaluations:", { subjectId, semester, professorId })
 
-        console.log("🔍 [BACKEND] All studenevalua data:", { data: allData, error: allError, count: allData?.length })
-
-        // Get all data for the subject (ignore semester filter for now to show all responses)
-        const { data, error } = await supabase
+        // Build query with filters
+        let query = supabase
             .from("studenevalua")
             .select(
                 `
@@ -156,17 +154,31 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
                 question_id,
                 response,
                 id_professor,
+                id_docente,
                 semester
             `
             )
             .eq("id_subject", subjectId)
 
-        console.log("🔍 [BACKEND] Final query result:", {
+        // Add professor filter if provided
+        if (professorId) {
+            query = query.eq("id_professor", professorId)
+        }
+
+        // Add semester filter if provided
+        if (semester) {
+            query = query.eq("semester", semester)
+        }
+
+        const { data, error } = await query
+
+        console.log("🔍 [BACKEND] Query result:", {
             data,
             error,
             dataLength: data?.length,
             subjectId,
             semester,
+            professorId,
             recordsFound: data?.length || 0,
         })
 
@@ -174,12 +186,20 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
             return res.status(500).json(errorResponse("Failed to fetch student evaluations"))
         }
 
+        // Transform data to ensure consistent professor ID field
+        const transformedData = (data || []).map((evaluation) => ({
+            ...evaluation,
+            // Use id_professor as the professor ID field
+            id_professor: evaluation.id_professor,
+        }))
+
         res.status(200).json({
-            data: data || [],
+            data: transformedData,
             errors: null,
             message: "Student evaluations retrieved successfully",
         })
     } catch (error) {
+        console.error("❌ Error in getStudentEvaluationsController:", error)
         res.status(500).json(errorResponse("Failed to fetch student evaluations"))
     }
 }

@@ -67,10 +67,40 @@ export async function addAnswer(answer: any, userId: string): Promise<boolean> {
 }
 
 export async function getStudentEvaluationsBySubject(subjectId: string) {
-    const { data, error } = await supabase.from("studenevalua").select("*").eq("id_subject", subjectId)
+    try {
+        // Get evaluations for the subject, checking both old and new column structures
+        const { data, error } = await supabase
+            .from("studenevalua")
+            .select(
+                `
+                id,
+                question_id,
+                response,
+                id_professor,
+                id_docente,
+                semester
+            `
+            )
+            .eq("id_subject", subjectId)
 
-    if (error) throw new Error(error.message)
-    return data
+        if (error) {
+            console.error("❌ Error fetching student evaluations:", error)
+            throw new Error(error.message)
+        }
+
+        // Transform data to ensure we have the correct professor ID
+        const transformedData = (data || []).map((evaluation) => ({
+            ...evaluation,
+            // Use id_docente if available, otherwise fall back to id_professor
+            id_professor: evaluation.id_docente || evaluation.id_professor,
+        }))
+
+        console.log("✅ Retrieved student evaluations:", transformedData.length, "records")
+        return transformedData
+    } catch (error) {
+        console.error("❌ Error in getStudentEvaluationsBySubject:", error)
+        return []
+    }
 }
 
 export async function saveStudentEvaluation(
@@ -80,6 +110,13 @@ export async function saveStudentEvaluation(
     answers: Record<string, any>
 ): Promise<boolean> {
     try {
+        console.log("🔍 [SERVICE] Saving student evaluation:", {
+            professorId,
+            subjectId,
+            semester,
+            answersCount: Object.keys(answers).length,
+        })
+
         // Convert answers object to array of records for the studenevalua table
         const studentEvaluationRecords = []
 
@@ -89,30 +126,38 @@ export async function saveStudentEvaluation(
 
             for (const textValue of textValues) {
                 if (textValue !== null && textValue !== undefined && textValue !== "") {
-                    studentEvaluationRecords.push({
+                    const record = {
+                        // Store the professor ID in id_professor
                         id_professor: professorId,
                         id_subject: subjectId,
                         question_id: questionId,
                         response: String(textValue),
                         semester: semester,
-                    })
+                    }
+                    console.log("📝 [SERVICE] Created record:", record)
+                    studentEvaluationRecords.push(record)
                 }
             }
         }
 
         if (studentEvaluationRecords.length === 0) {
+            console.log("⚠️ [SERVICE] No valid answers to save")
             return true // Consider this a success since no data to save
         }
+
+        console.log("💾 [SERVICE] Inserting records:", studentEvaluationRecords.length)
 
         // Insert into the studenevalua table
         const { data: insertedRecords, error } = await supabase.from("studenevalua").insert(studentEvaluationRecords).select()
 
         if (error) {
             console.log("❌ Error inserting into studenevalua table:", error)
+            console.log("🔍 [SERVICE] Insert data:", studentEvaluationRecords)
             return false
         }
 
         console.log("✅ Successfully saved student evaluation to studenevalua table:", insertedRecords?.length || 0, "records")
+        console.log("📊 [SERVICE] Inserted records:", insertedRecords)
         return true
     } catch (error) {
         console.error("❌ Error in saveStudentEvaluation:", error)
