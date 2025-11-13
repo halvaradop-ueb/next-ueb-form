@@ -145,9 +145,9 @@ export const StudentForm = ({ session }: StudentFormProps) => {
         if (!session?.user?.id) return
         await addFeedback(formData, session.user.id)
 
-        if (formData.subject && formData.answers) {
+        if (formData.subject && formData.answers && formData.professor) {
             const currentSemester = calculateSemester()
-            await addStudentEvaluation(session.user.id, formData.subject, currentSemester, formData.answers)
+            await addStudentEvaluation(formData.professor, formData.subject, currentSemester, formData.answers)
         }
         setIndexStep(0)
         setFormData(() => initialState(questions))

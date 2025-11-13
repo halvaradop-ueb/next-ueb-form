@@ -244,7 +244,7 @@ export const FeedbackManagement = () => {
             }
 
             try {
-                const allEvaluations = await getStudentEvaluationsBySubject(options.subjectId, "")
+                const allEvaluations = await getStudentEvaluationsBySubject(options.subjectId, "", options.professorId)
                 const isDefaultTimeframe = options.timeframe === "2023-01-01T00:00:00.000Z - 2050-01-01T00:00:00.000Z"
 
                 let filteredEvaluations = allEvaluations
@@ -281,7 +281,7 @@ export const FeedbackManagement = () => {
         }
 
         fetchStudentEvaluations()
-    }, [questions, options?.subjectId, options?.timeframe])
+    }, [questions, options?.subjectId, options?.professorId, options?.timeframe])
 
     useEffect(() => {
         const fetchCoevaluations = async () => {
