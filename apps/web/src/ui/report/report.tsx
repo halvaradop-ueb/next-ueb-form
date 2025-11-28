@@ -26,6 +26,25 @@ export interface ReportState {
     [key: string]: any
 }
 
+// Function to derive semester from timeframe
+const deriveSemesterFromTimeframe = (timeframe: string): string | null => {
+    try {
+        const [startStr] = timeframe.split(" - ")
+        const startDate = new Date(startStr)
+        const year = startDate.getFullYear()
+        const month = startDate.getMonth() + 1 // getMonth() returns 0-11
+
+        // First semester: Jan-June, Second semester: July-Dec
+        if (month >= 1 && month <= 6) {
+            return `${year}-1`
+        } else {
+            return `${year}-2`
+        }
+    } catch {
+        return null
+    }
+}
+
 const timeframes = createPeriods(new Date("2024-01-01"))
 
 const initialReportState: ReportState = {
@@ -55,29 +74,42 @@ export const Reports = () => {
         setSubjects([])
     }
     const handleSaveReport = async () => {
-        if (!report.title || !report.professor || !report.subject) {
-            alert("Por favor complete todos los campos obligatorios: título, profesor y materia")
+        // Validation
+        if (!report.title.trim()) {
+            alert("Por favor complete el título del informe")
+            return
+        }
+
+        if (!report.professor || report.professor === "all") {
+            alert("Por favor seleccione un profesor específico (no 'Todos los Profesores')")
+            return
+        }
+
+        if (!report.subject || report.subject === "all") {
+            alert("Por favor seleccione una materia específica")
             return
         }
 
         setIsLoading(true)
-        try {
-            if (report.professor === "all" || report.subject === "all") {
-                alert("Por favor seleccione un profesor y una materia específicos")
-                setIsLoading(false)
-                return
-            }
+        setError(null)
 
-            const newReport = await createReport({
-                title: report.title,
+        try {
+            // Derive semester from timeframe
+            const semester = report.timeframe ? deriveSemesterFromTimeframe(report.timeframe) : null
+
+            const reportData = {
+                title: report.title.trim(),
                 professor_id: report.professor,
                 subject_id: report.subject,
+                semester: semester,
                 comments: report.comments || "",
                 recommendations: report.recommendations || "",
-            })
+            }
+
+            const newReport = await createReport(reportData)
 
             if (!newReport) {
-                throw new Error("Error al guardar el reporte")
+                throw new Error("No se recibió respuesta del servidor")
             }
 
             setSavedReports((prev) => [newReport, ...(prev || [])])
@@ -86,7 +118,9 @@ export const Reports = () => {
             resetForm()
         } catch (error: any) {
             console.error("Error al guardar el borrador:", error)
-            alert(`Error al guardar: ${error.message || "Ocurrió un error"}`)
+            const errorMessage = error.message || "Ocurrió un error desconocido"
+            setError(`Error al guardar: ${errorMessage}`)
+            alert(`Error al guardar: ${errorMessage}`)
         } finally {
             setIsLoading(false)
         }
@@ -283,9 +317,20 @@ export const Reports = () => {
                                                         <div>
                                                             <h3 className="font-medium">{r.title}</h3>
                                                             <p className="text-sm text-muted-foreground">
+                                                                <span className="font-medium">Docente:</span>{" "}
                                                                 {r.professor_name ||
-                                                                    `${r.professor?.first_name} ${r.professor?.last_name}`}{" "}
-                                                                • {r.subject_name || r.subject?.name}
+                                                                    `${r.professor?.first_name || ""} ${r.professor?.last_name || ""}`.trim() ||
+                                                                    "No especificado"}
+                                                                {" • "}
+                                                                <span className="font-medium">Materia:</span>{" "}
+                                                                {r.subject_name || r.subject?.name || "No especificado"}
+                                                                {r.semester && (
+                                                                    <>
+                                                                        {" • "}
+                                                                        <span className="font-medium">Semestre:</span>{" "}
+                                                                        {r.semester}
+                                                                    </>
+                                                                )}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground mt-1">
                                                                 {new Date(r.created_at).toLocaleDateString("es-ES")}

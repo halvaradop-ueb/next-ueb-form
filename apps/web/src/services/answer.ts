@@ -108,12 +108,16 @@ export const addStudentEvaluation = async (
 
 export const getStudentEvaluationsBySubject = async (
     subjectId: string,
-    semester?: string
+    semester?: string,
+    professorId?: string
 ): Promise<Array<{ question_id: string; response: string; id_professor: string; semester?: string }>> => {
     try {
         const params = new URLSearchParams({ subjectId })
         if (semester) {
             params.append("semester", semester)
+        }
+        if (professorId) {
+            params.append("professorId", professorId)
         }
 
         const request = createRequest("GET", `answers/student-evaluations?${params}`)
@@ -121,6 +125,7 @@ export const getStudentEvaluationsBySubject = async (
 
         return result?.data || []
     } catch (error) {
+        console.error("❌ Error fetching student evaluations:", error)
         return []
     }
 }

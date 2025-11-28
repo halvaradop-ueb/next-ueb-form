@@ -6,6 +6,7 @@ export interface Report {
     comments?: string | null
     recommendations?: string | null
     created_at: string
+    semester?: string | null
     professor_name?: string | null
     subject_name?: string | null
     professor?: {
@@ -25,6 +26,7 @@ export interface CreateReportDto {
     title: string
     professor_id: string
     subject_id: string
+    semester?: string | null
     evaluation_criteria?: string
     analysis?: string
     comments?: string

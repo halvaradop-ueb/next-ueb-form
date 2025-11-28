@@ -54,6 +54,7 @@ export const Users = () => {
     const handleSetEdit = (user: User) => {
         setIdleForm("edit")
         setNewUser({ ...user, password: "" })
+        // Scroll to the form
         document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
     }
 
@@ -63,7 +64,8 @@ export const Users = () => {
         setIsOpenConfirm(true)
     }
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
         if (idleForm === "edit") {
             const updatedUser = await updateUser(newUser)
             setUsers((previous) => previous.map((user) => (user.id === updatedUser?.id ? updatedUser : user)))
@@ -132,7 +134,11 @@ export const Users = () => {
                                 />
                             </div>
                             <Button
-                                onClick={() => document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })}
+                                onClick={() => {
+                                    setIdleForm("create")
+                                    setNewUser(initialState)
+                                    document.getElementById("add-user-card")?.scrollIntoView({ behavior: "smooth" })
+                                }}
                             >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Agregar Usuario
@@ -335,7 +341,7 @@ export const Users = () => {
                                             <div className="flex items-center space-x-2 pt-2">
                                                 <Switch
                                                     id="status"
-                                                    defaultChecked
+                                                    checked={newUser.status}
                                                     onCheckedChange={(value) => handleChange("status", value)}
                                                 />
                                                 <Label htmlFor="status" className="font-normal">
