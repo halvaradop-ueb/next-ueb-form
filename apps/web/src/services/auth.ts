@@ -4,7 +4,7 @@ import { hash, genSalt, compare } from "bcryptjs"
 import type { User } from "@ueb/types"
 
 export const authenticate = async (email: string, password: string): Promise<User | null> => {
-    const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
+    const { data, error } = await supabase.from("User").select("*").ilike("email", email).single()
     if (error) {
         console.error("Error fetching user:", error)
         return null
@@ -30,7 +30,7 @@ export const hashPassword = async (password: string): Promise<string> => {
 export const checkAndRegisterUser = async (profile: OAuthProfile): Promise<User | null> => {
     const { email } = profile
     console.log("Checking user for registration:", email)
-    const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
+    const { data, error } = await supabase.from("User").select("*").ilike("email", email).single()
     if (error) {
         const fixedPassword = "student123"
         const password = await hashPassword(fixedPassword)

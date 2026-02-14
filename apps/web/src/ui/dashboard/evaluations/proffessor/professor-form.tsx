@@ -4,36 +4,34 @@ import { z } from "zod"
 import { Card, CardContent } from "@/components/ui/card"
 import { HeaderSteps } from "../header-steps"
 import { FooterSteps } from "../footer-steps"
-import { FeedbackStep } from "./feedback-step"
 import { Confirmation } from "../confirmation"
-import { EvaluationStep } from "./evaluation-step"
-import { SelectSubjectStep } from "./select-subject-step"
+import { SelectSubject } from "./select-subject-step"
+import { EvaluationStep } from "../students/evaluation-step"
+import { addAutoEvaluationAnswer, verifyAutoEvaluationData } from "@/services/answer"
 import { Question } from "@/lib/@types/services"
-import { addFeedback } from "@/services/feedback"
-import { addStudentEvaluation, verifyStudentEvaluationData } from "@/services/answer"
+import { AssignedProfessorSchema } from "@/lib/schema"
 import { defaultAnswer, generateSchema } from "@/lib/utils"
-import { getQuestionsForStudents } from "@/services/questions"
-import type { Step, StudentFormState } from "@/lib/@types/types"
-import { FeedbackFormSchema, AssignedStudentSchema } from "@/lib/schema"
-import { StudentFormProps } from "@/lib/@types/props"
+import { getQuestionsForProfessors } from "@/services/questions"
+import type { ProfessorFormState, Step } from "@/lib/@types/types"
+import { ProfessorFormProps } from "@/lib/@types/props"
 
 const getSteps = (
-    formData: StudentFormState,
+    formData: ProfessorFormState,
     errors: Record<string, string>,
-    onChange: (key: keyof StudentFormState, value: any) => void,
+    onChange: (key: keyof ProfessorFormState, value: any) => void,
     onChangeAnswer: (key: string, value: any) => void,
     stages: Partial<Record<string, Question[]>>,
     session: any
 ): Step[] => {
     const mappedStages = Object.keys(stages).map((key, index) => ({
-        id: `step-generated-${index}`,
+        id: `step-${index + 10}`,
         name: key,
         component: (
             <EvaluationStep
                 questions={stages[key] ?? []}
-                formData={formData}
                 errors={errors}
-                setFormData={onChange}
+                formData={formData as any}
+                setFormData={onChange as any}
                 onChangeAnswer={onChangeAnswer}
             />
         ),
@@ -42,17 +40,11 @@ const getSteps = (
     return [
         {
             id: "step-1",
-            name: "Curso",
-            component: <SelectSubjectStep formData={formData} errors={errors} setFormData={onChange} session={session} />,
-            schema: AssignedStudentSchema,
+            name: "Evaluación",
+            component: <SelectSubject formData={formData} errors={errors} setFormData={onChange} session={session} />,
+            schema: AssignedProfessorSchema,
         },
         ...mappedStages,
-        {
-            id: "step-3",
-            name: "Comentarios",
-            component: <FeedbackStep formData={formData} setFormData={onChange} />,
-            schema: FeedbackFormSchema,
-        },
         {
             id: "step-4",
             name: "Confirmación",
@@ -77,16 +69,28 @@ const calculateSemester = (): string => {
 const initialState = (questions: Question[]) => {
     return {
         answers: questions.reduce((previous, now) => ({ ...previous, [now.id]: defaultAnswer(now) }), {}),
-    } as StudentFormState
+    } as ProfessorFormState
 }
 
-export const StudentForm = ({ session }: StudentFormProps) => {
+export const ProffessorForm = ({ session }: ProfessorFormProps) => {
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
+    const [formData, setFormData] = useState<ProfessorFormState>({} as ProfessorFormState)
     const [errors, setErrors] = useState<Record<string, string>>({})
-    const [formData, setFormData] = useState<StudentFormState>({} as StudentFormState)
     const [questionStages, setQuestionStages] = useState<Partial<Record<string, Question[]>>>({})
     const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false)
+
+    const handleNextStep = () => {
+        // Check if trying to navigate to evaluation step when already completed
+        if (indexStep >= 1 && isAlreadyCompleted && formData.subject) {
+            alert("Ya has completado tu autoevaluación para esta materia. No puedes volver a hacerla.")
+            return
+        }
+
+        if (indexStep < steps.length - 1) {
+            setIndexStep((prev) => prev + 1)
+        }
+    }
 
     const handlePrevStep = () => {
         if (indexStep > 0) {
@@ -94,37 +98,12 @@ export const StudentForm = ({ session }: StudentFormProps) => {
         }
     }
 
-    const handleNextStep = () => {
-        if (!(indexStep in steps) || !steps[indexStep]) return
-
-        // Check if trying to navigate to evaluation step when already completed
-        if (indexStep >= 1 && isAlreadyCompleted && formData.professor && formData.subject) {
-            alert("Ya has completado esta evaluación. No puedes volver a hacerla.")
-            return
-        }
-
-        const data = steps[indexStep].id.includes("step-generated-") ? formData.answers : formData
-        const isValid = steps[indexStep].schema.safeParse(data)
-        if (indexStep < steps.length - 1) {
-            if (!isValid.success) {
-                isValid.error.errors.forEach((error) => {
-                    setErrors((prev) => ({
-                        ...prev,
-                        [error.path[0] as string]: error.message,
-                    }))
-                })
-            } else {
-                setIndexStep((prev) => prev + 1)
-            }
-        }
-    }
-
-    const handleChange = (key: keyof StudentFormState, value: any) => {
+    const handleChange = (key: keyof ProfessorFormState, value: any) => {
         setFormData((previous) => ({
             ...previous,
             [key]: value,
         }))
-        if (errors[key] && value) {
+        if (errors[key]) {
             setErrors((previous) => {
                 const newErrors = { ...previous }
                 delete newErrors[key]
@@ -141,57 +120,76 @@ export const StudentForm = ({ session }: StudentFormProps) => {
                 [questionId]: value,
             },
         }))
-        if (errors[questionId]) {
-            setErrors((previous) => {
-                const newErrors = { ...previous }
-                delete newErrors[questionId]
-                return newErrors
-            })
-        }
     }
 
     const handleSend = async () => {
         if (!session?.user?.id) return
 
         // Double check if already completed before submitting
-        if (formData.professor && formData.subject) {
-            const verifyResult = await verifyStudentEvaluationData(formData.professor, formData.subject, session.user.id)
+        if (formData.subject) {
+            const verifyResult = await verifyAutoEvaluationData(session.user.id, formData.subject)
             if (verifyResult.success && verifyResult.data) {
-                alert("Ya has completado esta evaluación. No puedes volver a hacerla.")
+                alert("Ya has completado tu autoevaluación para esta materia. No puedes volver a hacerla.")
                 return
             }
         }
 
-        await addFeedback(formData, session.user.id)
-
-        if (formData.subject && formData.answers && formData.professor) {
-            const currentSemester = calculateSemester()
-            await addStudentEvaluation(formData.professor, formData.subject, currentSemester, formData.answers, session.user.id)
+        const currentSemester = calculateSemester()
+        const formDataWithMeta = {
+            ...formData,
+            professorId: session.user.id,
+            semester: currentSemester,
         }
-        setIndexStep(0)
-        setFormData(() => initialState(questions))
+
+        try {
+            const result = await addAutoEvaluationAnswer(formDataWithMeta, session.user.id)
+
+            if (result.success) {
+                setIndexStep(0)
+                setFormData(() => initialState(questions))
+            } else {
+                console.error("❌ [PROFESSOR FORM] Failed to submit auto-evaluation:", result.error)
+                console.error("❌ [PROFESSOR FORM] Error details:", result.details)
+
+                let errorMessage = `❌ Error al enviar la auto-evaluación:\n\n${result.error}`
+
+                if (result.details?.errors && Array.isArray(result.details.errors)) {
+                    errorMessage += `\n\n🔧 Detalles del error:\n${result.details.errors.map((error: string) => `• ${error}`).join("\n")}`
+                }
+
+                errorMessage += `\n\n💡 Solución: Asegúrate de que los IDs de las preguntas existan en la base de datos antes de enviar la evaluación.`
+
+                alert(errorMessage)
+            }
+        } catch (error) {
+            console.error("❌ [PROFESSOR FORM] Unexpected error:", error)
+            alert("❌ Error inesperado al enviar la auto-evaluación")
+        }
     }
 
     const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages, session)
 
-    // Check if the selected evaluation has already been completed
+    // Check if the selected auto-evaluation has already been completed
     useEffect(() => {
         const checkIfCompleted = async () => {
-            if (formData.professor && formData.subject && session?.user?.id) {
-                const result = await verifyStudentEvaluationData(formData.professor, formData.subject, session.user.id)
+            if (formData.subject && session?.user?.id) {
+                const result = await verifyAutoEvaluationData(session.user.id, formData.subject)
                 setIsAlreadyCompleted(result.success && result.data)
             }
         }
         checkIfCompleted()
-    }, [formData.professor, formData.subject, session])
+    }, [formData.subject, session])
 
     useEffect(() => {
         const fetchQuestions = async () => {
-            const [questions, questionsStages] = await getQuestionsForStudents()
-            setQuestions(questions)
+            const [questions, questionsStages] = await getQuestionsForProfessors()
             setQuestionStages(questionsStages)
             const answers = questions.reduce((previous, now) => ({ ...previous, [now.id]: defaultAnswer(now) }), {})
-            setFormData((previous) => ({ ...previous, answers }))
+            setFormData((previous) => ({
+                ...previous,
+                answers,
+            }))
+            setQuestions(questions)
         }
         fetchQuestions()
     }, [])
@@ -201,8 +199,11 @@ export const StudentForm = ({ session }: StudentFormProps) => {
             {/* Show warning if already completed */}
             {isAlreadyCompleted && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    <p className="font-bold">✓ Evaluación completada</p>
-                    <p>Ya has completado esta evaluación. Puedes ver tus respuestas pero no puedes modificarlas.</p>
+                    <p className="font-bold">✓ Autoevaluación completada</p>
+                    <p>
+                        Ya has completado tu autoevaluación para esta materia. Puedes ver tus respuestas pero no puedes
+                        modificarlas.
+                    </p>
                 </div>
             )}
             <div className="flex flex-wrap justify-between gap-y-4">
@@ -210,10 +211,10 @@ export const StudentForm = ({ session }: StudentFormProps) => {
             </div>
             <Card>
                 <CardContent className="p-6">
-                    <div className="min-h-[300px]">{steps.length > 0 && steps[indexStep]?.component}</div>
+                    <div className="min-h-[300px]">{steps[indexStep]?.component}</div>
                     <FooterSteps
-                        steps={steps}
                         indexStep={indexStep}
+                        steps={steps}
                         onPrevStep={handlePrevStep}
                         onNextStep={handleNextStep}
                         onSend={handleSend}

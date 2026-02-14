@@ -316,3 +316,35 @@ export async function getAutoEvaluationAnswersByProfessor(professorId: string): 
         return []
     }
 }
+
+export async function verifyAutoEvaluationExists(professorId: string, subjectId: string, semester?: string): Promise<boolean> {
+    try {
+        // Build query to check if any auto-evaluation exists for this professor/subject combination
+        let query = supabase
+            .from("answervalue")
+            .select("id", { count: "exact" })
+            .eq("professor_id", professorId)
+            .eq("subject_id", subjectId)
+
+        if (semester) {
+            query = query.eq("semester", semester)
+        } else {
+            // Use current semester if no semester provided
+            const currentSemester = calculateSemester()
+            query = query.eq("semester", currentSemester)
+        }
+
+        const { count, error } = await query
+
+        if (error) {
+            console.error("❌ Error verifying auto-evaluation:", error)
+            return false
+        }
+
+        // Return true if at least one auto-evaluation exists
+        return (count || 0) > 0
+    } catch (error) {
+        console.error("❌ Error in verifyAutoEvaluationExists:", error)
+        return false
+    }
+}

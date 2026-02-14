@@ -7,12 +7,16 @@ import {
     addAnswerController,
     addStudentEvaluationController,
     getStudentEvaluationsController,
+    verifyStudentEvaluationController,
+    getCompletedStudentEvaluationsController,
 } from "../controllers/answer.controller.js"
 
 const router = Router()
 
 router.get("/", getAnswersController)
 router.get("/student-evaluations", getStudentEvaluationsController)
+router.get("/verify", verifyStudentEvaluationController)
+router.get("/completed", getCompletedStudentEvaluationsController)
 router.get("/:id", getAnswerByIdController)
 router.get("/user/:userId", getAnswersByUserController)
 router.get("/question/:questionId", getAnswersByQuestionController)

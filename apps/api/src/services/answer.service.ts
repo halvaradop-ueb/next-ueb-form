@@ -107,13 +107,15 @@ export async function saveStudentEvaluation(
     professorId: string,
     subjectId: string,
     semester: string,
-    answers: Record<string, any>
+    answers: Record<string, any>,
+    studentId: string
 ): Promise<boolean> {
     try {
         console.log("🔍 [SERVICE] Saving student evaluation:", {
             professorId,
             subjectId,
             semester,
+            studentId,
             answersCount: Object.keys(answers).length,
         })
 
@@ -133,6 +135,7 @@ export async function saveStudentEvaluation(
                         question_id: questionId,
                         response: String(textValue),
                         semester: semester,
+                        student_id: studentId, // Store student ID to distinguish from auto-evaluations
                     }
                     console.log("📝 [SERVICE] Created record:", record)
                     studentEvaluationRecords.push(record)
@@ -162,5 +165,57 @@ export async function saveStudentEvaluation(
     } catch (error) {
         console.error("❌ Error in saveStudentEvaluation:", error)
         return false
+    }
+}
+
+export async function verifyStudentEvaluation(
+    professorId: string,
+    subjectId: string,
+    studentId: string,
+    semester?: string
+): Promise<boolean> {
+    try {
+        // Build query to check if any STUDENT evaluation exists for this professor/subject combination
+        // Note: We check for student_id field which distinguishes from auto-evaluations
+        let query = supabase
+            .from("studenevalua")
+            .select("id")
+            .eq("id_professor", professorId)
+            .eq("id_subject", subjectId)
+            .eq("student_id", studentId) // Filter by student to avoid blocking on auto-evaluations
+
+        if (semester) {
+            query = query.eq("semester", semester)
+        }
+
+        const { data, error } = await query
+
+        if (error) {
+            console.error("❌ Error verifying student evaluation:", error)
+            return false
+        }
+
+        // Return true if at least one evaluation exists for THIS student
+        return (data?.length || 0) > 0
+    } catch (error) {
+        console.error("❌ Error in verifyStudentEvaluation:", error)
+        return false
+    }
+}
+
+export async function getCompletedStudentEvaluations(
+    _studentId: string,
+    _semester?: string
+): Promise<Array<{ professorId: string; subjectId: string; semester: string }>> {
+    try {
+        // Since we don't have student_id in the table, return empty array
+        // This is a workaround - ideally we should add student_id to the studenevalua table
+        console.log("⚠️ [SERVICE] Warning: studenevalua table doesn't have student_id column")
+
+        // For now, return empty array until the table is updated
+        return []
+    } catch (error) {
+        console.error("❌ Error in getCompletedStudentEvaluations:", error)
+        return []
     }
 }
