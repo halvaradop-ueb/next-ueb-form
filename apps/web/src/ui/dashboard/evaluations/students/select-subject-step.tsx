@@ -2,13 +2,9 @@
 import { useEffect, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getProfessors } from "@/services/professors"
-import { getSubjectsByProfessorId } from "@/services/subjects"
+import { getProfessorsBySemester, ProfessorWithSubjects } from "@/services/subjects"
 import { getCompletedStudentEvaluations } from "@/services/answer"
 import type { SelectSubjectStepProps } from "@/lib/@types/props"
-import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 
 interface CompletedEvaluation {
     professorId: string
@@ -16,36 +12,34 @@ interface CompletedEvaluation {
     semester: string
 }
 
-export const SelectSubjectStep = ({ formData, errors, setFormData, session }: SelectSubjectStepProps & { session: any }) => {
-    const [subjects, setSubjects] = useState<SubjectService[]>([])
-    const [professors, setProfessors] = useState<ProfessorService[]>([])
-    const [selectedSemester, setSelectedSemester] = useState<string>("")
-    const [semesters, setSemesters] = useState<string[]>([])
-    const [completedEvaluations, setCompletedEvaluations] = useState<CompletedEvaluation[]>([])
-    const [isLoading, setIsLoading] = useState(true)
+// Available academic semesters - only 3
+const ACADEMIC_SEMESTERS = [
+    { value: "Semestre 1", label: "Semestre 1" },
+    { value: "Semestre 2", label: "Semestre 2" },
+    { value: "Semestre 3", label: "Semestre 3" },
+]
 
+export const SelectSubjectStep = ({ formData, errors, setFormData, session }: SelectSubjectStepProps & { session: any }) => {
+    const [professorsWithSubjects, setProfessorsWithSubjects] = useState<ProfessorWithSubjects[]>([])
+    const [selectedProfessor, setSelectedProfessor] = useState<ProfessorWithSubjects | null>(null)
+    const [completedEvaluations, setCompletedEvaluations] = useState<CompletedEvaluation[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [selectedAcademicSemester, setSelectedAcademicSemester] = useState<string>("")
+
+    // Fetch professors with subjects when academic semester changes
     useEffect(() => {
         const fetchData = async () => {
-            const professors = await getProfessors()
-            setProfessors(professors)
+            if (!selectedAcademicSemester) {
+                setProfessorsWithSubjects([])
+                return
+            }
+            setIsLoading(true)
+            const professors = await getProfessorsBySemester(selectedAcademicSemester)
+            setProfessorsWithSubjects(professors)
+            setIsLoading(false)
         }
         fetchData()
-    }, [])
-
-    useEffect(() => {
-        const fetchSubjects = async () => {
-            if (!formData.professor) return
-            const subjects = await getSubjectsByProfessorId(formData.professor)
-            setSubjects(subjects)
-            const uniqueSemesters = [...new Set(subjects.map((s) => s.semestre).filter(Boolean))]
-            setSemesters(uniqueSemesters)
-            if (uniqueSemesters.length > 0) {
-                setSelectedSemester(uniqueSemesters[0])
-            }
-        }
-        fetchSubjects()
-        setFormData("subject", null)
-    }, [formData.professor])
+    }, [selectedAcademicSemester])
 
     // Fetch completed evaluations for the student
     useEffect(() => {
@@ -53,12 +47,31 @@ export const SelectSubjectStep = ({ formData, errors, setFormData, session }: Se
             if (!session?.user?.id) return
             const completed = await getCompletedStudentEvaluations(session.user.id)
             setCompletedEvaluations(completed)
-            setIsLoading(false)
         }
         fetchCompletedEvaluations()
     }, [session])
 
-    const filteredSubjects = selectedSemester ? subjects.filter((s) => s.semestre === selectedSemester) : subjects
+    // Update selected professor when formData.professor changes
+    useEffect(() => {
+        if (formData.professor && professorsWithSubjects.length > 0) {
+            const professor = professorsWithSubjects.find((p) => p.id === formData.professor)
+            setSelectedProfessor(professor || null)
+        } else {
+            setSelectedProfessor(null)
+        }
+    }, [formData.professor, professorsWithSubjects])
+
+    // Reset professor and subject when academic semester changes
+    useEffect(() => {
+        setFormData("professor", null)
+        setFormData("subject", null)
+        setSelectedProfessor(null)
+    }, [selectedAcademicSemester])
+
+    // Reset subject when professor changes
+    useEffect(() => {
+        setFormData("subject", null)
+    }, [formData.professor])
 
     // Check if a subject has been evaluated
     const isSubjectCompleted = (subjectId: string, professorId: string) => {
@@ -67,25 +80,15 @@ export const SelectSubjectStep = ({ formData, errors, setFormData, session }: Se
         )
     }
 
-    // Calculate current semester
-    const calculateCurrentSemester = (): string => {
-        const now = new Date()
-        const currentYear = now.getFullYear()
-        const currentMonth = now.getMonth() + 1
-        if (currentMonth > 6) {
-            return `${currentYear} - 2`
-        }
-        return `${currentYear} - 1`
-    }
-
-    const currentSemester = calculateCurrentSemester()
+    // Get subjects for the selected professor (already filtered by semester)
+    const subjectsForProfessor = selectedProfessor?.subjects || []
 
     return (
         <section>
             <div>
                 <h2 className="text-2xl font-bold">Seleccion de Docente y Materia</h2>
                 <p className="text-muted-foreground">
-                    Por favor selecciona al docente y materia que vas a realizar la evaluación docente
+                    Por favor selecciona tu semestre, el docente y la materia que vas a evaluar
                 </p>
             </div>
 
@@ -100,48 +103,77 @@ export const SelectSubjectStep = ({ formData, errors, setFormData, session }: Se
             )}
 
             <form className="mt-6 space-y-4">
+                {/* Academic Semester Selection */}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="semester">Selecciona tu semestre</Label>
+                        <span className="text-red-500 text-sm">*</span>
+                    </div>
+                    <Select value={selectedAcademicSemester} onValueChange={setSelectedAcademicSemester}>
+                        <SelectTrigger className="w-full" id="semester">
+                            <SelectValue placeholder="Selecciona tu semestre académico" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ACADEMIC_SEMESTERS.map((semester) => (
+                                <SelectItem key={semester.value} value={semester.value}>
+                                    {semester.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Professor Selection */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Label htmlFor="professor">Selecciona al docente</Label>
                         <span className="text-red-500 text-sm">*</span>
                     </div>
-                    <Select value={formData.professor} onValueChange={(value) => setFormData("professor", value)}>
+                    <Select
+                        value={formData.professor || ""}
+                        onValueChange={(value) => setFormData("professor", value)}
+                        disabled={!selectedAcademicSemester || isLoading}
+                    >
                         <SelectTrigger className="w-full" id="professor">
-                            <SelectValue placeholder="Docente" />
+                            <SelectValue
+                                placeholder={
+                                    !selectedAcademicSemester
+                                        ? "Primero selecciona tu semestre"
+                                        : isLoading
+                                          ? "Cargando..."
+                                          : "Docente"
+                                }
+                            />
                         </SelectTrigger>
                         <SelectContent>
-                            {professors.map(({ id, first_name, last_name }) => (
-                                <SelectItem key={id} value={id}>
-                                    {first_name} {last_name}
+                            {!selectedAcademicSemester ? (
+                                <SelectItem value="_none" disabled>
+                                    Primero selecciona tu semestre
                                 </SelectItem>
-                            ))}
+                            ) : professorsWithSubjects.length === 0 ? (
+                                <SelectItem value="_none" disabled>
+                                    No hay docentes disponibles para este semestre
+                                </SelectItem>
+                            ) : (
+                                professorsWithSubjects.map(({ id, first_name, last_name, subjects }) => (
+                                    <SelectItem key={id} value={id}>
+                                        {first_name} {last_name} ({subjects.length} materia{subjects.length !== 1 ? "s" : ""})
+                                    </SelectItem>
+                                ))
+                            )}
                         </SelectContent>
                     </Select>
                     {errors.professor && <p className="text-red-500 text-sm">{errors.professor}</p>}
                 </div>
 
-                {semesters.length > 0 && (
-                    <div className="space-y-2">
-                        <Label>Semestre</Label>
-                        <Tabs value={selectedSemester || semesters[0]} onValueChange={setSelectedSemester}>
-                            <TabsList className="grid w-full grid-cols-4">
-                                {semesters.map((semester) => (
-                                    <TabsTrigger key={semester} value={semester}>
-                                        {semester}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
-                        </Tabs>
-                    </div>
-                )}
-
+                {/* Subject Selection */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Label htmlFor="subject">Selecciona la materia</Label>
                         <span className="text-red-500 text-sm">*</span>
                     </div>
                     <Select
-                        value={formData.subject}
+                        value={formData.subject || ""}
                         disabled={!formData.professor || isLoading}
                         onValueChange={(value) => setFormData("subject", value)}
                     >
@@ -149,30 +181,44 @@ export const SelectSubjectStep = ({ formData, errors, setFormData, session }: Se
                             className={`w-full ${formData.subject && isSubjectCompleted(formData.subject, formData.professor) ? "bg-green-50 border-green-300" : ""}`}
                             id="subject"
                         >
-                            <SelectValue placeholder="Materia" />
+                            <SelectValue
+                                placeholder={
+                                    !selectedAcademicSemester
+                                        ? "Primero selecciona tu semestre"
+                                        : !formData.professor
+                                          ? "Primero selecciona un docente"
+                                          : "Materia"
+                                }
+                            />
                         </SelectTrigger>
                         <SelectContent>
-                            {filteredSubjects.map((subject) => {
-                                const completed = isSubjectCompleted(subject.id, formData.professor)
-                                const isCurrentSemester = subject.semestre === currentSemester
-                                return (
-                                    <SelectItem
-                                        key={subject.id}
-                                        value={subject.id}
-                                        disabled={completed}
-                                        className={completed ? "bg-green-50 text-green-700 font-medium" : ""}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {completed && <span className="text-green-600">✓</span>}
-                                            <span>{subject.name}</span>
-                                            {completed && <span className="text-xs text-green-600">(Completada)</span>}
-                                            {!completed && isCurrentSemester && (
-                                                <span className="text-xs text-blue-600">(Actual)</span>
-                                            )}
-                                        </div>
-                                    </SelectItem>
-                                )
-                            })}
+                            {!formData.professor ? (
+                                <SelectItem value="_none" disabled>
+                                    Primero selecciona un docente
+                                </SelectItem>
+                            ) : subjectsForProfessor.length === 0 ? (
+                                <SelectItem value="_none" disabled>
+                                    Este docente no tiene materias en este semestre
+                                </SelectItem>
+                            ) : (
+                                subjectsForProfessor.map((subject) => {
+                                    const completed = isSubjectCompleted(subject.id, formData.professor)
+                                    return (
+                                        <SelectItem
+                                            key={subject.id}
+                                            value={subject.id}
+                                            disabled={completed}
+                                            className={completed ? "bg-green-50 text-green-700 font-medium" : ""}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {completed && <span className="text-green-600">✓</span>}
+                                                <span>{subject.name}</span>
+                                                {completed && <span className="text-xs text-green-600">(Completada)</span>}
+                                            </div>
+                                        </SelectItem>
+                                    )
+                                })
+                            )}
                         </SelectContent>
                     </Select>
                     {formData.subject && isSubjectCompleted(formData.subject, formData.professor) && (

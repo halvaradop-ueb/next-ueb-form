@@ -8,6 +8,9 @@ import { FeedbackStep } from "./feedback-step"
 import { Confirmation } from "../confirmation"
 import { EvaluationStep } from "./evaluation-step"
 import { SelectSubjectStep } from "./select-subject-step"
+import { ConsentDialog } from "./consent-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Question } from "@/lib/@types/services"
 import { addFeedback } from "@/services/feedback"
 import { addStudentEvaluation, verifyStudentEvaluationData } from "@/services/answer"
@@ -16,6 +19,7 @@ import { getQuestionsForStudents } from "@/services/questions"
 import type { Step, StudentFormState } from "@/lib/@types/types"
 import { FeedbackFormSchema, AssignedStudentSchema } from "@/lib/schema"
 import { StudentFormProps } from "@/lib/@types/props"
+import { useRouter } from "next/navigation"
 
 const getSteps = (
     formData: StudentFormState,
@@ -81,12 +85,16 @@ const initialState = (questions: Question[]) => {
 }
 
 export const StudentForm = ({ session }: StudentFormProps) => {
+    const router = useRouter()
     const [indexStep, setIndexStep] = useState(0)
     const [questions, setQuestions] = useState<Question[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [formData, setFormData] = useState<StudentFormState>({} as StudentFormState)
     const [questionStages, setQuestionStages] = useState<Partial<Record<string, Question[]>>>({})
     const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false)
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handlePrevStep = () => {
         if (indexStep > 0) {
@@ -152,12 +160,20 @@ export const StudentForm = ({ session }: StudentFormProps) => {
 
     const handleSend = async () => {
         if (!session?.user?.id) return
+        setShowConfirmDialog(true)
+    }
+
+    const confirmSend = async () => {
+        if (!session?.user?.id) return
+        setShowConfirmDialog(false)
+        setIsSubmitting(true)
 
         // Double check if already completed before submitting
         if (formData.professor && formData.subject) {
             const verifyResult = await verifyStudentEvaluationData(formData.professor, formData.subject, session.user.id)
             if (verifyResult.success && verifyResult.data) {
                 alert("Ya has completado esta evaluación. No puedes volver a hacerla.")
+                setIsSubmitting(false)
                 return
             }
         }
@@ -168,8 +184,16 @@ export const StudentForm = ({ session }: StudentFormProps) => {
             const currentSemester = calculateSemester()
             await addStudentEvaluation(formData.professor, formData.subject, currentSemester, formData.answers, session.user.id)
         }
+
+        setIsSubmitting(false)
+        setShowSuccessDialog(true)
+    }
+
+    const handleSuccessClose = () => {
+        setShowSuccessDialog(false)
         setIndexStep(0)
         setFormData(() => initialState(questions))
+        router.push("/dashboard")
     }
 
     const steps = getSteps(formData, errors, handleChange, handleChangeAnswer, questionStages, session)
@@ -198,6 +222,9 @@ export const StudentForm = ({ session }: StudentFormProps) => {
 
     return (
         <section className="space-y-8">
+            {/* Consent Dialog */}
+            <ConsentDialog onAccept={() => {}} />
+
             {/* Show warning if already completed */}
             {isAlreadyCompleted && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
@@ -217,10 +244,45 @@ export const StudentForm = ({ session }: StudentFormProps) => {
                         onPrevStep={handlePrevStep}
                         onNextStep={handleNextStep}
                         onSend={handleSend}
-                        disabled={isAlreadyCompleted}
+                        disabled={isAlreadyCompleted || isSubmitting}
                     />
                 </CardContent>
             </Card>
+
+            {/* Confirmation Dialog */}
+            <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-center">¿Está seguro de enviar la evaluación?</DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="text-center py-4">
+                        Una vez enviada, no podrá modificar sus respuestas.
+                    </DialogDescription>
+                    <DialogFooter className="sm:justify-center gap-2">
+                        <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={confirmSend} disabled={isSubmitting}>
+                            {isSubmitting ? "Enviando..." : "Aceptar"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Success Dialog */}
+            <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+                <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-center text-green-600">Evaluación enviada</DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="text-center py-4">
+                        Su evaluación ha sido enviada exitosamente. Gracias por su participación.
+                    </DialogDescription>
+                    <DialogFooter className="sm:justify-center">
+                        <Button onClick={handleSuccessClose}>Aceptar</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </section>
     )
 }

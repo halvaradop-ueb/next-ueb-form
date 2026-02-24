@@ -549,7 +549,9 @@ export const FeedbackManagement = () => {
                                         <CardContent>
                                             <div className="flex items-center justify-center">
                                                 <div className="text-center">
-                                                    <span className="text-5xl font-bold">{avgRating}</span>
+                                                    <span className="text-5xl font-bold">
+                                                        {typeof avgRating === "number" ? avgRating.toFixed(2) : avgRating}
+                                                    </span>
                                                     <span className="text-2xl text-muted-foreground">/5</span>
                                                     <p className="text-sm text-muted-foreground">
                                                         Basado en evaluaciones de estudiantes
@@ -608,12 +610,12 @@ export const FeedbackManagement = () => {
                                                                 (sum: number, item: any) => sum + item.rating,
                                                                 0
                                                             ) / semesterFeedback.length
-                                                        // Convert from 1-10 scale to 1-5 university scale
-                                                        const universityAvg = avg / 2
+                                                        // Round to 2 decimal places
+                                                        const roundedAvg = Math.round(avg * 100) / 100
                                                         return {
                                                             semester,
-                                                            average: avg,
-                                                            universityAverage: avg,
+                                                            average: roundedAvg,
+                                                            universityAverage: roundedAvg,
                                                             count: semesterFeedback.length,
                                                             semesterName: `Semestre ${semester.replace("-", " - ")}`,
                                                         }
@@ -1769,7 +1771,7 @@ const ComparativeAnalysis = ({
                                             const avgRating =
                                                 comparisonData.reduce((sum: number, data: any) => sum + data.average, 0) /
                                                 comparisonData.length
-                                            return avgRating.toFixed(1)
+                                            return avgRating.toFixed(2)
                                         })()}
                                     </div>
                                     <div className="text-sm text-green-700">Promedio General</div>

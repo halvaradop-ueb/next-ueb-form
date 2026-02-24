@@ -8,6 +8,7 @@ import {
     getProfessorsBySubject,
     deleteAssignment,
     updateSubject,
+    getProfessorsBySemester,
 } from "../services/subjects.service.js"
 import { APIResponse } from "../lib/types.js"
 import { errorResponse } from "../lib/utils.js"
@@ -155,5 +156,23 @@ export const deleteAssignmentController = async (req: Request, res: Response<API
     } catch (error) {
         console.error("Error deleting assignment:", error)
         res.status(500).json(errorResponse("Failed to delete assignment"))
+    }
+}
+
+export const getProfessorsBySemesterController = async (req: Request, res: Response<APIResponse>) => {
+    try {
+        const semester = req.params.semester
+        if (!semester) {
+            return res.status(400).json(errorResponse("Semester is required"))
+        }
+        const professors = await getProfessorsBySemester(semester)
+        res.json({
+            data: professors,
+            errors: null,
+            message: "Professors retrieved successfully",
+        })
+    } catch (error) {
+        console.error("Error fetching professors by semester:", error)
+        res.status(500).json(errorResponse("Failed to retrieve professors"))
     }
 }

@@ -2,6 +2,19 @@ import { supabase } from "@/lib/supabase/client"
 import type { SubjectAssignmentService, SubjectAssignmentWithProfessorService, SubjectService } from "@/lib/@types/services"
 import { createRequest, createService } from "./utils"
 
+export interface ProfessorWithSubjects {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+    subjects: {
+        id: string
+        name: string
+        description: string
+        semestre: string
+    }[]
+}
+
 export const getSubjects = async (): Promise<SubjectService[]> => {
     const request = createRequest("GET", "subjects")
     const result = await createService(request)
@@ -10,6 +23,12 @@ export const getSubjects = async (): Promise<SubjectService[]> => {
 
 export const getSubjectsByProfessorId = async (professorId: string): Promise<SubjectService[]> => {
     const request = createRequest("GET", `subjects/${professorId}/professors`)
+    const result = await createService(request)
+    return result?.data || []
+}
+
+export const getProfessorsBySemester = async (semester: string): Promise<ProfessorWithSubjects[]> => {
+    const request = createRequest("GET", `subjects/semester/${encodeURIComponent(semester)}/professors`)
     const result = await createService(request)
     return result?.data || []
 }
