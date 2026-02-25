@@ -10,8 +10,8 @@ export const addPeerReview = async (peerReview: PeerReview & { admin: string }):
                 subject_id: peerReview.subject,
                 admin_id: peerReview.admin,
                 findings: peerReview.findings,
-                improvement_plan: peerReview.comments,
-                semestre: peerReview.semestre,
+                improvement_plan: peerReview?.comments,
+                semestre: peerReview?.semestre,
             })
             .select()
             .single()
@@ -79,7 +79,7 @@ export const updatePeerReview = async (reviewId: string, updates: Partial<PeerRe
             .update({
                 findings: updates.findings,
                 improvement_plan: updates.comments,
-                semestre: updates.semestre,
+                semestre: updates?.semestre || null,
             })
             .eq("id", reviewId)
             .select()

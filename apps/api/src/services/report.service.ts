@@ -75,7 +75,7 @@ export async function createReport(reportData: CreateReportDto): Promise<Report 
                 subject_id: reportData.subject_id,
                 comments: reportData.comments || null,
                 recommendations: reportData.recommendations || null,
-                semester: reportData.semester || null,
+                semester: reportData?.semester || null,
             })
             .select(
                 `
