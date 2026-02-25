@@ -10,7 +10,6 @@ vi.mock(
     () => ({
         auth: authMock,
     }),
-    { virtual: true }
 )
 
 import { middleware } from "@/middleware"
