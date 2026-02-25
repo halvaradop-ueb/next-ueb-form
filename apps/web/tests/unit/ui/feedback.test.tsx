@@ -342,4 +342,41 @@ describe("Feedback page", () => {
         expect(getFeedbackMock).toHaveBeenCalledWith("prof-1", "subject-1")
         expect(getQuestionsBySubjectMock).toHaveBeenCalledWith("subject-1")
     })
+
+    it("keeps the latest professor selection when subject responses resolve out of order", async () => {
+        let resolveProf1Subjects: ((value: SubjectService[]) => void) | null = null
+        let resolveProf2Subjects: ((value: SubjectService[]) => void) | null = null
+
+        getSubjectsByProfessorIdMock.mockImplementation(
+            (professorId: string) =>
+                new Promise<SubjectService[]>((resolve) => {
+                    if (professorId === "prof-1") {
+                        resolveProf1Subjects = resolve
+                        return
+                    }
+                    resolveProf2Subjects = resolve
+                })
+        )
+
+        render(<FeedbackManagement />)
+        await screen.findByText(/revisi.n de retroalimentaci.n/i)
+
+        await openSelectByLabel(/profesor/i, /ana lopez/i)
+        await openSelectByLabel(/profesor/i, /luis perez/i)
+
+        expect(resolveProf1Subjects).not.toBeNull()
+        expect(resolveProf2Subjects).not.toBeNull()
+
+        resolveProf2Subjects?.([])
+        await waitFor(() => {
+            expect(screen.getByText(/no tiene materias asignadas/i)).toBeInTheDocument()
+        })
+        expect(screen.getByRole("combobox", { name: /materia/i })).toBeDisabled()
+
+        resolveProf1Subjects?.(subjectsByProfessor["prof-1"])
+        await waitFor(() => {
+            expect(screen.getByText(/no tiene materias asignadas/i)).toBeInTheDocument()
+        })
+        expect(screen.getByRole("combobox", { name: /materia/i })).toBeDisabled()
+    })
 })
