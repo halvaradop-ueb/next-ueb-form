@@ -60,7 +60,7 @@ export const getUserByIdController = async (req: Request, res: Response) => {
                 message: "User ID is required",
             })
         }
-        const user = await getUserById(id)
+        const user = await getUserById(id.toString())
         if (!user) {
             return res.status(404).json(errorResponse("User not found"))
         }
@@ -90,7 +90,7 @@ export const updatePasswordController = async (req: Request, res: Response) => {
             })
         }
         const { newPassword } = req.body
-        const updatedUser = await updateUserPassword(userId, newPassword)
+        const updatedUser = await updateUserPassword(userId.toString(), newPassword)
         if (!updatedUser) {
             return res.status(404).json(errorResponse("User not found"))
         }
@@ -106,7 +106,7 @@ export const deleteUserController = async (req: Request, res: Response) => {
         if (!userId) {
             return res.status(400).json(errorResponse("User ID is required"))
         }
-        const deletedUser = await deleteUser(userId)
+        const deletedUser = await deleteUser(userId.toString())
         if (!deletedUser) {
             return res.status(404).json(errorResponse("User not found"))
         }
@@ -126,7 +126,7 @@ export const uploadUserPhotoController = async (req: Request, res: Response) => 
         if (!file) {
             return res.status(400).json(errorResponse("No file uploaded"))
         }
-        const photoUrl = await uploadUserPhoto(file, req.params.id)
+        const photoUrl = await uploadUserPhoto(file, req.params.id.toString())
         if (!photoUrl) {
             return res.status(500).json(errorResponse("Failed to upload user photo"))
         }

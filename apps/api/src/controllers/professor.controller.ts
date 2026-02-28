@@ -27,7 +27,7 @@ export const getPeerReviewsController = async (req: Request, res: Response) => {
         if (!professorId) {
             return res.status(400).json(errorResponse("Professor ID is required"))
         }
-        const peerReviews = await getPeerReviews(professorId)
+        const peerReviews = await getPeerReviews(professorId.toString())
         res.json(peerReviews)
     } catch {
         res.status(500).json(errorResponse("Failed to get peer reviews"))
@@ -41,7 +41,7 @@ export const getPeerReviewByIdController = async (req: Request, res: Response) =
         if (!professorId || !reviewId) {
             return res.status(400).json(errorResponse("Professor ID and Review ID are required"))
         }
-        const peerReview = await getPeerReviewById(professorId, reviewId)
+        const peerReview = await getPeerReviewById(professorId.toString(), reviewId.toString())
         if (!peerReview) {
             return res.status(404).json(errorResponse("Peer review not found"))
         }
@@ -61,7 +61,7 @@ export const updatePeerReviewController = async (req: Request, res: Response) =>
         if (!professorId || !reviewId) {
             return res.status(400).json(errorResponse("Professor ID and Review ID are required"))
         }
-        const updatedPeerReview = await updatePeerReview(reviewId, req.body)
+        const updatedPeerReview = await updatePeerReview(reviewId.toString(), req.body)
         if (!updatedPeerReview) {
             return res.status(404).json(errorResponse("Peer review not found"))
         }
@@ -78,7 +78,7 @@ export const deletePeerReviewController = async (req: Request, res: Response) =>
         if (!professorId || !reviewId) {
             return res.status(400).json(errorResponse("Professor ID and Review ID are required"))
         }
-        const deleted = await deletePeerReview(reviewId)
+        const deleted = await deletePeerReview(reviewId.toString())
         if (!deleted) {
             return res.status(404).json(errorResponse("Peer review not found"))
         }
