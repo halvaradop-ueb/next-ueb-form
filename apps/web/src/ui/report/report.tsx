@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import type { ProfessorService, SubjectService } from "@/lib/@types/services"
 import { generateNewReportPDF, generateSavedReportPDF } from "@/lib/report"
 import type { Report } from "@/lib/@types/reports"
 import { createReport, getReports } from "@/services/report"
-import { getSubjects } from "@/services/subjects"
+import { getSubjects, getSubjectsByProfessorId } from "@/services/subjects"
 import { getProfessors } from "@/services/professors"
 import { createPeriods } from "@/lib/utils"
 
@@ -31,8 +31,9 @@ const deriveSemesterFromTimeframe = (timeframe: string): string | null => {
     try {
         const [startStr] = timeframe.split(" - ")
         const startDate = new Date(startStr)
-        const year = startDate.getFullYear()
-        const month = startDate.getMonth() + 1 // getMonth() returns 0-11
+        if (Number.isNaN(startDate.getTime())) return null
+        const year = startDate.getUTCFullYear()
+        const month = startDate.getUTCMonth() + 1 // getUTCMonth() returns 0-11
 
         // First semester: Jan-June, Second semester: July-Dec
         if (month >= 1 && month <= 6) {
@@ -64,9 +65,16 @@ export const Reports = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [report, setReport] = useState<ReportState>(initialReportState)
     const [error, setError] = useState<string | null>(null)
+    const initialDataRequestIdRef = useRef(0)
+    const subjectsRequestIdRef = useRef(0)
 
     const handleChange = (key: keyof ReportState, value: any) => {
-        setReport((prev) => ({ ...prev, [key]: value }))
+        setReport((prev) => {
+            if (key === "professor") {
+                return { ...prev, professor: value, subject: "" }
+            }
+            return { ...prev, [key]: value }
+        })
     }
 
     const resetForm = () => {
@@ -127,11 +135,13 @@ export const Reports = () => {
     }
 
     useEffect(() => {
+        const requestId = ++initialDataRequestIdRef.current
         const loadInitialData = async () => {
             setIsLoading(true)
             setError(null)
             try {
                 const [professorsData, reportsData] = await Promise.all([getProfessors(), getReports()])
+                if (requestId !== initialDataRequestIdRef.current) return
 
                 setProfessors([
                     ...professorsData,
@@ -140,11 +150,13 @@ export const Reports = () => {
 
                 setSavedReports(reportsData || [])
             } catch (error) {
+                if (requestId !== initialDataRequestIdRef.current) return
                 console.error("Error loading initial data:", error)
                 setError("Error al cargar los datos iniciales")
                 setProfessors([{ id: "all", first_name: "Todos", last_name: "los Profesores" } as ProfessorService])
                 setSavedReports([])
             } finally {
+                if (requestId !== initialDataRequestIdRef.current) return
                 setIsLoading(false)
             }
         }
@@ -152,12 +164,17 @@ export const Reports = () => {
         loadInitialData()
     }, [])
     useEffect(() => {
+        const requestId = ++subjectsRequestIdRef.current
         const fetchSubjects = async () => {
             try {
-                let subjectsData = []
-                subjectsData = await getSubjects()
+                const subjectsData =
+                    report.professor && report.professor !== "all"
+                        ? await getSubjectsByProfessorId(report.professor)
+                        : await getSubjects()
+                if (requestId !== subjectsRequestIdRef.current) return
                 setSubjects(subjectsData)
             } catch (error) {
+                if (requestId !== subjectsRequestIdRef.current) return
                 console.error("Error al cargar las materias:", error)
                 setSubjects([])
             }

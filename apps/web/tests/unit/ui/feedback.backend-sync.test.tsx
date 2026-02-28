@@ -371,7 +371,9 @@ describe("Feedback UI <> backend sync", () => {
             await waitFor(() => {
                 expect(screen.queryByText(/no hay comentarios disponibles/i)).not.toBeInTheDocument()
             })
-            expect(await screen.findByText((text) => text.toLowerCase().includes("excelente comunicacion en clase"))).toBeInTheDocument()
+            expect(
+                await screen.findByText((text) => text.toLowerCase().includes("excelente comunicacion en clase"))
+            ).toBeInTheDocument()
 
             await openTab(/indices/i)
             expect(await screen.findAllByText(/total respuestas/i)).not.toHaveLength(0)
