@@ -33,7 +33,7 @@ export const getAnswerByIdController = async (req: Request, res: Response<APIRes
         if (!id) {
             return res.status(400).json(errorResponse("Answer ID is required"))
         }
-        const answer = await getAnswerById(id)
+        const answer = await getAnswerById(id.toString())
         res.status(200).json({
             data: answer,
             errors: null,
@@ -55,7 +55,7 @@ export const getAnswersByUserController = async (req: Request, res: Response<API
         if (!userId) {
             return res.status(400).json(errorResponse("User ID is required"))
         }
-        const answers = await getAnswersByUser(userId)
+        const answers = await getAnswersByUser(userId.toString())
         res.status(200).json({
             data: answers,
             errors: null,
@@ -73,7 +73,7 @@ export const getAnswersByQuestionController = async (req: Request, res: Response
         if (!questionId) {
             return res.status(400).json(errorResponse("Question ID is required"))
         }
-        const answers = await getAnswersByQuestion(questionId)
+        const answers = await getAnswersByQuestion(questionId.toString())
         res.status(200).json({
             data: answers,
             errors: null,
