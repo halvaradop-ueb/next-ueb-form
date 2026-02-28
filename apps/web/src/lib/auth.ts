@@ -35,6 +35,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             authorization: {
                 params: {
                     scope: "openid profile email https://graph.microsoft.com/User.Read",
+                    redirect_uri: process.env.NEXTAUTH_URL + "/auth/callback/outlook",
                 },
             },
             async profile(profile: any) {

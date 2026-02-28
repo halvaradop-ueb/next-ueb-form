@@ -8,6 +8,8 @@ import {
     getAnswersByQuestion,
     addAnswer,
     saveStudentEvaluation,
+    verifyStudentEvaluation,
+    getCompletedStudentEvaluations,
 } from "../services/answer.service.js"
 import { supabase } from "../lib/supabase.js"
 
@@ -107,17 +109,18 @@ export const addAnswerController = async (req: Request, res: Response<APIRespons
 
 export const addStudentEvaluationController = async (req: Request, res: Response<APIResponse>) => {
     try {
-        const { professorId, subjectId, semester, answers } = req.body
-        if (!professorId || !subjectId || !semester || !answers) {
-            return res.status(400).json(errorResponse("Professor ID, subject ID, semester, and answers are required"))
+        const { professorId, subjectId, semester, answers, studentId } = req.body
+        if (!professorId || !subjectId || !semester || !answers || !studentId) {
+            return res.status(400).json(errorResponse("Professor ID, subject ID, semester, answers, and student ID are required"))
         }
         console.log("🔍 [CONTROLLER] Adding student evaluation:", {
             professorId,
             subjectId,
             semester,
+            studentId,
             answersCount: Object.keys(answers).length,
         })
-        const success = await saveStudentEvaluation(professorId, subjectId, semester, answers)
+        const success = await saveStudentEvaluation(professorId, subjectId, semester, answers, studentId)
         if (success) {
             res.status(201).json({
                 data: null,
@@ -201,5 +204,51 @@ export const getStudentEvaluationsController = async (req: Request, res: Respons
     } catch (error) {
         console.error("❌ Error in getStudentEvaluationsController:", error)
         res.status(500).json(errorResponse("Failed to fetch student evaluations"))
+    }
+}
+
+export const verifyStudentEvaluationController = async (req: Request, res: Response) => {
+    try {
+        const professorId = req.query.professorId as string
+        const subjectId = req.query.subjectId as string
+        const studentId = req.query.studentId as string
+        const semester = req.query.semester as string
+
+        if (!professorId || !subjectId || !studentId) {
+            return res.status(400).json(errorResponse("Professor ID, subject ID, and student ID are required"))
+        }
+
+        const result = await verifyStudentEvaluation(professorId, subjectId, studentId, semester)
+
+        res.status(200).json({
+            data: result as unknown as unknown[],
+            errors: null,
+            message: "Student evaluation verification retrieved successfully",
+        })
+    } catch (error) {
+        console.error("❌ Error in verifyStudentEvaluationController:", error)
+        res.status(500).json(errorResponse("Failed to verify student evaluation"))
+    }
+}
+
+export const getCompletedStudentEvaluationsController = async (req: Request, res: Response<APIResponse>) => {
+    try {
+        const studentId = req.query.studentId as string
+        const semester = req.query.semester as string
+
+        if (!studentId) {
+            return res.status(400).json(errorResponse("Student ID is required"))
+        }
+
+        const evaluations = await getCompletedStudentEvaluations(studentId, semester)
+
+        res.status(200).json({
+            data: evaluations,
+            errors: null,
+            message: "Completed student evaluations retrieved successfully",
+        })
+    } catch (error) {
+        console.error("❌ Error in getCompletedStudentEvaluationsController:", error)
+        res.status(500).json(errorResponse("Failed to fetch completed student evaluations"))
     }
 }

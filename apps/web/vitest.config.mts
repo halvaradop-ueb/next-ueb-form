@@ -8,7 +8,7 @@ export default defineConfig({
         environment: "happy-dom",
         setupFiles: ["./tests/unit/setup.ts"],
         globals: true,
-        include: ["tests/unit/**/*.test.ts"],
+        include: ["tests/unit/**/*.test.{ts,tsx}"],
         coverage: {
             provider: "v8",
             reporter: ["text", "json", "html"],
@@ -16,8 +16,15 @@ export default defineConfig({
         },
     },
     resolve: {
-        alias: {
-            "@": path.resolve(__dirname, "./src"),
-        },
+        alias: [
+            {
+                find: "@/auth",
+                replacement: path.resolve(__dirname, "./src/lib/auth.ts"),
+            },
+            {
+                find: "@",
+                replacement: path.resolve(__dirname, "./src"),
+            },
+        ],
     },
 })

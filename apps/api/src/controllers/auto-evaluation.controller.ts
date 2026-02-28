@@ -3,6 +3,7 @@ import {
     getAutoEvaluationAnswers,
     getAutoEvaluationAnswersByProfessor,
     saveAutoEvaluationAnswers,
+    verifyAutoEvaluationExists,
 } from "../services/auto-evaluation.service.js"
 import { APIResponse } from "../lib/types.js"
 import { errorResponse } from "../lib/utils.js"
@@ -79,5 +80,26 @@ export const addAutoEvaluationAnswer = async (req: Request, res: Response<APIRes
     } catch (error) {
         console.error("Error in addAutoEvaluationAnswer:", error)
         res.status(500).json(errorResponse("Failed to submit auto-evaluation answer"))
+    }
+}
+
+export const verifyAutoEvaluationController = async (req: Request, res: Response) => {
+    try {
+        const { professorId, subjectId, semester } = req.query
+
+        if (!professorId || !subjectId) {
+            return res.status(400).json(errorResponse("Professor ID and Subject ID are required"))
+        }
+
+        const exists = await verifyAutoEvaluationExists(professorId as string, subjectId as string, semester as string)
+
+        res.status(200).json({
+            data: exists as unknown as unknown[],
+            errors: null,
+            message: "Auto-evaluation verification retrieved successfully",
+        })
+    } catch (error) {
+        console.error("Error in verifyAutoEvaluationController:", error)
+        res.status(500).json(errorResponse("Failed to verify auto-evaluation"))
     }
 }

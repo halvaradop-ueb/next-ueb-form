@@ -14,7 +14,7 @@ export type User = {
 export type SafeUser = Omit<User, "password">
 
 export async function authenticate(email: string, password: string): Promise<SafeUser | null> {
-    const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
+    const { data, error } = await supabase.from("User").select("*").ilike("email", email).single()
 
     if (error || !data) {
         console.error("Error fetching user:", error)
@@ -46,7 +46,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function checkAndRegisterUser(profile: { email: string }): Promise<SafeUser | null> {
     const { email } = profile
-    const { data, error } = await supabase.from("User").select("*").eq("email", email).single()
+    const { data, error } = await supabase.from("User").select("*").ilike("email", email).single()
 
     const user = data as User | undefined
 

@@ -89,7 +89,8 @@ export const addStudentEvaluation = async (
     professorId: string,
     subjectId: string,
     semester: string,
-    answers: Record<string, any>
+    answers: Record<string, any>,
+    studentId: string
 ): Promise<boolean> => {
     try {
         const request = createRequest("POST", "answers/student-evaluation", {
@@ -97,6 +98,7 @@ export const addStudentEvaluation = async (
             subjectId,
             semester,
             answers,
+            studentId,
         })
         const result = await createService(request)
 
@@ -126,6 +128,50 @@ export const getStudentEvaluationsBySubject = async (
         return result?.data || []
     } catch (error) {
         console.error("❌ Error fetching student evaluations:", error)
+        return []
+    }
+}
+
+export const verifyStudentEvaluationData = async (
+    professorId: string,
+    subjectId: string,
+    studentId: string,
+    semester?: string
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+    try {
+        const params = new URLSearchParams({ professorId, subjectId, studentId })
+        if (semester) params.append("semester", semester)
+
+        const request = createRequest("GET", `answers/verify?${params}`)
+        const result = await createService(request)
+
+        if (result && result.data) {
+            return {
+                success: true,
+                data: result.data,
+            }
+        } else {
+            return { success: false, error: "No data found" }
+        }
+    } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+    }
+}
+
+export const getCompletedStudentEvaluations = async (
+    studentId: string,
+    semester?: string
+): Promise<Array<{ professorId: string; subjectId: string; semester: string }>> => {
+    try {
+        const params = new URLSearchParams({ studentId })
+        if (semester) params.append("semester", semester)
+
+        const request = createRequest("GET", `answers/completed?${params}`)
+        const result = await createService(request)
+
+        return result?.data || []
+    } catch (error) {
+        console.error("❌ Error fetching completed student evaluations:", error)
         return []
     }
 }

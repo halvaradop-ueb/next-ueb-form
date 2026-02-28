@@ -3,6 +3,7 @@ import {
     getAutoEvaluationByProfessorAndSubject,
     getAutoEvaluationByProfessor,
     addAutoEvaluationAnswer,
+    verifyAutoEvaluationController,
 } from "../controllers/auto-evaluation.controller.js"
 
 const router = Router()
@@ -13,6 +14,13 @@ const router = Router()
  * @access Public
  */
 router.get("/", getAutoEvaluationByProfessorAndSubject)
+
+/**
+ * @route GET /api/auto-evaluation/verify
+ * @desc Verify if an auto-evaluation exists for a professor and subject
+ * @access Public
+ */
+router.get("/verify", verifyAutoEvaluationController)
 
 /**
  * @route GET /api/auto-evaluation/professor/:professorId

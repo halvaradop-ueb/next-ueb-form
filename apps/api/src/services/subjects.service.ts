@@ -195,3 +195,93 @@ export const updateSubject = async (
         return {} as SubjectService
     }
 }
+
+export interface ProfessorWithSubjects {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+    subjects: {
+        id: string
+        name: string
+        description: string
+        semestre: string
+    }[]
+}
+
+/**
+ * Get all professors who teach subjects in a specific semester
+ */
+export const getProfessorsBySemester = async (semester: string): Promise<ProfessorWithSubjects[]> => {
+    try {
+        // First get all subjects in the semester
+        const { data: subjects, error: subjectsError } = await supabase
+            .from("subject")
+            .select("id, name, description, semestre")
+            .eq("semestre", semester)
+
+        if (subjectsError) {
+            throw new Error(`Error fetching subjects by semester: ${subjectsError.message}`)
+        }
+
+        if (!subjects || subjects.length === 0) {
+            return []
+        }
+
+        const subjectIds = subjects.map((s) => s.id)
+
+        // Get all assignments for these subjects with professor info
+        const { data: assignments, error: assignmentsError } = await supabase
+            .from("subjectassignment")
+            .select(
+                `
+                subject_id,
+                professor_id,
+                User:professor_id (
+                    id,
+                    first_name,
+                    last_name,
+                    email
+                )
+            `
+            )
+            .in("subject_id", subjectIds)
+
+        if (assignmentsError) {
+            throw new Error(`Error fetching assignments: ${assignmentsError.message}`)
+        }
+
+        // Group by professor
+        const professorMap = new Map<string, ProfessorWithSubjects>()
+
+        for (const assignment of assignments) {
+            const professor = assignment.User as unknown as { id: string; first_name: string; last_name: string; email: string }
+            if (!professor) continue
+
+            if (!professorMap.has(professor.id)) {
+                professorMap.set(professor.id, {
+                    id: professor.id,
+                    first_name: professor.first_name,
+                    last_name: professor.last_name,
+                    email: professor.email,
+                    subjects: [],
+                })
+            }
+
+            const subject = subjects.find((s) => s.id === assignment.subject_id)
+            if (subject) {
+                professorMap.get(professor.id)!.subjects.push({
+                    id: subject.id,
+                    name: subject.name,
+                    description: subject.description,
+                    semestre: subject.semestre,
+                })
+            }
+        }
+
+        return Array.from(professorMap.values())
+    } catch (error) {
+        console.error("Error fetching professors by semester:", error)
+        return []
+    }
+}

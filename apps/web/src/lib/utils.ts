@@ -63,7 +63,8 @@ export const getAverageRatings = (feedback: Feedback[]) => {
     if (n === 0) return 0
 
     const convertedRatings = feedback.map((item) => item.rating)
-    return convertedRatings.reduce((previous, now) => previous + now, 0) / n
+    const average = convertedRatings.reduce((previous, now) => previous + now, 0) / n
+    return Math.round(average * 100) / 100
 }
 
 export const createPeriods = (start: Date) => {

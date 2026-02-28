@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -35,6 +35,16 @@ const initialState = {
         return `${startDate.toISOString()} - ${endDate.toISOString()}`
     })(),
 } as FeedbackState
+
+type StudentEvaluationsState = {
+    numericResponses: Array<{ question: Question; responses: number[] }>
+    textResponses: Array<{ question: Question; responses: string[] }>
+}
+
+const emptyStudentEvaluations: StudentEvaluationsState = {
+    numericResponses: [],
+    textResponses: [],
+}
 
 const getQuestionsByType = (questions: Question[]) => {
     const numericQuestions = questions.filter((q) => q.question_type === "numeric")
@@ -99,11 +109,15 @@ export const FeedbackManagement = () => {
     const [ratings, setRatings] = useState<ReturnType<typeof ratingFeedback>>([])
     const [autoEvaluationAnswers, setAutoEvaluationAnswers] = useState<AutoEvaluationBySemester[]>([])
     const [questions, setQuestions] = useState<Question[]>([])
-    const [studentEvaluations, setStudentEvaluations] = useState<{
-        numericResponses: Array<{ question: Question; responses: number[] }>
-        textResponses: Array<{ question: Question; responses: string[] }>
-    }>({ numericResponses: [], textResponses: [] })
+    const [studentEvaluations, setStudentEvaluations] = useState<StudentEvaluationsState>(emptyStudentEvaluations)
     const [coevaluations, setCoevaluations] = useState<any[]>([])
+    const professorsRequestIdRef = useRef(0)
+    const subjectsRequestIdRef = useRef(0)
+    const feedbackRequestIdRef = useRef(0)
+    const autoEvaluationRequestIdRef = useRef(0)
+    const questionsRequestIdRef = useRef(0)
+    const studentEvaluationsRequestIdRef = useRef(0)
+    const coevaluationsRequestIdRef = useRef(0)
 
     const optionsDisabled = !options.professorId || !options.subjectId
     const defaultCardMessage =
@@ -122,19 +136,42 @@ export const FeedbackManagement = () => {
     const isEmptyFeedback = filteredFeedback.length === 0
 
     const handleSelectChange = (key: keyof FeedbackState, value: any) => {
+        if (key === "professorId") {
+            setSubjects([])
+            setFeedback([])
+            setRatings([])
+            setAutoEvaluationAnswers([])
+            setQuestions([])
+            setStudentEvaluations(emptyStudentEvaluations)
+            setCoevaluations([])
+        }
+
+        if (key === "subjectId") {
+            setFeedback([])
+            setRatings([])
+            setAutoEvaluationAnswers([])
+            setQuestions([])
+            setStudentEvaluations(emptyStudentEvaluations)
+            setCoevaluations([])
+        }
+
         setOptions((previous) => ({
             ...previous,
+            ...(key === "professorId" ? { subjectId: "" } : {}),
             [key]: value,
         }))
     }
 
     useEffect(() => {
+        const requestId = ++professorsRequestIdRef.current
         const fetchData = async () => {
             try {
                 const professorsData = await getProfessors()
+                if (requestId !== professorsRequestIdRef.current) return
                 setProfessors(professorsData)
             } catch (err) {
-                // Fetch error handled silently
+                if (requestId !== professorsRequestIdRef.current) return
+                setProfessors([])
             }
         }
 
@@ -142,13 +179,19 @@ export const FeedbackManagement = () => {
     }, [])
 
     useEffect(() => {
+        const requestId = ++subjectsRequestIdRef.current
         const fetchSubjects = async () => {
-            if (!options?.professorId) return
+            if (!options?.professorId) {
+                setSubjects([])
+                return
+            }
             try {
                 const subjectsData = await getSubjectsByProfessorId(options.professorId)
+                if (requestId !== subjectsRequestIdRef.current) return
                 setSubjects(subjectsData)
             } catch (err) {
-                // Error handled silently
+                if (requestId !== subjectsRequestIdRef.current) return
+                setSubjects([])
             }
         }
 
@@ -156,9 +199,15 @@ export const FeedbackManagement = () => {
     }, [options?.professorId])
 
     useEffect(() => {
+        const requestId = ++feedbackRequestIdRef.current
         const fetchFeedback = async () => {
-            if (!options?.professorId || !options?.subjectId) return
+            if (!options?.professorId || !options?.subjectId) {
+                setFeedback([])
+                setRatings([])
+                return
+            }
             const feedbackData = await getFeedback(options.professorId, options.subjectId)
+            if (requestId !== feedbackRequestIdRef.current) return
             setFeedback(feedbackData)
             setRatings(ratingFeedback(feedbackData))
         }
@@ -166,8 +215,12 @@ export const FeedbackManagement = () => {
     }, [options?.professorId, options?.subjectId])
 
     useEffect(() => {
+        const requestId = ++autoEvaluationRequestIdRef.current
         const fetchAutoEvaluation = async () => {
-            if (!options?.professorId || !options?.subjectId) return
+            if (!options?.professorId || !options?.subjectId) {
+                setAutoEvaluationAnswers([])
+                return
+            }
 
             try {
                 const autoEvaluationData = await getAutoEvaluationAnswers(options.professorId, options.subjectId)
@@ -206,8 +259,10 @@ export const FeedbackManagement = () => {
                     }
                 }
 
+                if (requestId !== autoEvaluationRequestIdRef.current) return
                 setAutoEvaluationAnswers(filteredAutoEvaluations)
             } catch (error) {
+                if (requestId !== autoEvaluationRequestIdRef.current) return
                 setAutoEvaluationAnswers([])
             }
         }
@@ -215,8 +270,12 @@ export const FeedbackManagement = () => {
     }, [options?.professorId, options?.subjectId, options?.timeframe])
 
     useEffect(() => {
+        const requestId = ++questionsRequestIdRef.current
         const fetchQuestions = async () => {
-            if (!options?.subjectId) return
+            if (!options?.subjectId) {
+                setQuestions([])
+                return
+            }
 
             try {
                 const questionsData = await getQuestionsBySubject(options.subjectId)
@@ -226,11 +285,14 @@ export const FeedbackManagement = () => {
                     const allQuestionsResponse = await fetch(`${API_ENDPOINT}/questions`)
                     const allQuestionsData = await allQuestionsResponse.json()
                     const allQuestions = Array.isArray(allQuestionsData.questions) ? allQuestionsData.questions : []
+                    if (requestId !== questionsRequestIdRef.current) return
                     setQuestions(allQuestions)
                 } else {
+                    if (requestId !== questionsRequestIdRef.current) return
                     setQuestions(questionsData)
                 }
             } catch (error) {
+                if (requestId !== questionsRequestIdRef.current) return
                 setQuestions([])
             }
         }
@@ -238,8 +300,10 @@ export const FeedbackManagement = () => {
     }, [options?.subjectId])
 
     useEffect(() => {
+        const requestId = ++studentEvaluationsRequestIdRef.current
         const fetchStudentEvaluations = async () => {
             if (questions.length === 0 || !options?.subjectId) {
+                setStudentEvaluations(emptyStudentEvaluations)
                 return
             }
 
@@ -274,9 +338,11 @@ export const FeedbackManagement = () => {
                     }
                 }
                 const data = await getStudentEvaluationsByQuestionType(questions, options.subjectId, filteredEvaluations)
+                if (requestId !== studentEvaluationsRequestIdRef.current) return
                 setStudentEvaluations(data)
             } catch (error) {
-                setStudentEvaluations({ numericResponses: [], textResponses: [] })
+                if (requestId !== studentEvaluationsRequestIdRef.current) return
+                setStudentEvaluations(emptyStudentEvaluations)
             }
         }
 
@@ -284,7 +350,12 @@ export const FeedbackManagement = () => {
     }, [questions, options?.subjectId, options?.professorId, options?.timeframe])
 
     useEffect(() => {
+        const requestId = ++coevaluationsRequestIdRef.current
         const fetchCoevaluations = async () => {
+            if (!options?.professorId || !options?.subjectId) {
+                setCoevaluations([])
+                return
+            }
             try {
                 const coevaluationData = await getAllCoevaluations(options.professorId, options.subjectId)
 
@@ -326,8 +397,10 @@ export const FeedbackManagement = () => {
                     }
                 }
 
+                if (requestId !== coevaluationsRequestIdRef.current) return
                 setCoevaluations(filteredCoevaluations)
             } catch (error) {
+                if (requestId !== coevaluationsRequestIdRef.current) return
                 setCoevaluations([])
             }
         }
@@ -549,7 +622,9 @@ export const FeedbackManagement = () => {
                                         <CardContent>
                                             <div className="flex items-center justify-center">
                                                 <div className="text-center">
-                                                    <span className="text-5xl font-bold">{avgRating}</span>
+                                                    <span className="text-5xl font-bold">
+                                                        {typeof avgRating === "number" ? avgRating.toFixed(2) : avgRating}
+                                                    </span>
                                                     <span className="text-2xl text-muted-foreground">/5</span>
                                                     <p className="text-sm text-muted-foreground">
                                                         Basado en evaluaciones de estudiantes
@@ -608,12 +683,12 @@ export const FeedbackManagement = () => {
                                                                 (sum: number, item: any) => sum + item.rating,
                                                                 0
                                                             ) / semesterFeedback.length
-                                                        // Convert from 1-10 scale to 1-5 university scale
-                                                        const universityAvg = avg / 2
+                                                        // Round to 2 decimal places
+                                                        const roundedAvg = Math.round(avg * 100) / 100
                                                         return {
                                                             semester,
-                                                            average: avg,
-                                                            universityAverage: avg,
+                                                            average: roundedAvg,
+                                                            universityAverage: roundedAvg,
                                                             count: semesterFeedback.length,
                                                             semesterName: `Semestre ${semester.replace("-", " - ")}`,
                                                         }
@@ -1769,7 +1844,7 @@ const ComparativeAnalysis = ({
                                             const avgRating =
                                                 comparisonData.reduce((sum: number, data: any) => sum + data.average, 0) /
                                                 comparisonData.length
-                                            return avgRating.toFixed(1)
+                                            return avgRating.toFixed(2)
                                         })()}
                                     </div>
                                     <div className="text-sm text-green-700">Promedio General</div>

@@ -46,6 +46,7 @@ export interface FooterStepsProps {
     onNextStep: MouseEventHandler
     onPrevStep: MouseEventHandler
     onSend: () => void
+    disabled?: boolean
 }
 
 export interface FeedbackStepProps {

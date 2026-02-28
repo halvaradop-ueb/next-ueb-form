@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["AUTH_*", "NEXTAUTH_*", "AZURE_*"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -13,5 +14,7 @@
       "cache": false
     }
   },
-  "ui": "tui"
+  "ui": "tui",
+  "globalDependencies": [".env"],
+  "globalEnv": [".env"]
 }

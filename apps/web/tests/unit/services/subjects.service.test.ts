@@ -11,6 +11,7 @@ const mockSubject: SubjectService = {
     name: "Matemáticas",
     description: "Matemáticas Básicas",
     professor_id: "prof-1",
+    semestre: "2024-1",
 }
 
 const mockSubjects: SubjectService[] = [
@@ -20,6 +21,7 @@ const mockSubjects: SubjectService[] = [
         name: "Física",
         description: "Física General",
         professor_id: "prof-2",
+        semestre: "2024-1",
     },
 ]
 
@@ -76,6 +78,7 @@ describe("Subjects Service", () => {
                 name: "Química",
                 description: "Química General",
                 professor_id: "prof-3",
+                semestre: "2024-1",
             }
 
             server.use(
@@ -108,6 +111,7 @@ describe("Subjects Service", () => {
                 name: "",
                 description: "",
                 professor_id: "",
+                semestre: "",   
             }
 
             await expect(addSubject(invalidSubject)).rejects.toThrow()
@@ -121,9 +125,10 @@ describe("Subjects Service", () => {
             )
 
             const duplicateSubject: Omit<SubjectService, "id"> = {
-                name: "Matemáticas", // Ya existe
+                name: "Matemáticas",
                 description: "Test",
                 professor_id: "prof-1",
+                semestre: "2024-1",
             }
 
             await expect(addSubject(duplicateSubject)).rejects.toThrow()
