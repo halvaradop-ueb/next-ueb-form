@@ -1,5 +1,6 @@
-import { beforeAll, afterEach, afterAll } from "vitest"
+import { afterAll, afterEach, beforeAll, vi } from "vitest"
 import { setupServer } from "msw/node"
+import { cleanup } from "@testing-library/react"
 import "@testing-library/jest-dom"
 
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co"
@@ -12,7 +13,9 @@ beforeAll(() => {
 })
 
 afterEach(() => {
+    cleanup()
     server.resetHandlers()
+    vi.restoreAllMocks()
 })
 
 afterAll(() => {

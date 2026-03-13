@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { linksByRole } from "./components/dashboard/sidebar"
+import { linksByRole } from "@/lib/routes-by-role"
 import type { Role } from "./lib/@types/types"
 
 const getRoutesByRole = (role: Role) => {
