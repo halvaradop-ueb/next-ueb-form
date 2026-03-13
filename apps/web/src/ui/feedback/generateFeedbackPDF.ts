@@ -35,7 +35,21 @@ export const generateExecutiveSummaryPDF = async (
     doc.setFont("helvetica")
     const marginLeft = 5
     const contentWidth = 200
+    const sectionGap = 4
     let y = 10
+
+    // Helper function to draw section titles
+    const drawSectionTitle = (title: string) => {
+        doc.setFillColor(30, 41, 59)
+        doc.rect(marginLeft, y, contentWidth, 5, "F")
+
+        doc.setFontSize(9)
+        doc.setTextColor(255, 255, 255)
+        doc.setFont("helvetica", "bold")
+        doc.text(title, marginLeft + 5, y + 3.5)
+
+        y += 7
+    }
 
     // Get professor and subject names
     const professor = professors.find((p) => p.id === options.professorId)
@@ -128,7 +142,7 @@ export const generateExecutiveSummaryPDF = async (
     doc.setFontSize(12)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("RESUMEN EJECUTIVO", 105, 7, { align: "center" })
+    doc.text("Resumen Ejecutivo", 105, 7, { align: "center" })
 
     doc.setFontSize(7)
     doc.setFont("helvetica", "normal")
@@ -208,25 +222,10 @@ export const generateExecutiveSummaryPDF = async (
     doc.setFont("helvetica", "normal")
     doc.text(currentDate, marginLeft + 108, y + 15)
 
-    y += 25
+    y += 19
 
     // ========== 3. EXECUTIVE CONCLUSION ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
-    doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("CONCLUSIÓN EJECUTIVA", marginLeft + 5, y + 6)
-
-    y += 10
-    doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 18, "F")
-    doc.setDrawColor(200, 210, 220)
-    doc.rect(marginLeft, y, contentWidth, 18)
-
-    doc.setFontSize(8)
-    doc.setTextColor(30, 41, 59)
-    doc.setFont("helvetica", "normal")
+    drawSectionTitle("CONCLUSIÓN EJECUTIVA")
 
     const conclusionText =
         `El docente obtuvo una calificación promedio de ${avgScore.toFixed(1)}/5.0, ubicándose en un nivel de desempeño ${levelText.toLowerCase()}. ` +
@@ -237,24 +236,30 @@ export const generateExecutiveSummaryPDF = async (
             ? `La tendencia frente al semestre anterior se mantiene ${trendText.toLowerCase()}.`
             : "")
 
+    const lineHeight = 4
     const splitConclusion = doc.splitTextToSize(conclusionText, contentWidth - 10)
-    doc.text(splitConclusion, marginLeft + 5, y + 6)
+    const conclusionHeight = splitConclusion.length * lineHeight + 4
 
-    y += 23
+    doc.setFillColor(248, 250, 252)
+    doc.rect(marginLeft, y, contentWidth, conclusionHeight, "F")
+    doc.setDrawColor(200, 210, 220)
+    doc.rect(marginLeft, y, contentWidth, conclusionHeight)
+
+    doc.setFontSize(8)
+    doc.setTextColor(30, 41, 59)
+    doc.setFont("helvetica", "normal")
+    doc.text(splitConclusion, marginLeft + 5, y + 4)
+
+    y += conclusionHeight + sectionGap
 
     // ========== 4. KEY INDICATORS ==========
-    doc.setFillColor(30, 41, 59)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
-    doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("INDICADORES CLAVE", marginLeft + 5, y + 6)
+    drawSectionTitle("INDICADORES CLAVE")
 
-    y += 10
+    const indicatorsHeight = 24
     doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 26, "F")
+    doc.rect(marginLeft, y, contentWidth, indicatorsHeight, "F")
     doc.setDrawColor(200, 210, 220)
-    doc.rect(marginLeft, y, contentWidth, 26)
+    doc.rect(marginLeft, y, contentWidth, indicatorsHeight)
 
     // Left column indicators
     doc.setFontSize(7)
@@ -303,21 +308,21 @@ export const generateExecutiveSummaryPDF = async (
         y + 20
     )
 
-    y += 35
+    y += indicatorsHeight + sectionGap
 
     // ========== 5. GRADE DISTRIBUTION ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
-    doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("DISTRIBUCIÓN DE CALIFICACIONES", marginLeft + 5, y + 6)
-
-    y += 10
+    drawSectionTitle("DISTRIBUCIÓN DE CALIFICACIONES")
+    
+    const distributionHeight = 20
     doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 22, "F")
+    doc.rect(marginLeft, y, contentWidth, distributionHeight, "F")
     doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 22)
+    doc.rect(marginLeft, y, contentWidth, distributionHeight)
+
+    doc.setFontSize(9)
+    doc.setTextColor(30, 41, 59)
+    doc.setFont("helvetica", "bold")
+    doc.text("Distribución De Calificaciones", marginLeft + 5, y + 2)
 
     if (allResponses.length > 0) {
         const categories = [
@@ -351,7 +356,7 @@ export const generateExecutiveSummaryPDF = async (
             const percentage = category.percentage
             const barWidth = (count / maxValue) * barMaxWidth
 
-            const rowY = y + 5 + index * 3
+            const rowY = y + 6 + index * 2.5
 
             // Label with number
             doc.setFontSize(6)
@@ -361,11 +366,11 @@ export const generateExecutiveSummaryPDF = async (
 
             // Background bar
             doc.setFillColor(230, 230, 235)
-            doc.rect(barStartX, rowY, barMaxWidth, 4, "F")
+            doc.rect(barStartX, rowY, barMaxWidth, 3, "F")
 
             // Value bar - highlight dominant
             doc.setFillColor(category.color[0], category.color[1], category.color[2])
-            doc.rect(barStartX, rowY, Math.max(barWidth, 2), 4, "F")
+            doc.rect(barStartX, rowY, Math.max(barWidth, 2), 3, "F")
 
             // Percentage - positioned to avoid overlap
             doc.setFont("helvetica", category === dominant ? "bold" : "normal")
@@ -384,67 +389,21 @@ export const generateExecutiveSummaryPDF = async (
         doc.text("No hay datos disponibles", marginLeft + contentWidth / 2, y + 12, { align: "center" })
     }
 
-    y += 26
+    y += distributionHeight + sectionGap
 
-    // ========== 6. PERFORMANCE TREND ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
-    doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("TENDENCIA DE DESEMPEÑO", marginLeft + 5, y + 6)
-
-    y += 10
+    // ========== 6. GRADE HISTORY ==========
+    drawSectionTitle("HISTORIAL DE NOTAS")
+    
+    const historyHeight = 36
     doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 20, "F")
+    doc.rect(marginLeft, y, contentWidth, historyHeight, "F")
     doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 20)
+    doc.rect(marginLeft, y, contentWidth, historyHeight)
 
-    if (semesterAverages && semesterAverages.length >= 1) {
-        // Table header
-        doc.setFontSize(7)
-        doc.setTextColor(100, 100, 100)
-        doc.setFont("helvetica", "bold")
-        doc.text("Periodo", marginLeft + 5, y + 6)
-        doc.text("Promedio", marginLeft + 60, y + 6)
-
-        doc.setDrawColor(220, 220, 230)
-        doc.line(marginLeft + 50, y + 4, marginLeft + 50, y + 16)
-
-        // Show up to 3 semesters
-        const displaySemesters = semesterAverages.slice(-3)
-        displaySemesters.forEach((sem, index) => {
-            const rowY = y + 10 + index * 4
-            doc.setFont("helvetica", "normal")
-            doc.setTextColor(30, 41, 59)
-            doc.text(sem.semesterName || sem.semester, marginLeft + 5, rowY)
-            doc.setFont("helvetica", "bold")
-            doc.text(sem.average.toFixed(2) + " / 5.0", marginLeft + 60, rowY)
-        })
-    } else {
-        doc.setFontSize(8)
-        doc.setTextColor(120, 120, 120)
-        doc.setFont("helvetica", "normal")
-        doc.text("Se necesita más de un semestre para mostrar tendencia", marginLeft + contentWidth / 2, y + 10, {
-            align: "center",
-        })
-    }
-
-    y += 22
-
-    // ========== 7. GRADE HISTORY ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
     doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
+    doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("HISTORIAL DE NOTAS", marginLeft + 5, y + 6)
-
-    y += 10
-    doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 40, "F")
-    doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 40)
+    doc.text("Historial De Notas", marginLeft + 5, y + 2)
 
     if (semesterAverages && semesterAverages.length > 0) {
         const semestersWithNotes = semesterAverages.filter((sem) => sem.count > 0).slice(-5) // Last 5 semesters
@@ -453,7 +412,7 @@ export const generateExecutiveSummaryPDF = async (
             const maxBarHeight = 25
             const maxAvg = 5
             const startX = marginLeft + 20
-            const baseY = y + 35
+            const baseY = y + 33
 
             semestersWithNotes.forEach((sem, index) => {
                 const barHeight = (sem.average / maxAvg) * maxBarHeight
@@ -505,69 +464,41 @@ export const generateExecutiveSummaryPDF = async (
         doc.text("No hay historial disponible", marginLeft + contentWidth / 2, y + 20, { align: "center" })
     }
 
-    y += 45
+    y += historyHeight + sectionGap
 
     // ========== 8. RECOMMENDATIONS ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 8, "F")
-    doc.setFontSize(9)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("RECOMENDACIONES", marginLeft + 5, y + 6)
+    drawSectionTitle("RECOMENDACIONES")
 
-    y += 10
+    const recommendationsText =
+        worstQuestion.name !== "N/A"
+            ? `1. Revisar y mejorar "${worstQuestion.name.substring(0, 50)}" según las evaluaciones de los estudiantes.\n2. Mantener y fortalecer "${bestQuestion.name.substring(0, 50)}" que ha sido bien valorado.\n3. Implementar estrategias pedagógicas adicionales para mejorar la comprensión del contenido.`
+            : `1. Continuar con las buenas prácticas docentes identificadas.\n2. Realizar seguimiento periódicamente para monitorear mejoras.\n3. Promover la participación de más estudiantes en las evaluaciones.`
+
+    const splitRecommendations = doc.splitTextToSize(recommendationsText, contentWidth - 10)
+    const recommendationsHeight = splitRecommendations.length * lineHeight + 4
+
     doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 25, "F")
+    doc.rect(marginLeft, y, contentWidth, recommendationsHeight, "F")
     doc.setDrawColor(59, 130, 246)
     doc.setLineWidth(0.5)
-    doc.rect(marginLeft, y, contentWidth, 25)
+    doc.rect(marginLeft, y, contentWidth, recommendationsHeight)
 
     doc.setFontSize(7)
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "normal")
+    doc.text(splitRecommendations, marginLeft + 5, y + 4)
 
-    let recommendations = ""
-    if (worstQuestion.name !== "N/A") {
-        recommendations =
-            `1. Revisar y mejorar "${worstQuestion.name.substring(0, 50)}" según las evaluaciones de los estudiantes.\n` +
-            `2. Mantener y fortalecer "${bestQuestion.name.substring(0, 50)}" que ha sido bien valorado.\n` +
-            "3. Implementar estrategias pedagógicas adicionales para mejorar la comprensión del contenido."
-    } else {
-        recommendations =
-            "1. Continuar con las buenas prácticas docentes identificadas.\n" +
-            "2. Realizar seguimiento periódicamente para monitorear mejoras.\n" +
-            "3. Promover la participación de más estudiantes en las evaluaciones."
-    }
-
-    const splitRecommendations = doc.splitTextToSize(recommendations, contentWidth - 10)
-    doc.text(splitRecommendations, marginLeft + 5, y + 6)
-
-    y += 30
-
-    // ========== 9. FOOTER ==========
-    const pageHeight = doc.internal.pageSize.getHeight()
-    doc.setFillColor(30, 41, 59)
-    doc.rect(0, pageHeight - 12, 210, 12, "F")
-
-    doc.setFontSize(7)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("Sistema de Evaluación Docente | Universidad El Bosque", 105, pageHeight - 7, { align: "center" })
-
-    doc.setFontSize(6)
-    doc.setTextColor(200, 200, 200)
-    doc.setFont("helvetica", "normal")
-    doc.text(`Reporte generado automáticamente el ${currentDate}`, 105, pageHeight - 2, { align: "center" })
+    y += recommendationsHeight + sectionGap
 
     // Generate filename
     const professorFileName = professor ? `${professor.first_name}_${professor.last_name}` : "profesor"
     const subjectFileName = subject ? subject.name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "") : "materia"
-    const fileName = `Resumen_Ejecutivo_${professorFileName}_${subjectFileName}_${currentDate.replace(/\s+/g, "_")}.pdf`
+    const fileName = `Resumen Ejecutivo_${professorFileName}_${subjectFileName}_${currentDate.replace(/\s+/g, "_")}.pdf`
 
     try {
         doc.save(fileName)
     } catch (error) {
         console.error("Error saving executive summary PDF:", error)
-        doc.save("Resumen_Ejecutivo.pdf")
+        doc.save("Resumen Ejecutivo.pdf")
     }
 }
