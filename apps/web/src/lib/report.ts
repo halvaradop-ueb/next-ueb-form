@@ -99,8 +99,9 @@ export const generateNewReportPDF = (report: ReportState, professors: ProfessorS
         try {
             const [startStr] = timeframe.split(" - ")
             const startDate = new Date(startStr)
-            const year = startDate.getFullYear()
-            const month = startDate.getMonth() + 1 // getMonth() returns 0-11
+            if (Number.isNaN(startDate.getTime())) return null
+            const year = startDate.getUTCFullYear()
+            const month = startDate.getUTCMonth() + 1 // getUTCMonth() returns 0-11
 
             // First semester: Jan-June, Second semester: July-Dec
             if (month >= 1 && month <= 6) {
