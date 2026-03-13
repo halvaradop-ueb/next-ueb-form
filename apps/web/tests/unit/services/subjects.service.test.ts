@@ -111,7 +111,7 @@ describe("Subjects Service", () => {
                 name: "",
                 description: "",
                 professor_id: "",
-                semestre: "",   
+                semestre: "",
             }
 
             await expect(addSubject(invalidSubject)).rejects.toThrow()

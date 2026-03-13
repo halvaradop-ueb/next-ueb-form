@@ -33,7 +33,7 @@ export const getSubjectsByProfessorIdController = async (req: Request, res: Resp
         if (!professorId) {
             return res.status(400).json(errorResponse("Professor ID is required"))
         }
-        const subjects = await getSubjectsByProfessorId(professorId)
+        const subjects = await getSubjectsByProfessorId(professorId.toString())
         res.json({
             data: subjects,
             errors: null,
@@ -67,7 +67,7 @@ export const updateSubjectController = async (req: Request, res: Response<APIRes
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
         const updates = req.body
-        const updatedSubject = await updateSubject(subjectId, updates)
+        const updatedSubject = await updateSubject(subjectId.toString(), updates)
         res.json({
             data: updatedSubject,
             errors: null,
@@ -85,7 +85,7 @@ export const deleteSubjectController = async (req: Request, res: Response<APIRes
         if (!subjectId) {
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
-        const success = await deleteSubject(subjectId)
+        const success = await deleteSubject(subjectId.toString())
         if (success) {
             res.json({
                 data: {},
@@ -125,7 +125,7 @@ export const getProfessorsBySubjectController = async (req: Request, res: Respon
         if (!subjectId) {
             return res.status(400).json(errorResponse("Subject ID is required"))
         }
-        const assignments = await getProfessorsBySubject(subjectId)
+        const assignments = await getProfessorsBySubject(subjectId.toString())
         res.json({
             data: assignments,
             errors: null,
@@ -143,7 +143,7 @@ export const deleteAssignmentController = async (req: Request, res: Response<API
         if (!assignmentId) {
             return res.status(400).json(errorResponse("Assignment ID is required"))
         }
-        const success = await deleteAssignment(assignmentId)
+        const success = await deleteAssignment(assignmentId.toString())
         if (success) {
             res.json({
                 data: {},
@@ -165,7 +165,7 @@ export const getProfessorsBySemesterController = async (req: Request, res: Respo
         if (!semester) {
             return res.status(400).json(errorResponse("Semester is required"))
         }
-        const professors = await getProfessorsBySemester(semester)
+        const professors = await getProfessorsBySemester(semester.toString())
         res.json({
             data: professors,
             errors: null,

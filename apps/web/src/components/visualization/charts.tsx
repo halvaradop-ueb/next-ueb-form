@@ -26,7 +26,7 @@ export interface ChartDataPoint {
 
 interface BaseChartProps {
     data: ChartDataPoint[]
-    width?: number | string
+    width?: number | `${number}%`
     height?: number
 }
 
@@ -56,7 +56,7 @@ const DEFAULT_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c", "#8dd1e1", "
 
 export const BarChartComponent = ({
     data,
-    width = "100%",
+    width = "100%" as `${number}%`,
     height = 300,
     xAxisKey = "name",
     yAxisKey = "value",
@@ -102,7 +102,7 @@ export const PieChartComponent = ({ data, width = "100%", height = 300, colors =
 
 export const LineChartComponent = ({
     data,
-    width = "100%",
+    width = "100%" as `${number}%`,
     height = 300,
     xAxisKey = "name",
     yAxisKey = "value",

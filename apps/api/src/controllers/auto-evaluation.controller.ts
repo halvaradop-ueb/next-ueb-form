@@ -39,7 +39,7 @@ export const getAutoEvaluationByProfessor = async (req: Request, res: Response) 
             })
         }
 
-        const answers = await getAutoEvaluationAnswersByProfessor(professorId)
+        const answers = await getAutoEvaluationAnswersByProfessor(professorId.toString())
 
         res.json(answers)
     } catch (error) {

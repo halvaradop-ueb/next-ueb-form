@@ -5,12 +5,9 @@ const { authMock } = vi.hoisted(() => ({
     authMock: vi.fn(),
 }))
 
-vi.mock(
-    "@/auth",
-    () => ({
-        auth: authMock,
-    }),
-)
+vi.mock("@/auth", () => ({
+    auth: authMock,
+}))
 
 import { middleware } from "@/middleware"
 
