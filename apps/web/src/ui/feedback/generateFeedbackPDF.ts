@@ -33,9 +33,9 @@ export const generateExecutiveSummaryPDF = async (
     })
 
     doc.setFont("helvetica")
-    const marginLeft = 20
-    const contentWidth = 170
-    let y = 20
+    const marginLeft = 5
+    const contentWidth = 200
+    let y = 10
 
     // Get professor and subject names
     const professor = professors.find((p) => p.id === options.professorId)
@@ -123,44 +123,46 @@ export const generateExecutiveSummaryPDF = async (
 
     // ========== 1. TITLE ==========
     doc.setFillColor(30, 41, 59)
-    doc.rect(0, 0, 210, 25, "F")
+    doc.rect(0, 0, 210, 15, "F")
 
-    doc.setFontSize(18)
+    doc.setFontSize(12)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("RESUMEN EJECUTIVO", 105, 10, { align: "center" })
+    doc.text("RESUMEN EJECUTIVO", 105, 7, { align: "center" })
 
-    doc.setFontSize(10)
+    doc.setFontSize(7)
     doc.setFont("helvetica", "normal")
-    doc.text("Evaluación Docente - Universidad El Bosque", 105, 18, { align: "center" })
+    doc.text("Evaluación Docente - Universidad El Bosque", 105, 12, { align: "center" })
 
-    y = 32
+    y = 18
 
     // ========== 2. COURSE INFO ==========
     doc.setFillColor(240, 245, 250)
-    doc.rect(marginLeft, y, contentWidth, 30, "F")
+    doc.rect(marginLeft, y, contentWidth, 20, "F")
     doc.setDrawColor(200, 210, 220)
     doc.setLineWidth(0.5)
-    doc.rect(marginLeft, y, contentWidth, 30)
+    doc.rect(marginLeft, y, contentWidth, 20)
 
     doc.setFontSize(10)
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("Docente:", marginLeft + 5, y + 7)
+    doc.text("Docente:", marginLeft + 5, y + 6)
     doc.setFont("helvetica", "normal")
     const professorName = professor ? `${professor.first_name} ${professor.last_name}` : "No seleccionado"
     const professorSplit = doc.splitTextToSize(professorName, 55) // Limitar ancho para evitar superposición
-    doc.text(professorSplit, marginLeft + 25, y + 7)
+    doc.text(professorSplit, marginLeft + 25, y + 6)
 
     doc.setFont("helvetica", "bold")
-    doc.text("Materia:", marginLeft + 90, y + 7)
+    doc.text("Materia:", marginLeft + 90, y + 6)
     doc.setFont("helvetica", "normal")
+    doc.setFontSize(8)
     const subjectName = subject ? subject.name : "No seleccionada"
     const subjectSplit = doc.splitTextToSize(subjectName, 55) // Limitar ancho para el espacio disponible
-    doc.text(subjectSplit, marginLeft + 112, y + 7)
+    doc.text(subjectSplit, marginLeft + 112, y + 6)
+    doc.setFontSize(10)
 
     doc.setFont("helvetica", "bold")
-    doc.text("Periodo:", marginLeft + 5, y + 18)
+    doc.text("Periodo:", marginLeft + 5, y + 15)
     doc.setFont("helvetica", "normal")
     let periodText = "Todos los semestres"
 
@@ -199,30 +201,30 @@ export const generateExecutiveSummaryPDF = async (
         }
     }
 
-    doc.text(periodText, marginLeft + 25, y + 18)
+    doc.text(periodText, marginLeft + 25, y + 15)
 
     doc.setFont("helvetica", "bold")
-    doc.text("Fecha:", marginLeft + 90, y + 18)
+    doc.text("Fecha:", marginLeft + 90, y + 15)
     doc.setFont("helvetica", "normal")
-    doc.text(currentDate, marginLeft + 108, y + 18)
+    doc.text(currentDate, marginLeft + 108, y + 15)
 
-    y += 38
+    y += 25
 
     // ========== 3. EXECUTIVE CONCLUSION ==========
     doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("CONCLUSIÓN EJECUTIVA", marginLeft + 5, y + 7)
+    doc.text("CONCLUSIÓN EJECUTIVA", marginLeft + 5, y + 6)
 
-    y += 14
+    y += 10
     doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 32, "F")
+    doc.rect(marginLeft, y, contentWidth, 18, "F")
     doc.setDrawColor(200, 210, 220)
-    doc.rect(marginLeft, y, contentWidth, 32)
+    doc.rect(marginLeft, y, contentWidth, 18)
 
-    doc.setFontSize(10)
+    doc.setFontSize(8)
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "normal")
 
@@ -236,61 +238,61 @@ export const generateExecutiveSummaryPDF = async (
             : "")
 
     const splitConclusion = doc.splitTextToSize(conclusionText, contentWidth - 10)
-    doc.text(splitConclusion, marginLeft + 5, y + 8)
+    doc.text(splitConclusion, marginLeft + 5, y + 6)
 
-    y += 38
+    y += 23
 
     // ========== 4. KEY INDICATORS ==========
     doc.setFillColor(30, 41, 59)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("INDICADORES CLAVE", marginLeft + 5, y + 7)
+    doc.text("INDICADORES CLAVE", marginLeft + 5, y + 6)
 
-    y += 14
+    y += 10
     doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 50, "F")
+    doc.rect(marginLeft, y, contentWidth, 26, "F")
     doc.setDrawColor(200, 210, 220)
-    doc.rect(marginLeft, y, contentWidth, 50)
+    doc.rect(marginLeft, y, contentWidth, 26)
 
     // Left column indicators
-    doc.setFontSize(9)
+    doc.setFontSize(7)
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("Calificación actitudes del docente en la clase:", marginLeft + 5, y + 8)
+    doc.text("Calificación actitudes docente en clase:", marginLeft + 5, y + 5)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(levelColor[0], levelColor[1], levelColor[2])
-    doc.text(`${avgScore.toFixed(1)} / 5.0`, marginLeft + 5, y + 14)
+    doc.text(`${avgScore.toFixed(1)} / 5.0`, marginLeft + 5, y + 8)
 
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("Nota media de estudiantes con respecto al docente:", marginLeft + 5, y + 20)
+    doc.text("Nota media estudiantes docente:", marginLeft + 5, y + 11)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(levelColor[0], levelColor[1], levelColor[2])
-    doc.text(`${(summaryRating || avgScore).toFixed(1)} / 5.0`, marginLeft + 5, y + 26)
+    doc.text(`${(summaryRating || avgScore).toFixed(1)} / 5.0`, marginLeft + 5, y + 14)
 
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("Nivel de desempeño:", marginLeft + 5, y + 32)
+    doc.text("Nivel de desempeño:", marginLeft + 5, y + 17)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(levelColor[0], levelColor[1], levelColor[2])
-    doc.text(levelText, marginLeft + 5, y + 38)
+    doc.text(levelText, marginLeft + 5, y + 20)
 
     // Right column indicators
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "bold")
-    doc.text("Total evaluaciones:", marginLeft + 95, y + 8)
+    doc.text("Total evaluaciones:", marginLeft + 95, y + 6)
     doc.setFont("helvetica", "normal")
-    doc.text(`${Math.round(totalResponses / 11)}`, marginLeft + 135, y + 8)
+    doc.text(`${Math.round(totalResponses / 11)}`, marginLeft + 135, y + 6)
 
     doc.setFont("helvetica", "bold")
-    doc.text("Desviación estándar:", marginLeft + 95, y + 16)
+    doc.text("Desviación estándar:", marginLeft + 95, y + 13)
     doc.setFont("helvetica", "normal")
-    doc.text(`±${stdDev.toFixed(2)}`, marginLeft + 135, y + 16)
+    doc.text(`±${stdDev.toFixed(2)}`, marginLeft + 135, y + 13)
 
     doc.setFont("helvetica", "bold")
-    doc.text("Tendencia:", marginLeft + 95, y + 24)
+    doc.text("Tendencia:", marginLeft + 95, y + 20)
     if (trend > 0.1) doc.setTextColor(34, 197, 94)
     else if (trend < -0.1) doc.setTextColor(239, 68, 68)
     else doc.setTextColor(100, 100, 100)
@@ -298,24 +300,24 @@ export const generateExecutiveSummaryPDF = async (
     doc.text(
         trendText + (trend !== 0 && semesterAverages?.length ? ` (${trend > 0 ? "+" : ""}${trend.toFixed(2)})` : ""),
         marginLeft + 135,
-        y + 24
+        y + 20
     )
 
-    y += 56
+    y += 35
 
     // ========== 5. GRADE DISTRIBUTION ==========
     doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("DISTRIBUCIÓN DE CALIFICACIONES", marginLeft + 5, y + 7)
+    doc.text("DISTRIBUCIÓN DE CALIFICACIONES", marginLeft + 5, y + 6)
 
-    y += 14
+    y += 10
     doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 35, "F")
+    doc.rect(marginLeft, y, contentWidth, 22, "F")
     doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 35)
+    doc.rect(marginLeft, y, contentWidth, 22)
 
     if (allResponses.length > 0) {
         const categories = [
@@ -327,7 +329,7 @@ export const generateExecutiveSummaryPDF = async (
         ]
 
         const barStartX = marginLeft + 45
-        const barMaxWidth = 75
+        const barMaxWidth = 85
         const maxValue = Math.max(
             ...categories.map((c) => allResponses.filter((r) => r >= c.range[0] && r <= c.range[1]).length),
             1
@@ -349,25 +351,25 @@ export const generateExecutiveSummaryPDF = async (
             const percentage = category.percentage
             const barWidth = (count / maxValue) * barMaxWidth
 
-            const rowY = y + 8 + index * 5
+            const rowY = y + 5 + index * 3
 
             // Label with number
-            doc.setFontSize(7)
+            doc.setFontSize(6)
             doc.setTextColor(60, 60, 60)
             doc.setFont("helvetica", "bold")
             doc.text(category.label + " - " + category.name, marginLeft + 5, rowY + 2)
 
             // Background bar
             doc.setFillColor(230, 230, 235)
-            doc.rect(barStartX, rowY, barMaxWidth, 5, "F")
+            doc.rect(barStartX, rowY, barMaxWidth, 4, "F")
 
             // Value bar - highlight dominant
             doc.setFillColor(category.color[0], category.color[1], category.color[2])
-            doc.rect(barStartX, rowY, Math.max(barWidth, 2), 5, "F")
+            doc.rect(barStartX, rowY, Math.max(barWidth, 2), 4, "F")
 
             // Percentage - positioned to avoid overlap
             doc.setFont("helvetica", category === dominant ? "bold" : "normal")
-            doc.setFontSize(category === dominant ? 7 : 6)
+            doc.setFontSize(category === dominant ? 6 : 5)
             doc.setTextColor(
                 category === dominant ? levelColor[0] : 40,
                 category === dominant ? levelColor[1] : 40,
@@ -375,112 +377,44 @@ export const generateExecutiveSummaryPDF = async (
             )
             doc.text(percentage.toFixed(0) + "%", barStartX + barMaxWidth + 8, rowY + 2, { align: "left" })
         })
-
-        // Dominant category note
-        doc.setFontSize(6)
-        doc.setTextColor(100, 100, 100)
-        doc.setFont("helvetica", "italic")
-        doc.text(`* Categoría dominante: ${dominant.name}`, marginLeft + 5, y + 32)
     } else {
-        doc.setFontSize(8)
+        doc.setFontSize(7)
         doc.setTextColor(120, 120, 120)
         doc.setFont("helvetica", "normal")
-        doc.text("No hay datos disponibles", marginLeft + contentWidth / 2, y + 15, { align: "center" })
+        doc.text("No hay datos disponibles", marginLeft + contentWidth / 2, y + 12, { align: "center" })
     }
 
-    y += 42
+    y += 26
 
-    // ========== 6. BEST EVALUATED / TO IMPROVE ==========
+    // ========== 6. PERFORMANCE TREND ==========
     doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("ASPECTOS EVALUADOS", marginLeft + 5, y + 7)
+    doc.text("TENDENCIA DE DESEMPEÑO", marginLeft + 5, y + 6)
 
-    y += 14
-    // Left box - Best evaluated
+    y += 10
     doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth / 2 - 3, 22, "F")
-    doc.setDrawColor(34, 197, 94)
-    doc.setLineWidth(1)
-    doc.rect(marginLeft, y, contentWidth / 2 - 3, 22)
-
-    // Right box - To improve
-    doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft + contentWidth / 2 + 1, y, contentWidth / 2 - 3, 22, "F")
-    doc.setDrawColor(239, 68, 68)
-    doc.rect(marginLeft + contentWidth / 2 + 1, y, contentWidth / 2 - 3, 22)
-
-    // Best evaluated
-    doc.setFontSize(8)
-    doc.setTextColor(34, 197, 94)
-    doc.setFont("helvetica", "bold")
-    doc.text("MEJOR EVALUADO", marginLeft + 5, y + 5)
-
-    doc.setFontSize(6)
-    doc.setTextColor(30, 41, 59)
-    doc.setFont("helvetica", "normal")
-    const bestText = bestQuestion.name !== "N/A" ? bestQuestion.name : "Sin datos"
-    const bestSplit = doc.splitTextToSize(bestText, contentWidth / 2 - 15)
-    doc.text(bestSplit, marginLeft + 5, y + 10)
-
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(34, 197, 94)
-    doc.text(bestQuestion.name !== "N/A" ? bestQuestion.avg.toFixed(2) + " / 5.0" : "0.0", marginLeft + 5, y + 16)
-
-    // To improve
-    doc.setFontSize(8)
-    doc.setTextColor(239, 68, 68)
-    doc.setFont("helvetica", "bold")
-    doc.text("A MEJORAR", marginLeft + contentWidth / 2 + 6, y + 5)
-
-    doc.setFontSize(6)
-    doc.setTextColor(30, 41, 59)
-    doc.setFont("helvetica", "normal")
-    const worstText = worstQuestion.name !== "N/A" ? worstQuestion.name : "Sin datos"
-    const worstSplit = doc.splitTextToSize(worstText, contentWidth / 2 - 15)
-    doc.text(worstSplit, marginLeft + contentWidth / 2 + 6, y + 10)
-
-    doc.setFont("helvetica", "bold")
-    doc.setTextColor(239, 68, 68)
-    doc.text(
-        worstQuestion.name !== "N/A" ? worstQuestion.avg.toFixed(2) + " / 5.0" : "0.0",
-        marginLeft + contentWidth / 2 + 6,
-        y + 16
-    )
-
-    y += 32
-
-    // ========== 7. PERFORMANCE TREND ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("TENDENCIA DE DESEMPEÑO", marginLeft + 5, y + 7)
-
-    y += 14
-    doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 30, "F")
+    doc.rect(marginLeft, y, contentWidth, 20, "F")
     doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 30)
+    doc.rect(marginLeft, y, contentWidth, 20)
 
     if (semesterAverages && semesterAverages.length >= 1) {
         // Table header
-        doc.setFontSize(8)
+        doc.setFontSize(7)
         doc.setTextColor(100, 100, 100)
         doc.setFont("helvetica", "bold")
-        doc.text("Periodo", marginLeft + 5, y + 8)
-        doc.text("Promedio", marginLeft + 60, y + 8)
+        doc.text("Periodo", marginLeft + 5, y + 6)
+        doc.text("Promedio", marginLeft + 60, y + 6)
 
         doc.setDrawColor(220, 220, 230)
-        doc.line(marginLeft + 50, y + 4, marginLeft + 50, y + 26)
+        doc.line(marginLeft + 50, y + 4, marginLeft + 50, y + 16)
 
         // Show up to 3 semesters
         const displaySemesters = semesterAverages.slice(-3)
         displaySemesters.forEach((sem, index) => {
-            const rowY = y + 14 + index * 6
+            const rowY = y + 10 + index * 4
             doc.setFont("helvetica", "normal")
             doc.setTextColor(30, 41, 59)
             doc.text(sem.semesterName || sem.semester, marginLeft + 5, rowY)
@@ -488,143 +422,107 @@ export const generateExecutiveSummaryPDF = async (
             doc.text(sem.average.toFixed(2) + " / 5.0", marginLeft + 60, rowY)
         })
     } else {
-        doc.setFontSize(9)
-        doc.setTextColor(120, 120, 120)
-        doc.setFont("helvetica", "normal")
-        doc.text("Se necesita más de un semestre para mostrar tendencia", marginLeft + contentWidth / 2, y + 15, {
-            align: "center",
-        })
-    }
-
-    y += 36
-
-    // ========== 8. AUTOMATIC ANALYTICAL SUMMARY ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("RESUMEN ANALÍTICO", marginLeft + 5, y + 7)
-
-    y += 14
-    doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 30, "F")
-    doc.setDrawColor(59, 130, 246)
-    doc.setLineWidth(0.5)
-    doc.rect(marginLeft, y, contentWidth, 30)
-
-    doc.setFontSize(9)
-    doc.setTextColor(30, 41, 59)
-    doc.setFont("helvetica", "normal")
-
-    // Calculate distribution
-    const excellentCount = allResponses.filter((r) => r === 5).length
-    const goodCount = allResponses.filter((r) => r === 4).length
-    const regularCount = allResponses.filter((r) => r === 3).length
-    const lowCount = allResponses.filter((r) => r === 2).length
-    const deficientCount = allResponses.filter((r) => r === 1).length
-
-    const excellentPct = allResponses.length > 0 ? (excellentCount / allResponses.length) * 100 : 0
-    const goodPct = allResponses.length > 0 ? (goodCount / allResponses.length) * 100 : 0
-    const regularPct = allResponses.length > 0 ? (regularCount / allResponses.length) * 100 : 0
-    const lowPct = allResponses.length > 0 ? (lowCount / allResponses.length) * 100 : 0
-    const deficientPct = allResponses.length > 0 ? (deficientCount / allResponses.length) * 100 : 0
-
-    let analysisText = ""
-    if (allResponses.length > 0) {
-        // Find dominant level
-        const levels = [
-            { name: "excelentes", pct: excellentPct },
-            { name: "buenas", pct: goodPct },
-            { name: "regulares", pct: regularPct },
-            { name: "bajas", pct: lowPct },
-            { name: "deficientes", pct: deficientPct },
-        ]
-        const dominant = levels.reduce((prev, curr) => (curr.pct > prev.pct ? curr : prev))
-
-        analysisText =
-            `Los resultados indican una percepción ${levelText === "EXCELENTE" ? "muy positiva" : levelText === "BUENO" ? "positiva" : "moderada"} del desempeño docente, ` +
-            `con predominio de evaluaciones ${dominant.name} (${dominant.pct.toFixed(0)}%). ` +
-            (bestQuestion.name !== "N/A"
-                ? `Los estudiantes valoran positivamente "${bestQuestion.name.substring(0, 30)}". `
-                : "") +
-            (worstQuestion.name !== "N/A" && worstQuestion.name !== bestQuestion.name
-                ? `Se identifican oportunidades de mejora en "${worstQuestion.name.substring(0, 30)}".`
-                : "")
-    } else {
-        analysisText = "No hay suficientes datos para generar un análisis completo."
-    }
-
-    const splitAnalysis = doc.splitTextToSize(analysisText, contentWidth - 10)
-    doc.text(splitAnalysis, marginLeft + 5, y + 8)
-
-    y += 36
-
-    // ========== 9. FEATURED COMMENTS ==========
-    doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
-    doc.setTextColor(255, 255, 255)
-    doc.setFont("helvetica", "bold")
-    doc.text("COMENTARIOS DESTACADOS", marginLeft + 5, y + 7)
-
-    y += 14
-    doc.setFillColor(250, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 30, "F")
-    doc.setDrawColor(220, 220, 230)
-    doc.rect(marginLeft, y, contentWidth, 30)
-
-    // Get meaningful comments
-    const meaningfulComments = studentEvaluations.textResponses
-        .flatMap((item) => item.responses)
-        .filter(
-            (c) =>
-                c &&
-                c.trim().length > 3 &&
-                c.toLowerCase() !== "si" &&
-                c.toLowerCase() !== "sí" &&
-                c.toLowerCase() !== "no" &&
-                c.toLowerCase() !== "aja" &&
-                c.toLowerCase() !== "ok"
-        )
-        .slice(0, 2)
-
-    if (meaningfulComments.length > 0) {
         doc.setFontSize(8)
-        doc.setTextColor(60, 60, 60)
-        doc.setFont("helvetica", "normal")
-
-        meaningfulComments.forEach((comment, index) => {
-            const truncatedComment = comment.length > 75 ? comment.substring(0, 75) + "..." : comment
-            doc.text(`"${truncatedComment}"`, marginLeft + 5, y + 10 + index * 10)
-        })
-    } else {
-        doc.setFontSize(9)
         doc.setTextColor(120, 120, 120)
-        doc.setFont("helvetica", "italic")
-        doc.text("No se identificaron comentarios recurrentes significativos", marginLeft + contentWidth / 2, y + 15, {
+        doc.setFont("helvetica", "normal")
+        doc.text("Se necesita más de un semestre para mostrar tendencia", marginLeft + contentWidth / 2, y + 10, {
             align: "center",
         })
     }
 
-    y += 36
+    y += 22
 
-    // ========== 10. RECOMMENDATIONS ==========
+    // ========== 7. GRADE HISTORY ==========
     doc.setFillColor(59, 130, 246)
-    doc.rect(marginLeft, y, contentWidth, 10, "F")
-    doc.setFontSize(10)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("RECOMENDACIONES", marginLeft + 5, y + 7)
+    doc.text("HISTORIAL DE NOTAS", marginLeft + 5, y + 6)
 
-    y += 14
+    y += 10
+    doc.setFillColor(250, 250, 252)
+    doc.rect(marginLeft, y, contentWidth, 40, "F")
+    doc.setDrawColor(220, 220, 230)
+    doc.rect(marginLeft, y, contentWidth, 40)
+
+    if (semesterAverages && semesterAverages.length > 0) {
+        const semestersWithNotes = semesterAverages.filter((sem) => sem.count > 0).slice(-5) // Last 5 semesters
+        if (semestersWithNotes.length > 0) {
+            const barWidth = 20
+            const maxBarHeight = 25
+            const maxAvg = 5
+            const startX = marginLeft + 20
+            const baseY = y + 35
+
+            semestersWithNotes.forEach((sem, index) => {
+                const barHeight = (sem.average / maxAvg) * maxBarHeight
+                const barX = startX + index * 30
+                const barY = baseY - barHeight
+
+                // Draw bar
+                doc.setFillColor(59, 130, 246)
+                doc.rect(barX, barY, barWidth, barHeight, "F")
+
+                // Draw border
+                doc.setDrawColor(30, 41, 59)
+                doc.setLineWidth(0.5)
+                doc.rect(barX, barY, barWidth, barHeight)
+
+                // Label semester
+                doc.setFontSize(6)
+                doc.setTextColor(30, 41, 59)
+                doc.setFont("helvetica", "normal")
+                doc.text(sem.semesterName || sem.semester, barX + barWidth / 2, baseY + 5, { align: "center" })
+
+                // Label average
+                doc.setFontSize(6)
+                doc.setTextColor(30, 41, 59)
+                doc.setFont("helvetica", "bold")
+                doc.text(sem.average.toFixed(1), barX + barWidth / 2, barY - 2, { align: "center" })
+            })
+
+            // Draw axis
+            doc.setDrawColor(100, 100, 100)
+            doc.line(startX - 5, baseY, startX + semestersWithNotes.length * 30, baseY)
+            doc.line(startX - 5, baseY, startX - 5, baseY - maxBarHeight)
+
+            // Axis labels
+            doc.setFontSize(6)
+            doc.setTextColor(100, 100, 100)
+            doc.text("0", startX - 10, baseY + 2)
+            doc.text("5", startX - 10, baseY - maxBarHeight + 2)
+        } else {
+            doc.setFontSize(8)
+            doc.setTextColor(120, 120, 120)
+            doc.setFont("helvetica", "normal")
+            doc.text("No hay historial disponible", marginLeft + contentWidth / 2, y + 20, { align: "center" })
+        }
+    } else {
+        doc.setFontSize(8)
+        doc.setTextColor(120, 120, 120)
+        doc.setFont("helvetica", "normal")
+        doc.text("No hay historial disponible", marginLeft + contentWidth / 2, y + 20, { align: "center" })
+    }
+
+    y += 45
+
+    // ========== 8. RECOMMENDATIONS ==========
+    doc.setFillColor(59, 130, 246)
+    doc.rect(marginLeft, y, contentWidth, 8, "F")
+    doc.setFontSize(9)
+    doc.setTextColor(255, 255, 255)
+    doc.setFont("helvetica", "bold")
+    doc.text("RECOMENDACIONES", marginLeft + 5, y + 6)
+
+    y += 10
     doc.setFillColor(248, 250, 252)
-    doc.rect(marginLeft, y, contentWidth, 35, "F")
+    doc.rect(marginLeft, y, contentWidth, 25, "F")
     doc.setDrawColor(59, 130, 246)
     doc.setLineWidth(0.5)
-    doc.rect(marginLeft, y, contentWidth, 35)
+    doc.rect(marginLeft, y, contentWidth, 25)
 
-    doc.setFontSize(8)
+    doc.setFontSize(7)
     doc.setTextColor(30, 41, 59)
     doc.setFont("helvetica", "normal")
 
@@ -642,24 +540,24 @@ export const generateExecutiveSummaryPDF = async (
     }
 
     const splitRecommendations = doc.splitTextToSize(recommendations, contentWidth - 10)
-    doc.text(splitRecommendations, marginLeft + 5, y + 8)
+    doc.text(splitRecommendations, marginLeft + 5, y + 6)
 
-    y += 41
+    y += 30
 
-    // ========== 11. FOOTER ==========
+    // ========== 9. FOOTER ==========
     const pageHeight = doc.internal.pageSize.getHeight()
     doc.setFillColor(30, 41, 59)
-    doc.rect(0, pageHeight - 18, 210, 18, "F")
+    doc.rect(0, pageHeight - 12, 210, 12, "F")
 
-    doc.setFontSize(9)
+    doc.setFontSize(7)
     doc.setTextColor(255, 255, 255)
     doc.setFont("helvetica", "bold")
-    doc.text("Sistema de Evaluación Docente | Universidad El Bosque", 105, pageHeight - 10, { align: "center" })
+    doc.text("Sistema de Evaluación Docente | Universidad El Bosque", 105, pageHeight - 7, { align: "center" })
 
-    doc.setFontSize(8)
+    doc.setFontSize(6)
     doc.setTextColor(200, 200, 200)
     doc.setFont("helvetica", "normal")
-    doc.text(`Reporte generado automáticamente el ${currentDate}`, 105, pageHeight - 5, { align: "center" })
+    doc.text(`Reporte generado automáticamente el ${currentDate}`, 105, pageHeight - 2, { align: "center" })
 
     // Generate filename
     const professorFileName = professor ? `${professor.first_name}_${professor.last_name}` : "profesor"
