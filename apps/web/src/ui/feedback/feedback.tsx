@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Download } from "lucide-react"
+import { FileText } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts"
 import type { FeedbackState } from "@/lib/@types/types"
 import type { Feedback, ProfessorService, SubjectService, AutoEvaluationBySemester, Question } from "@/lib/@types/services"
@@ -17,7 +17,7 @@ import { getAutoEvaluationAnswers } from "@/services/auto-evaluation"
 import { getQuestionsBySubject } from "@/services/questions"
 import { getStudentEvaluationsBySubject } from "@/services/answer"
 import { API_ENDPOINT } from "@/services/utils"
-import { generateFeedbackPDF } from "./generateFeedbackPDF"
+import { generateExecutiveSummaryPDF } from "./generateFeedbackPDF"
 
 const timeframes = createPeriods(new Date("2023-01-01"))
 
@@ -342,110 +342,108 @@ export const FeedbackManagement = () => {
                     <h2 className="text-2xl font-bold">Revisión de Retroalimentación</h2>
                     <p className="text-muted-foreground">Revisar la retroalimentación proporcionada por los estudiantes</p>
                 </div>
-                <Button
-                    onClick={async () => {
-                        try {
-                            // Show loading state
-                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
-                            if (button) {
-                                button.innerHTML =
-                                    '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Generando PDF...'
-                                button.disabled = true
-                            }
-
-                            // Verificar que tenemos datos antes de generar
-                            if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
-                                alert(
-                                    "No hay datos disponibles para generar el PDF. Por favor, asegúrese de que la información se haya cargado completamente."
-                                )
+                <div className="flex gap-2">
+                    <Button
+                        onClick={async () => {
+                            try {
+                                // Show loading state
+                                const button = document.querySelector("[data-summary-button]") as HTMLButtonElement
                                 if (button) {
                                     button.innerHTML =
-                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                    button.disabled = false
+                                        '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Generando...'
+                                    button.disabled = true
                                 }
-                                return
-                            }
 
-                            // Calculate semester averages for the PDF timeline (using ALL feedback, not filtered)
-                            const semesterAveragesData = (() => {
-                                // Group ALL feedback by semester (ignoring time filter)
-                                const feedbackBySemester = feedback.reduce(
-                                    (acc, item) => {
-                                        // Extract semester from feedback_date
-                                        const date = new Date(item.feedback_date)
-                                        const year = date.getFullYear()
-                                        const month = date.getMonth() + 1
-                                        const semester = month >= 7 ? `${year}-2` : `${year}-1`
+                                // Verificar que tenemos datos antes de generar
+                                if (studentEvaluations.numericResponses.length === 0 && feedback.length === 0) {
+                                    alert(
+                                        "No hay datos disponibles para generar el resumen. Por favor, asegúrese de que la información se haya cargado completamente."
+                                    )
+                                    if (button) {
+                                        button.innerHTML =
+                                            '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Generar Resumen'
+                                        button.disabled = false
+                                    }
+                                    return
+                                }
 
-                                        if (!acc[semester]) {
-                                            acc[semester] = []
-                                        }
-                                        acc[semester].push(item)
-                                        return acc
-                                    },
-                                    {} as Record<string, typeof feedback>
+                                // Calculate semester averages for the summary
+                                const semesterAveragesData = (() => {
+                                    const feedbackBySemester = feedback.reduce(
+                                        (acc, item) => {
+                                            const date = new Date(item.feedback_date)
+                                            const year = date.getFullYear()
+                                            const month = date.getMonth() + 1
+                                            const semester = month >= 7 ? `${year}-2` : `${year}-1`
+
+                                            if (!acc[semester]) {
+                                                acc[semester] = []
+                                            }
+                                            acc[semester].push(item)
+                                            return acc
+                                        },
+                                        {} as Record<string, typeof feedback>
+                                    )
+
+                                    return Object.entries(feedbackBySemester)
+                                        .map(([semester, semesterFeedback]) => {
+                                            const avg =
+                                                semesterFeedback.reduce((sum, item) => sum + item.rating, 0) /
+                                                semesterFeedback.length
+                                            return {
+                                                semester,
+                                                average: avg,
+                                                universityAverage: avg,
+                                                count: semesterFeedback.length,
+                                                semesterName: `Semestre ${semester.replace("-", " - ")}`,
+                                            }
+                                        })
+                                        .sort((a, b) => a.semester.localeCompare(b.semester))
+                                })()
+
+                                // Generate Executive Summary PDF
+                                await generateExecutiveSummaryPDF(
+                                    professors,
+                                    subjects,
+                                    options,
+                                    feedback,
+                                    studentEvaluations,
+                                    semesterAveragesData,
+                                    avgRating
                                 )
 
-                                return Object.entries(feedbackBySemester)
-                                    .map(([semester, semesterFeedback]) => {
-                                        const avg =
-                                            semesterFeedback.reduce((sum, item) => sum + item.rating, 0) / semesterFeedback.length
-                                        return {
-                                            semester,
-                                            average: avg,
-                                            universityAverage: avg,
-                                            count: semesterFeedback.length,
-                                            semesterName: `Semestre ${semester.replace("-", " - ")}`,
-                                        }
-                                    })
-                                    .sort((a, b) => a.semester.localeCompare(b.semester))
-                            })()
-
-                            // Generate PDF directly with available data
-                            await generateFeedbackPDF(
-                                professors,
-                                subjects,
-                                options,
-                                feedback,
-                                ratings,
-                                autoEvaluationAnswers,
-                                coevaluations,
-                                studentEvaluations,
-                                questions,
-                                semesterAveragesData
-                            )
-
-                            // Show success feedback
-                            if (button) {
-                                button.innerHTML =
-                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡PDF Generado!'
-                                setTimeout(() => {
+                                // Show success feedback
+                                if (button) {
                                     button.innerHTML =
-                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                    button.disabled = false
-                                }, 2000)
-                            }
-                        } catch (error) {
-                            // Show error message to user
-                            const errorMessage = error instanceof Error ? error.message : "Error desconocido"
-                            alert(`Error generando PDF: ${errorMessage}`)
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡Generado!'
+                                    setTimeout(() => {
+                                        button.innerHTML =
+                                            '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Generar Resumen'
+                                        button.disabled = false
+                                    }, 2000)
+                                }
+                            } catch (error) {
+                                // Show error message to user
+                                const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+                                alert(`Error generando resumen: ${errorMessage}`)
 
-                            // Restore button state on error
-                            const button = document.querySelector("[data-pdf-button]") as HTMLButtonElement
-                            if (button) {
-                                button.innerHTML =
-                                    '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Generar PDF'
-                                button.disabled = false
+                                // Restore button state on error
+                                const button = document.querySelector("[data-summary-button]") as HTMLButtonElement
+                                if (button) {
+                                    button.innerHTML =
+                                        '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> Generar Resumen'
+                                    button.disabled = false
+                                }
                             }
-                        }
-                    }}
-                    disabled={optionsDisabled}
-                    className="flex items-center gap-2"
-                    data-pdf-button
-                >
-                    <Download className="h-4 w-4" />
-                    Generar PDF
-                </Button>
+                        }}
+                        disabled={optionsDisabled}
+                        className="flex items-center gap-2"
+                        data-summary-button
+                    >
+                        <FileText className="h-4 w-4" />
+                        Generar Resumen
+                    </Button>
+                </div>
             </div>
             <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
